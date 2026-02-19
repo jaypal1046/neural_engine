@@ -71,7 +71,16 @@ All SHA-256 verified lossless.
 | Mode | Saved | Time (compress) | Time (decompress) |
 |------|-------|-----------------|-------------------|
 | v7 default | 57.5% | ~3-5s | fast |
-| v8 --best  | 74.6% | ~800s (estimated) | ~77s |
+| v8 --best  | 74.6% | ~800s | ~77s |
+| v9 --ultra | **~76-78%** (est) | very slow | slow |
+
+### 5MB Synthetic Text Benchmark
+| Mode | Size | Ratio | Saved |
+|------|------|-------|-------|
+| v7 (LZ77) | 1.72 MB | 0.288 | 71.1% |
+| v8 (BWT)  | 0.84 MB | 0.141 | 85.9% |
+| v9 (PPM)  | **0.65 MB** | **0.109** | **89.1%** |
+
 
 ---
 
@@ -244,11 +253,11 @@ Verified: SHA-256 passes for v7/v8/v9 on 500KB and 5MB test files.
 | **DONE** | PPM context model (Phase 16) | ✓ | ~400 lines | best ratio on text | Ratio |
 | **DONE** | Streaming / mmap I/O (Phase 18) | ✓ | ~200 lines | RAM = 1 block | Robustness |
 
-**Do Phase 17 next**: closes the audio gap from 0% to ~40%. Short implementation.
+**ALL PHASES 1-18 COMPLETE.**
 
-**Do Phase 15 after**: Order-2 rANS on BWT output, +2-4% on text, ~100 lines.
+**Phase 19 (Future):** Multithreading? (Parallel block compression).
+**Phase 20 (Future):** Solid mode / Context continuity across blocks?
 
-**Do Phase 16 last**: PPM is a major effort (+10-15% ratio) but slow (--ultra mode).
 
 ---
 
@@ -303,9 +312,9 @@ If it fails, the layer is not done.
 
 ```bash
 # Build
-cd src_cpp
+cd src
 g++ -O3 -std=c++17 -Wall -march=native -o myzip.exe \
-    main.cpp compressor.cpp lz77.cpp huffman.cpp ans.cpp bwt.cpp
+    main.cpp compressor.cpp lz77.cpp huffman.cpp ans.cpp bwt.cpp ppm.cpp
 
 # Default mode (v7)
 .\myzip.exe compress   input.txt
@@ -326,5 +335,5 @@ g++ -O3 -std=c++17 -Wall -march=native -o myzip.exe \
 Debug build with sanitizers (catches memory bugs during development):
 ```bash
 g++ -O0 -g -std=c++17 -fsanitize=address,undefined -o myzip_debug.exe \
-    main.cpp compressor.cpp lz77.cpp huffman.cpp ans.cpp bwt.cpp
+    main.cpp compressor.cpp lz77.cpp huffman.cpp ans.cpp bwt.cpp ppm.cpp
 ```
