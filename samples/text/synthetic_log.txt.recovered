@@ -1,0 +1,500 @@
+2026-02-19 10:00:00.759  [INFO]  Request received from 192.168.1.164 at port 8114
+2026-02-19 10:01:01.142  [WARN]  Response time 71ms exceeded threshold of 200ms
+2026-02-19 10:02:02.758  [ERROR] Connection to database failed: timeout after 189s
+2026-02-19 10:03:03.604  [INFO]  User session 229 authenticated successfully
+2026-02-19 10:04:04.095  [DEBUG] Cache hit ratio: 109.00%
+2026-02-19 10:05:05.616  [INFO]  Processed 56 records in 8238ms
+2026-02-19 10:06:06.733  [INFO]  Request received from 192.168.1.7 at port 8574
+2026-02-19 10:07:07.429  [WARN]  Response time 167ms exceeded threshold of 200ms
+2026-02-19 10:08:08.284  [ERROR] Connection to database failed: timeout after 57s
+2026-02-19 10:09:09.777  [INFO]  User session 208 authenticated successfully
+2026-02-19 10:10:10.432  [DEBUG] Cache hit ratio: 207.00%
+2026-02-19 10:11:11.220  [INFO]  Processed 88 records in 8284ms
+2026-02-19 10:12:12.104  [INFO]  Request received from 192.168.1.246 at port 8781
+2026-02-19 10:13:13.367  [WARN]  Response time 24ms exceeded threshold of 200ms
+2026-02-19 10:14:14.270  [ERROR] Connection to database failed: timeout after 217s
+2026-02-19 10:15:15.549  [INFO]  User session 207 authenticated successfully
+2026-02-19 10:16:16.080  [DEBUG] Cache hit ratio: 32.00%
+2026-02-19 10:17:17.633  [INFO]  Processed 142 records in 8300ms
+2026-02-19 10:18:18.591  [INFO]  Request received from 192.168.1.227 at port 8882
+2026-02-19 10:19:19.046  [WARN]  Response time 50ms exceeded threshold of 200ms
+2026-02-19 10:20:20.081  [ERROR] Connection to database failed: timeout after 170s
+2026-02-19 10:21:21.389  [INFO]  User session 219 authenticated successfully
+2026-02-19 10:22:22.854  [DEBUG] Cache hit ratio: 72.00%
+2026-02-19 10:23:23.363  [INFO]  Processed 94 records in 8166ms
+2026-02-19 10:24:24.718  [INFO]  Request received from 192.168.1.54 at port 8686
+2026-02-19 10:25:25.073  [WARN]  Response time 240ms exceeded threshold of 200ms
+2026-02-19 10:26:26.546  [ERROR] Connection to database failed: timeout after 156s
+2026-02-19 10:27:27.473  [INFO]  User session 187 authenticated successfully
+2026-02-19 10:28:28.704  [DEBUG] Cache hit ratio: 98.00%
+2026-02-19 10:29:29.332  [INFO]  Processed 143 records in 8224ms
+2026-02-19 10:30:30.234  [INFO]  Request received from 192.168.1.216 at port 8786
+2026-02-19 10:31:31.410  [WARN]  Response time 211ms exceeded threshold of 200ms
+2026-02-19 10:32:32.935  [ERROR] Connection to database failed: timeout after 69s
+2026-02-19 10:33:33.322  [INFO]  User session 242 authenticated successfully
+2026-02-19 10:34:34.405  [DEBUG] Cache hit ratio: 55.00%
+2026-02-19 10:35:35.469  [INFO]  Processed 227 records in 8936ms
+2026-02-19 10:36:36.252  [INFO]  Request received from 192.168.1.37 at port 8271
+2026-02-19 10:37:37.269  [WARN]  Response time 191ms exceeded threshold of 200ms
+2026-02-19 10:38:38.919  [ERROR] Connection to database failed: timeout after 192s
+2026-02-19 10:39:39.224  [INFO]  User session 150 authenticated successfully
+2026-02-19 10:40:40.093  [DEBUG] Cache hit ratio: 36.00%
+2026-02-19 10:41:41.156  [INFO]  Processed 194 records in 8048ms
+2026-02-19 10:42:42.432  [INFO]  Request received from 192.168.1.161 at port 8163
+2026-02-19 10:43:43.390  [WARN]  Response time 153ms exceeded threshold of 200ms
+2026-02-19 10:44:44.257  [ERROR] Connection to database failed: timeout after 153s
+2026-02-19 10:45:45.696  [INFO]  User session 249 authenticated successfully
+2026-02-19 10:46:46.906  [DEBUG] Cache hit ratio: 185.00%
+2026-02-19 10:47:47.787  [INFO]  Processed 138 records in 8768ms
+2026-02-19 10:48:48.300  [INFO]  Request received from 192.168.1.165 at port 8348
+2026-02-19 10:49:49.003  [WARN]  Response time 112ms exceeded threshold of 200ms
+2026-02-19 10:50:50.995  [ERROR] Connection to database failed: timeout after 245s
+2026-02-19 10:51:51.519  [INFO]  User session 129 authenticated successfully
+2026-02-19 10:52:52.305  [DEBUG] Cache hit ratio: 234.00%
+2026-02-19 10:53:53.623  [INFO]  Processed 216 records in 8654ms
+2026-02-19 10:54:54.780  [INFO]  Request received from 192.168.1.51 at port 8156
+2026-02-19 10:55:55.940  [WARN]  Response time 42ms exceeded threshold of 200ms
+2026-02-19 10:56:56.500  [ERROR] Connection to database failed: timeout after 1s
+2026-02-19 10:57:57.899  [INFO]  User session 5 authenticated successfully
+2026-02-19 10:58:58.245  [DEBUG] Cache hit ratio: 253.00%
+2026-02-19 10:59:59.969  [INFO]  Processed 15 records in 8246ms
+2026-02-19 10:00:00.835  [INFO]  Request received from 192.168.1.21 at port 8087
+2026-02-19 10:01:01.784  [WARN]  Response time 18ms exceeded threshold of 200ms
+2026-02-19 10:02:02.486  [ERROR] Connection to database failed: timeout after 33s
+2026-02-19 10:03:03.271  [INFO]  User session 243 authenticated successfully
+2026-02-19 10:04:04.433  [DEBUG] Cache hit ratio: 136.00%
+2026-02-19 10:05:05.773  [INFO]  Processed 247 records in 8216ms
+2026-02-19 10:06:06.730  [INFO]  Request received from 192.168.1.187 at port 8706
+2026-02-19 10:07:07.665  [WARN]  Response time 80ms exceeded threshold of 200ms
+2026-02-19 10:08:08.462  [ERROR] Connection to database failed: timeout after 96s
+2026-02-19 10:09:09.065  [INFO]  User session 31 authenticated successfully
+2026-02-19 10:10:10.567  [DEBUG] Cache hit ratio: 87.00%
+2026-02-19 10:11:11.007  [INFO]  Processed 59 records in 8602ms
+2026-02-19 10:12:12.060  [INFO]  Request received from 192.168.1.19 at port 8724
+2026-02-19 10:13:13.880  [WARN]  Response time 59ms exceeded threshold of 200ms
+2026-02-19 10:14:14.243  [ERROR] Connection to database failed: timeout after 85s
+2026-02-19 10:15:15.219  [INFO]  User session 72 authenticated successfully
+2026-02-19 10:16:16.590  [DEBUG] Cache hit ratio: 139.00%
+2026-02-19 10:17:17.826  [INFO]  Processed 122 records in 8248ms
+2026-02-19 10:18:18.099  [INFO]  Request received from 192.168.1.105 at port 8194
+2026-02-19 10:19:19.433  [WARN]  Response time 169ms exceeded threshold of 200ms
+2026-02-19 10:20:20.689  [ERROR] Connection to database failed: timeout after 106s
+2026-02-19 10:21:21.062  [INFO]  User session 168 authenticated successfully
+2026-02-19 10:22:22.819  [DEBUG] Cache hit ratio: 104.00%
+2026-02-19 10:23:23.196  [INFO]  Processed 221 records in 8111ms
+2026-02-19 10:24:24.143  [INFO]  Request received from 192.168.1.49 at port 8549
+2026-02-19 10:25:25.473  [WARN]  Response time 109ms exceeded threshold of 200ms
+2026-02-19 10:26:26.453  [ERROR] Connection to database failed: timeout after 64s
+2026-02-19 10:27:27.100  [INFO]  User session 207 authenticated successfully
+2026-02-19 10:28:28.856  [DEBUG] Cache hit ratio: 13.00%
+2026-02-19 10:29:29.948  [INFO]  Processed 4 records in 8992ms
+2026-02-19 10:30:30.170  [INFO]  Request received from 192.168.1.193 at port 8869
+2026-02-19 10:31:31.218  [WARN]  Response time 105ms exceeded threshold of 200ms
+2026-02-19 10:32:32.168  [ERROR] Connection to database failed: timeout after 222s
+2026-02-19 10:33:33.271  [INFO]  User session 98 authenticated successfully
+2026-02-19 10:34:34.292  [DEBUG] Cache hit ratio: 238.00%
+2026-02-19 10:35:35.677  [INFO]  Processed 109 records in 8713ms
+2026-02-19 10:36:36.194  [INFO]  Request received from 192.168.1.184 at port 8498
+2026-02-19 10:37:37.593  [WARN]  Response time 76ms exceeded threshold of 200ms
+2026-02-19 10:38:38.765  [ERROR] Connection to database failed: timeout after 189s
+2026-02-19 10:39:39.598  [INFO]  User session 81 authenticated successfully
+2026-02-19 10:40:40.161  [DEBUG] Cache hit ratio: 123.00%
+2026-02-19 10:41:41.082  [INFO]  Processed 15 records in 8983ms
+2026-02-19 10:42:42.609  [INFO]  Request received from 192.168.1.218 at port 8190
+2026-02-19 10:43:43.413  [WARN]  Response time 18ms exceeded threshold of 200ms
+2026-02-19 10:44:44.252  [ERROR] Connection to database failed: timeout after 31s
+2026-02-19 10:45:45.634  [INFO]  User session 149 authenticated successfully
+2026-02-19 10:46:46.597  [DEBUG] Cache hit ratio: 21.00%
+2026-02-19 10:47:47.957  [INFO]  Processed 145 records in 8535ms
+2026-02-19 10:48:48.733  [INFO]  Request received from 192.168.1.67 at port 8209
+2026-02-19 10:49:49.405  [WARN]  Response time 81ms exceeded threshold of 200ms
+2026-02-19 10:50:50.307  [ERROR] Connection to database failed: timeout after 34s
+2026-02-19 10:51:51.009  [INFO]  User session 118 authenticated successfully
+2026-02-19 10:52:52.102  [DEBUG] Cache hit ratio: 118.00%
+2026-02-19 10:53:53.518  [INFO]  Processed 19 records in 8550ms
+2026-02-19 10:54:54.902  [INFO]  Request received from 192.168.1.68 at port 8135
+2026-02-19 10:55:55.378  [WARN]  Response time 18ms exceeded threshold of 200ms
+2026-02-19 10:56:56.853  [ERROR] Connection to database failed: timeout after 73s
+2026-02-19 10:57:57.626  [INFO]  User session 140 authenticated successfully
+2026-02-19 10:58:58.541  [DEBUG] Cache hit ratio: 252.00%
+2026-02-19 10:59:59.306  [INFO]  Processed 3 records in 8683ms
+2026-02-19 10:00:00.961  [INFO]  Request received from 192.168.1.239 at port 8679
+2026-02-19 10:01:01.118  [WARN]  Response time 225ms exceeded threshold of 200ms
+2026-02-19 10:02:02.159  [ERROR] Connection to database failed: timeout after 228s
+2026-02-19 10:03:03.215  [INFO]  User session 70 authenticated successfully
+2026-02-19 10:04:04.703  [DEBUG] Cache hit ratio: 184.00%
+2026-02-19 10:05:05.517  [INFO]  Processed 163 records in 8873ms
+2026-02-19 10:06:06.094  [INFO]  Request received from 192.168.1.126 at port 8257
+2026-02-19 10:07:07.045  [WARN]  Response time 163ms exceeded threshold of 200ms
+2026-02-19 10:08:08.652  [ERROR] Connection to database failed: timeout after 1s
+2026-02-19 10:09:09.759  [INFO]  User session 251 authenticated successfully
+2026-02-19 10:10:10.437  [DEBUG] Cache hit ratio: 114.00%
+2026-02-19 10:11:11.077  [INFO]  Processed 144 records in 8009ms
+2026-02-19 10:12:12.925  [INFO]  Request received from 192.168.1.242 at port 8904
+2026-02-19 10:13:13.854  [WARN]  Response time 39ms exceeded threshold of 200ms
+2026-02-19 10:14:14.151  [ERROR] Connection to database failed: timeout after 95s
+2026-02-19 10:15:15.315  [INFO]  User session 111 authenticated successfully
+2026-02-19 10:16:16.920  [DEBUG] Cache hit ratio: 94.00%
+2026-02-19 10:17:17.255  [INFO]  Processed 92 records in 8215ms
+2026-02-19 10:18:18.798  [INFO]  Request received from 192.168.1.171 at port 8105
+2026-02-19 10:19:19.997  [WARN]  Response time 144ms exceeded threshold of 200ms
+2026-02-19 10:20:20.947  [ERROR] Connection to database failed: timeout after 159s
+2026-02-19 10:21:21.999  [INFO]  User session 239 authenticated successfully
+2026-02-19 10:22:22.902  [DEBUG] Cache hit ratio: 205.00%
+2026-02-19 10:23:23.754  [INFO]  Processed 106 records in 8025ms
+2026-02-19 10:24:24.821  [INFO]  Request received from 192.168.1.237 at port 8340
+2026-02-19 10:25:25.273  [WARN]  Response time 172ms exceeded threshold of 200ms
+2026-02-19 10:26:26.110  [ERROR] Connection to database failed: timeout after 41s
+2026-02-19 10:27:27.879  [INFO]  User session 98 authenticated successfully
+2026-02-19 10:28:28.836  [DEBUG] Cache hit ratio: 121.00%
+2026-02-19 10:29:29.312  [INFO]  Processed 236 records in 8471ms
+2026-02-19 10:30:30.228  [INFO]  Request received from 192.168.1.211 at port 8814
+2026-02-19 10:31:31.408  [WARN]  Response time 7ms exceeded threshold of 200ms
+2026-02-19 10:32:32.990  [ERROR] Connection to database failed: timeout after 85s
+2026-02-19 10:33:33.656  [INFO]  User session 198 authenticated successfully
+2026-02-19 10:34:34.863  [DEBUG] Cache hit ratio: 131.00%
+2026-02-19 10:35:35.118  [INFO]  Processed 138 records in 8339ms
+2026-02-19 10:36:36.182  [INFO]  Request received from 192.168.1.225 at port 8993
+2026-02-19 10:37:37.039  [WARN]  Response time 149ms exceeded threshold of 200ms
+2026-02-19 10:38:38.353  [ERROR] Connection to database failed: timeout after 28s
+2026-02-19 10:39:39.446  [INFO]  User session 187 authenticated successfully
+2026-02-19 10:40:40.394  [DEBUG] Cache hit ratio: 156.00%
+2026-02-19 10:41:41.260  [INFO]  Processed 231 records in 8590ms
+2026-02-19 10:42:42.001  [INFO]  Request received from 192.168.1.12 at port 8725
+2026-02-19 10:43:43.703  [WARN]  Response time 134ms exceeded threshold of 200ms
+2026-02-19 10:44:44.201  [ERROR] Connection to database failed: timeout after 185s
+2026-02-19 10:45:45.971  [INFO]  User session 94 authenticated successfully
+2026-02-19 10:46:46.638  [DEBUG] Cache hit ratio: 171.00%
+2026-02-19 10:47:47.737  [INFO]  Processed 81 records in 8679ms
+2026-02-19 10:48:48.316  [INFO]  Request received from 192.168.1.231 at port 8307
+2026-02-19 10:49:49.412  [WARN]  Response time 171ms exceeded threshold of 200ms
+2026-02-19 10:50:50.130  [ERROR] Connection to database failed: timeout after 179s
+2026-02-19 10:51:51.962  [INFO]  User session 50 authenticated successfully
+2026-02-19 10:52:52.630  [DEBUG] Cache hit ratio: 98.00%
+2026-02-19 10:53:53.561  [INFO]  Processed 146 records in 8308ms
+2026-02-19 10:54:54.293  [INFO]  Request received from 192.168.1.214 at port 8000
+2026-02-19 10:55:55.621  [WARN]  Response time 54ms exceeded threshold of 200ms
+2026-02-19 10:56:56.452  [ERROR] Connection to database failed: timeout after 168s
+2026-02-19 10:57:57.523  [INFO]  User session 114 authenticated successfully
+2026-02-19 10:58:58.674  [DEBUG] Cache hit ratio: 122.00%
+2026-02-19 10:59:59.679  [INFO]  Processed 22 records in 8290ms
+2026-02-19 10:00:00.095  [INFO]  Request received from 192.168.1.163 at port 8634
+2026-02-19 10:01:01.688  [WARN]  Response time 210ms exceeded threshold of 200ms
+2026-02-19 10:02:02.150  [ERROR] Connection to database failed: timeout after 80s
+2026-02-19 10:03:03.486  [INFO]  User session 7 authenticated successfully
+2026-02-19 10:04:04.466  [DEBUG] Cache hit ratio: 157.00%
+2026-02-19 10:05:05.589  [INFO]  Processed 107 records in 8907ms
+2026-02-19 10:06:06.393  [INFO]  Request received from 192.168.1.50 at port 8735
+2026-02-19 10:07:07.151  [WARN]  Response time 127ms exceeded threshold of 200ms
+2026-02-19 10:08:08.914  [ERROR] Connection to database failed: timeout after 168s
+2026-02-19 10:09:09.797  [INFO]  User session 193 authenticated successfully
+2026-02-19 10:10:10.823  [DEBUG] Cache hit ratio: 109.00%
+2026-02-19 10:11:11.475  [INFO]  Processed 246 records in 8712ms
+2026-02-19 10:12:12.939  [INFO]  Request received from 192.168.1.13 at port 8570
+2026-02-19 10:13:13.136  [WARN]  Response time 218ms exceeded threshold of 200ms
+2026-02-19 10:14:14.543  [ERROR] Connection to database failed: timeout after 206s
+2026-02-19 10:15:15.324  [INFO]  User session 253 authenticated successfully
+2026-02-19 10:16:16.627  [DEBUG] Cache hit ratio: 244.00%
+2026-02-19 10:17:17.436  [INFO]  Processed 209 records in 8736ms
+2026-02-19 10:18:18.456  [INFO]  Request received from 192.168.1.213 at port 8928
+2026-02-19 10:19:19.460  [WARN]  Response time 230ms exceeded threshold of 200ms
+2026-02-19 10:20:20.860  [ERROR] Connection to database failed: timeout after 67s
+2026-02-19 10:21:21.496  [INFO]  User session 164 authenticated successfully
+2026-02-19 10:22:22.450  [DEBUG] Cache hit ratio: 161.00%
+2026-02-19 10:23:23.240  [INFO]  Processed 20 records in 8730ms
+2026-02-19 10:24:24.914  [INFO]  Request received from 192.168.1.70 at port 8343
+2026-02-19 10:25:25.154  [WARN]  Response time 139ms exceeded threshold of 200ms
+2026-02-19 10:26:26.156  [ERROR] Connection to database failed: timeout after 60s
+2026-02-19 10:27:27.424  [INFO]  User session 181 authenticated successfully
+2026-02-19 10:28:28.477  [DEBUG] Cache hit ratio: 105.00%
+2026-02-19 10:29:29.852  [INFO]  Processed 107 records in 8063ms
+2026-02-19 10:30:30.968  [INFO]  Request received from 192.168.1.108 at port 8398
+2026-02-19 10:31:31.389  [WARN]  Response time 179ms exceeded threshold of 200ms
+2026-02-19 10:32:32.305  [ERROR] Connection to database failed: timeout after 123s
+2026-02-19 10:33:33.551  [INFO]  User session 193 authenticated successfully
+2026-02-19 10:34:34.819  [DEBUG] Cache hit ratio: 192.00%
+2026-02-19 10:35:35.499  [INFO]  Processed 155 records in 8919ms
+2026-02-19 10:36:36.497  [INFO]  Request received from 192.168.1.57 at port 8279
+2026-02-19 10:37:37.684  [WARN]  Response time 8ms exceeded threshold of 200ms
+2026-02-19 10:38:38.741  [ERROR] Connection to database failed: timeout after 174s
+2026-02-19 10:39:39.941  [INFO]  User session 43 authenticated successfully
+2026-02-19 10:40:40.027  [DEBUG] Cache hit ratio: 33.00%
+2026-02-19 10:41:41.577  [INFO]  Processed 233 records in 8403ms
+2026-02-19 10:42:42.658  [INFO]  Request received from 192.168.1.170 at port 8027
+2026-02-19 10:43:43.186  [WARN]  Response time 110ms exceeded threshold of 200ms
+2026-02-19 10:44:44.335  [ERROR] Connection to database failed: timeout after 13s
+2026-02-19 10:45:45.345  [INFO]  User session 55 authenticated successfully
+2026-02-19 10:46:46.284  [DEBUG] Cache hit ratio: 195.00%
+2026-02-19 10:47:47.258  [INFO]  Processed 193 records in 8974ms
+2026-02-19 10:48:48.019  [INFO]  Request received from 192.168.1.214 at port 8083
+2026-02-19 10:49:49.974  [WARN]  Response time 192ms exceeded threshold of 200ms
+2026-02-19 10:50:50.070  [ERROR] Connection to database failed: timeout after 90s
+2026-02-19 10:51:51.041  [INFO]  User session 200 authenticated successfully
+2026-02-19 10:52:52.204  [DEBUG] Cache hit ratio: 194.00%
+2026-02-19 10:53:53.156  [INFO]  Processed 215 records in 8020ms
+2026-02-19 10:54:54.685  [INFO]  Request received from 192.168.1.62 at port 8129
+2026-02-19 10:55:55.476  [WARN]  Response time 30ms exceeded threshold of 200ms
+2026-02-19 10:56:56.171  [ERROR] Connection to database failed: timeout after 180s
+2026-02-19 10:57:57.117  [INFO]  User session 156 authenticated successfully
+2026-02-19 10:58:58.987  [DEBUG] Cache hit ratio: 200.00%
+2026-02-19 10:59:59.026  [INFO]  Processed 80 records in 8110ms
+2026-02-19 10:00:00.693  [INFO]  Request received from 192.168.1.238 at port 8319
+2026-02-19 10:01:01.406  [WARN]  Response time 233ms exceeded threshold of 200ms
+2026-02-19 10:02:02.077  [ERROR] Connection to database failed: timeout after 242s
+2026-02-19 10:03:03.248  [INFO]  User session 152 authenticated successfully
+2026-02-19 10:04:04.870  [DEBUG] Cache hit ratio: 27.00%
+2026-02-19 10:05:05.815  [INFO]  Processed 176 records in 8614ms
+2026-02-19 10:06:06.355  [INFO]  Request received from 192.168.1.252 at port 8579
+2026-02-19 10:07:07.379  [WARN]  Response time 137ms exceeded threshold of 200ms
+2026-02-19 10:08:08.349  [ERROR] Connection to database failed: timeout after 18s
+2026-02-19 10:09:09.842  [INFO]  User session 4 authenticated successfully
+2026-02-19 10:10:10.983  [DEBUG] Cache hit ratio: 126.00%
+2026-02-19 10:11:11.724  [INFO]  Processed 93 records in 8650ms
+2026-02-19 10:12:12.751  [INFO]  Request received from 192.168.1.40 at port 8445
+2026-02-19 10:13:13.276  [WARN]  Response time 134ms exceeded threshold of 200ms
+2026-02-19 10:14:14.793  [ERROR] Connection to database failed: timeout after 158s
+2026-02-19 10:15:15.845  [INFO]  User session 124 authenticated successfully
+2026-02-19 10:16:16.330  [DEBUG] Cache hit ratio: 188.00%
+2026-02-19 10:17:17.285  [INFO]  Processed 219 records in 8251ms
+2026-02-19 10:18:18.768  [INFO]  Request received from 192.168.1.226 at port 8461
+2026-02-19 10:19:19.684  [WARN]  Response time 119ms exceeded threshold of 200ms
+2026-02-19 10:20:20.506  [ERROR] Connection to database failed: timeout after 98s
+2026-02-19 10:21:21.499  [INFO]  User session 218 authenticated successfully
+2026-02-19 10:22:22.348  [DEBUG] Cache hit ratio: 55.00%
+2026-02-19 10:23:23.718  [INFO]  Processed 72 records in 8901ms
+2026-02-19 10:24:24.010  [INFO]  Request received from 192.168.1.226 at port 8282
+2026-02-19 10:25:25.087  [WARN]  Response time 133ms exceeded threshold of 200ms
+2026-02-19 10:26:26.500  [ERROR] Connection to database failed: timeout after 62s
+2026-02-19 10:27:27.707  [INFO]  User session 143 authenticated successfully
+2026-02-19 10:28:28.502  [DEBUG] Cache hit ratio: 122.00%
+2026-02-19 10:29:29.095  [INFO]  Processed 115 records in 8811ms
+2026-02-19 10:30:30.708  [INFO]  Request received from 192.168.1.76 at port 8226
+2026-02-19 10:31:31.595  [WARN]  Response time 63ms exceeded threshold of 200ms
+2026-02-19 10:32:32.543  [ERROR] Connection to database failed: timeout after 95s
+2026-02-19 10:33:33.338  [INFO]  User session 89 authenticated successfully
+2026-02-19 10:34:34.277  [DEBUG] Cache hit ratio: 91.00%
+2026-02-19 10:35:35.123  [INFO]  Processed 79 records in 8257ms
+2026-02-19 10:36:36.122  [INFO]  Request received from 192.168.1.185 at port 8197
+2026-02-19 10:37:37.189  [WARN]  Response time 191ms exceeded threshold of 200ms
+2026-02-19 10:38:38.283  [ERROR] Connection to database failed: timeout after 50s
+2026-02-19 10:39:39.611  [INFO]  User session 186 authenticated successfully
+2026-02-19 10:40:40.303  [DEBUG] Cache hit ratio: 73.00%
+2026-02-19 10:41:41.309  [INFO]  Processed 59 records in 8369ms
+2026-02-19 10:42:42.129  [INFO]  Request received from 192.168.1.4 at port 8725
+2026-02-19 10:43:43.566  [WARN]  Response time 71ms exceeded threshold of 200ms
+2026-02-19 10:44:44.653  [ERROR] Connection to database failed: timeout after 75s
+2026-02-19 10:45:45.105  [INFO]  User session 223 authenticated successfully
+2026-02-19 10:46:46.291  [DEBUG] Cache hit ratio: 224.00%
+2026-02-19 10:47:47.348  [INFO]  Processed 121 records in 8490ms
+2026-02-19 10:48:48.258  [INFO]  Request received from 192.168.1.48 at port 8988
+2026-02-19 10:49:49.116  [WARN]  Response time 241ms exceeded threshold of 200ms
+2026-02-19 10:50:50.503  [ERROR] Connection to database failed: timeout after 211s
+2026-02-19 10:51:51.702  [INFO]  User session 19 authenticated successfully
+2026-02-19 10:52:52.830  [DEBUG] Cache hit ratio: 14.00%
+2026-02-19 10:53:53.087  [INFO]  Processed 145 records in 8971ms
+2026-02-19 10:54:54.571  [INFO]  Request received from 192.168.1.255 at port 8254
+2026-02-19 10:55:55.610  [WARN]  Response time 196ms exceeded threshold of 200ms
+2026-02-19 10:56:56.794  [ERROR] Connection to database failed: timeout after 203s
+2026-02-19 10:57:57.930  [INFO]  User session 134 authenticated successfully
+2026-02-19 10:58:58.439  [DEBUG] Cache hit ratio: 114.00%
+2026-02-19 10:59:59.061  [INFO]  Processed 79 records in 8582ms
+2026-02-19 10:00:00.970  [INFO]  Request received from 192.168.1.157 at port 8983
+2026-02-19 10:01:01.216  [WARN]  Response time 196ms exceeded threshold of 200ms
+2026-02-19 10:02:02.160  [ERROR] Connection to database failed: timeout after 68s
+2026-02-19 10:03:03.076  [INFO]  User session 62 authenticated successfully
+2026-02-19 10:04:04.461  [DEBUG] Cache hit ratio: 41.00%
+2026-02-19 10:05:05.298  [INFO]  Processed 177 records in 8608ms
+2026-02-19 10:06:06.723  [INFO]  Request received from 192.168.1.9 at port 8237
+2026-02-19 10:07:07.072  [WARN]  Response time 73ms exceeded threshold of 200ms
+2026-02-19 10:08:08.806  [ERROR] Connection to database failed: timeout after 176s
+2026-02-19 10:09:09.677  [INFO]  User session 203 authenticated successfully
+2026-02-19 10:10:10.435  [DEBUG] Cache hit ratio: 206.00%
+2026-02-19 10:11:11.663  [INFO]  Processed 30 records in 8557ms
+2026-02-19 10:12:12.846  [INFO]  Request received from 192.168.1.39 at port 8930
+2026-02-19 10:13:13.169  [WARN]  Response time 37ms exceeded threshold of 200ms
+2026-02-19 10:14:14.766  [ERROR] Connection to database failed: timeout after 203s
+2026-02-19 10:15:15.449  [INFO]  User session 212 authenticated successfully
+2026-02-19 10:16:16.311  [DEBUG] Cache hit ratio: 32.00%
+2026-02-19 10:17:17.512  [INFO]  Processed 180 records in 8412ms
+2026-02-19 10:18:18.082  [INFO]  Request received from 192.168.1.139 at port 8505
+2026-02-19 10:19:19.752  [WARN]  Response time 154ms exceeded threshold of 200ms
+2026-02-19 10:20:20.026  [ERROR] Connection to database failed: timeout after 83s
+2026-02-19 10:21:21.856  [INFO]  User session 24 authenticated successfully
+2026-02-19 10:22:22.973  [DEBUG] Cache hit ratio: 221.00%
+2026-02-19 10:23:23.841  [INFO]  Processed 6 records in 8783ms
+2026-02-19 10:24:24.781  [INFO]  Request received from 192.168.1.69 at port 8590
+2026-02-19 10:25:25.531  [WARN]  Response time 194ms exceeded threshold of 200ms
+2026-02-19 10:26:26.185  [ERROR] Connection to database failed: timeout after 167s
+2026-02-19 10:27:27.833  [INFO]  User session 150 authenticated successfully
+2026-02-19 10:28:28.481  [DEBUG] Cache hit ratio: 126.00%
+2026-02-19 10:29:29.328  [INFO]  Processed 90 records in 8418ms
+2026-02-19 10:30:30.337  [INFO]  Request received from 192.168.1.172 at port 8107
+2026-02-19 10:31:31.295  [WARN]  Response time 106ms exceeded threshold of 200ms
+2026-02-19 10:32:32.833  [ERROR] Connection to database failed: timeout after 170s
+2026-02-19 10:33:33.465  [INFO]  User session 195 authenticated successfully
+2026-02-19 10:34:34.331  [DEBUG] Cache hit ratio: 23.00%
+2026-02-19 10:35:35.885  [INFO]  Processed 30 records in 8993ms
+2026-02-19 10:36:36.673  [INFO]  Request received from 192.168.1.132 at port 8844
+2026-02-19 10:37:37.423  [WARN]  Response time 223ms exceeded threshold of 200ms
+2026-02-19 10:38:38.370  [ERROR] Connection to database failed: timeout after 14s
+2026-02-19 10:39:39.640  [INFO]  User session 160 authenticated successfully
+2026-02-19 10:40:40.208  [DEBUG] Cache hit ratio: 114.00%
+2026-02-19 10:41:41.949  [INFO]  Processed 69 records in 8562ms
+2026-02-19 10:42:42.496  [INFO]  Request received from 192.168.1.74 at port 8448
+2026-02-19 10:43:43.623  [WARN]  Response time 32ms exceeded threshold of 200ms
+2026-02-19 10:44:44.162  [ERROR] Connection to database failed: timeout after 205s
+2026-02-19 10:45:45.565  [INFO]  User session 80 authenticated successfully
+2026-02-19 10:46:46.861  [DEBUG] Cache hit ratio: 105.00%
+2026-02-19 10:47:47.969  [INFO]  Processed 234 records in 8116ms
+2026-02-19 10:48:48.510  [INFO]  Request received from 192.168.1.31 at port 8663
+2026-02-19 10:49:49.521  [WARN]  Response time 239ms exceeded threshold of 200ms
+2026-02-19 10:50:50.854  [ERROR] Connection to database failed: timeout after 181s
+2026-02-19 10:51:51.467  [INFO]  User session 124 authenticated successfully
+2026-02-19 10:52:52.195  [DEBUG] Cache hit ratio: 142.00%
+2026-02-19 10:53:53.764  [INFO]  Processed 236 records in 8613ms
+2026-02-19 10:54:54.282  [INFO]  Request received from 192.168.1.226 at port 8139
+2026-02-19 10:55:55.348  [WARN]  Response time 198ms exceeded threshold of 200ms
+2026-02-19 10:56:56.273  [ERROR] Connection to database failed: timeout after 240s
+2026-02-19 10:57:57.743  [INFO]  User session 211 authenticated successfully
+2026-02-19 10:58:58.593  [DEBUG] Cache hit ratio: 77.00%
+2026-02-19 10:59:59.457  [INFO]  Processed 169 records in 8501ms
+2026-02-19 10:00:00.340  [INFO]  Request received from 192.168.1.138 at port 8495
+2026-02-19 10:01:01.386  [WARN]  Response time 142ms exceeded threshold of 200ms
+2026-02-19 10:02:02.890  [ERROR] Connection to database failed: timeout after 117s
+2026-02-19 10:03:03.585  [INFO]  User session 49 authenticated successfully
+2026-02-19 10:04:04.044  [DEBUG] Cache hit ratio: 99.00%
+2026-02-19 10:05:05.722  [INFO]  Processed 82 records in 8762ms
+2026-02-19 10:06:06.395  [INFO]  Request received from 192.168.1.234 at port 8830
+2026-02-19 10:07:07.155  [WARN]  Response time 254ms exceeded threshold of 200ms
+2026-02-19 10:08:08.129  [ERROR] Connection to database failed: timeout after 127s
+2026-02-19 10:09:09.339  [INFO]  User session 129 authenticated successfully
+2026-02-19 10:10:10.102  [DEBUG] Cache hit ratio: 223.00%
+2026-02-19 10:11:11.015  [INFO]  Processed 135 records in 8932ms
+2026-02-19 10:12:12.891  [INFO]  Request received from 192.168.1.185 at port 8147
+2026-02-19 10:13:13.076  [WARN]  Response time 168ms exceeded threshold of 200ms
+2026-02-19 10:14:14.346  [ERROR] Connection to database failed: timeout after 121s
+2026-02-19 10:15:15.665  [INFO]  User session 160 authenticated successfully
+2026-02-19 10:16:16.872  [DEBUG] Cache hit ratio: 21.00%
+2026-02-19 10:17:17.389  [INFO]  Processed 173 records in 8879ms
+2026-02-19 10:18:18.735  [INFO]  Request received from 192.168.1.245 at port 8324
+2026-02-19 10:19:19.893  [WARN]  Response time 228ms exceeded threshold of 200ms
+2026-02-19 10:20:20.070  [ERROR] Connection to database failed: timeout after 139s
+2026-02-19 10:21:21.943  [INFO]  User session 61 authenticated successfully
+2026-02-19 10:22:22.444  [DEBUG] Cache hit ratio: 74.00%
+2026-02-19 10:23:23.720  [INFO]  Processed 251 records in 8100ms
+2026-02-19 10:24:24.170  [INFO]  Request received from 192.168.1.224 at port 8102
+2026-02-19 10:25:25.047  [WARN]  Response time 178ms exceeded threshold of 200ms
+2026-02-19 10:26:26.300  [ERROR] Connection to database failed: timeout after 84s
+2026-02-19 10:27:27.149  [INFO]  User session 92 authenticated successfully
+2026-02-19 10:28:28.579  [DEBUG] Cache hit ratio: 63.00%
+2026-02-19 10:29:29.174  [INFO]  Processed 175 records in 8811ms
+2026-02-19 10:30:30.891  [INFO]  Request received from 192.168.1.45 at port 8080
+2026-02-19 10:31:31.246  [WARN]  Response time 98ms exceeded threshold of 200ms
+2026-02-19 10:32:32.146  [ERROR] Connection to database failed: timeout after 128s
+2026-02-19 10:33:33.260  [INFO]  User session 60 authenticated successfully
+2026-02-19 10:34:34.009  [DEBUG] Cache hit ratio: 118.00%
+2026-02-19 10:35:35.922  [INFO]  Processed 231 records in 8823ms
+2026-02-19 10:36:36.161  [INFO]  Request received from 192.168.1.74 at port 8693
+2026-02-19 10:37:37.601  [WARN]  Response time 19ms exceeded threshold of 200ms
+2026-02-19 10:38:38.706  [ERROR] Connection to database failed: timeout after 77s
+2026-02-19 10:39:39.203  [INFO]  User session 65 authenticated successfully
+2026-02-19 10:40:40.109  [DEBUG] Cache hit ratio: 99.00%
+2026-02-19 10:41:41.367  [INFO]  Processed 61 records in 8390ms
+2026-02-19 10:42:42.302  [INFO]  Request received from 192.168.1.148 at port 8302
+2026-02-19 10:43:43.405  [WARN]  Response time 6ms exceeded threshold of 200ms
+2026-02-19 10:44:44.885  [ERROR] Connection to database failed: timeout after 71s
+2026-02-19 10:45:45.932  [INFO]  User session 176 authenticated successfully
+2026-02-19 10:46:46.852  [DEBUG] Cache hit ratio: 156.00%
+2026-02-19 10:47:47.794  [INFO]  Processed 232 records in 8924ms
+2026-02-19 10:48:48.821  [INFO]  Request received from 192.168.1.205 at port 8235
+2026-02-19 10:49:49.194  [WARN]  Response time 91ms exceeded threshold of 200ms
+2026-02-19 10:50:50.773  [ERROR] Connection to database failed: timeout after 159s
+2026-02-19 10:51:51.697  [INFO]  User session 185 authenticated successfully
+2026-02-19 10:52:52.099  [DEBUG] Cache hit ratio: 215.00%
+2026-02-19 10:53:53.040  [INFO]  Processed 232 records in 8642ms
+2026-02-19 10:54:54.034  [INFO]  Request received from 192.168.1.80 at port 8807
+2026-02-19 10:55:55.092  [WARN]  Response time 149ms exceeded threshold of 200ms
+2026-02-19 10:56:56.765  [ERROR] Connection to database failed: timeout after 233s
+2026-02-19 10:57:57.135  [INFO]  User session 107 authenticated successfully
+2026-02-19 10:58:58.543  [DEBUG] Cache hit ratio: 202.00%
+2026-02-19 10:59:59.850  [INFO]  Processed 129 records in 8935ms
+2026-02-19 10:00:00.990  [INFO]  Request received from 192.168.1.43 at port 8263
+2026-02-19 10:01:01.823  [WARN]  Response time 207ms exceeded threshold of 200ms
+2026-02-19 10:02:02.144  [ERROR] Connection to database failed: timeout after 30s
+2026-02-19 10:03:03.880  [INFO]  User session 194 authenticated successfully
+2026-02-19 10:04:04.406  [DEBUG] Cache hit ratio: 174.00%
+2026-02-19 10:05:05.374  [INFO]  Processed 248 records in 8866ms
+2026-02-19 10:06:06.014  [INFO]  Request received from 192.168.1.24 at port 8809
+2026-02-19 10:07:07.465  [WARN]  Response time 68ms exceeded threshold of 200ms
+2026-02-19 10:08:08.268  [ERROR] Connection to database failed: timeout after 95s
+2026-02-19 10:09:09.962  [INFO]  User session 150 authenticated successfully
+2026-02-19 10:10:10.239  [DEBUG] Cache hit ratio: 96.00%
+2026-02-19 10:11:11.905  [INFO]  Processed 121 records in 8025ms
+2026-02-19 10:12:12.937  [INFO]  Request received from 192.168.1.242 at port 8574
+2026-02-19 10:13:13.064  [WARN]  Response time 157ms exceeded threshold of 200ms
+2026-02-19 10:14:14.931  [ERROR] Connection to database failed: timeout after 163s
+2026-02-19 10:15:15.418  [INFO]  User session 180 authenticated successfully
+2026-02-19 10:16:16.968  [DEBUG] Cache hit ratio: 30.00%
+2026-02-19 10:17:17.118  [INFO]  Processed 10 records in 8311ms
+2026-02-19 10:18:18.138  [INFO]  Request received from 192.168.1.25 at port 8240
+2026-02-19 10:19:19.686  [WARN]  Response time 100ms exceeded threshold of 200ms
+2026-02-19 10:20:20.968  [ERROR] Connection to database failed: timeout after 244s
+2026-02-19 10:21:21.760  [INFO]  User session 139 authenticated successfully
+2026-02-19 10:22:22.670  [DEBUG] Cache hit ratio: 187.00%
+2026-02-19 10:23:23.630  [INFO]  Processed 26 records in 8853ms
+2026-02-19 10:24:24.033  [INFO]  Request received from 192.168.1.105 at port 8961
+2026-02-19 10:25:25.454  [WARN]  Response time 177ms exceeded threshold of 200ms
+2026-02-19 10:26:26.875  [ERROR] Connection to database failed: timeout after 114s
+2026-02-19 10:27:27.376  [INFO]  User session 93 authenticated successfully
+2026-02-19 10:28:28.367  [DEBUG] Cache hit ratio: 140.00%
+2026-02-19 10:29:29.194  [INFO]  Processed 16 records in 8407ms
+2026-02-19 10:30:30.093  [INFO]  Request received from 192.168.1.248 at port 8125
+2026-02-19 10:31:31.654  [WARN]  Response time 170ms exceeded threshold of 200ms
+2026-02-19 10:32:32.051  [ERROR] Connection to database failed: timeout after 153s
+2026-02-19 10:33:33.128  [INFO]  User session 202 authenticated successfully
+2026-02-19 10:34:34.070  [DEBUG] Cache hit ratio: 202.00%
+2026-02-19 10:35:35.212  [INFO]  Processed 213 records in 8783ms
+2026-02-19 10:36:36.336  [INFO]  Request received from 192.168.1.151 at port 8221
+2026-02-19 10:37:37.002  [WARN]  Response time 199ms exceeded threshold of 200ms
+2026-02-19 10:38:38.133  [ERROR] Connection to database failed: timeout after 71s
+2026-02-19 10:39:39.112  [INFO]  User session 139 authenticated successfully
+2026-02-19 10:40:40.134  [DEBUG] Cache hit ratio: 170.00%
+2026-02-19 10:41:41.602  [INFO]  Processed 4 records in 8366ms
+2026-02-19 10:42:42.271  [INFO]  Request received from 192.168.1.83 at port 8016
+2026-02-19 10:43:43.538  [WARN]  Response time 14ms exceeded threshold of 200ms
+2026-02-19 10:44:44.487  [ERROR] Connection to database failed: timeout after 30s
+2026-02-19 10:45:45.525  [INFO]  User session 115 authenticated successfully
+2026-02-19 10:46:46.515  [DEBUG] Cache hit ratio: 152.00%
+2026-02-19 10:47:47.044  [INFO]  Processed 57 records in 8968ms
+2026-02-19 10:48:48.533  [INFO]  Request received from 192.168.1.187 at port 8802
+2026-02-19 10:49:49.987  [WARN]  Response time 78ms exceeded threshold of 200ms
+2026-02-19 10:50:50.867  [ERROR] Connection to database failed: timeout after 8s
+2026-02-19 10:51:51.110  [INFO]  User session 103 authenticated successfully
+2026-02-19 10:52:52.075  [DEBUG] Cache hit ratio: 126.00%
+2026-02-19 10:53:53.622  [INFO]  Processed 231 records in 8082ms
+2026-02-19 10:54:54.281  [INFO]  Request received from 192.168.1.38 at port 8067
+2026-02-19 10:55:55.561  [WARN]  Response time 160ms exceeded threshold of 200ms
+2026-02-19 10:56:56.611  [ERROR] Connection to database failed: timeout after 183s
+2026-02-19 10:57:57.517  [INFO]  User session 136 authenticated successfully
+2026-02-19 10:58:58.812  [DEBUG] Cache hit ratio: 155.00%
+2026-02-19 10:59:59.666  [INFO]  Processed 180 records in 8117ms
+2026-02-19 10:00:00.738  [INFO]  Request received from 192.168.1.225 at port 8787
+2026-02-19 10:01:01.462  [WARN]  Response time 222ms exceeded threshold of 200ms
+2026-02-19 10:02:02.347  [ERROR] Connection to database failed: timeout after 228s
+2026-02-19 10:03:03.425  [INFO]  User session 212 authenticated successfully
+2026-02-19 10:04:04.437  [DEBUG] Cache hit ratio: 187.00%
+2026-02-19 10:05:05.383  [INFO]  Processed 81 records in 8681ms
+2026-02-19 10:06:06.945  [INFO]  Request received from 192.168.1.245 at port 8156
+2026-02-19 10:07:07.851  [WARN]  Response time 122ms exceeded threshold of 200ms
+2026-02-19 10:08:08.098  [ERROR] Connection to database failed: timeout after 22s
+2026-02-19 10:09:09.831  [INFO]  User session 191 authenticated successfully
+2026-02-19 10:10:10.600  [DEBUG] Cache hit ratio: 34.00%
+2026-02-19 10:11:11.337  [INFO]  Processed 245 records in 8575ms
+2026-02-19 10:12:12.362  [INFO]  Request received from 192.168.1.172 at port 8125
+2026-02-19 10:13:13.888  [WARN]  Response time 224ms exceeded threshold of 200ms
+2026-02-19 10:14:14.991  [ERROR] Connection to database failed: timeout after 235s
+2026-02-19 10:15:15.360  [INFO]  User session 74 authenticated successfully
+2026-02-19 10:16:16.217  [DEBUG] Cache hit ratio: 27.00%
+2026-02-19 10:17:17.229  [INFO]  Processed 40 records in 8672ms
+2026-02-19 10:18:18.865  [INFO]  Request received from 192.168.1.217 at port 8110
+2026-02-19 10:19:19.780  [WARN]  Response time 143ms exceeded threshold of 200ms

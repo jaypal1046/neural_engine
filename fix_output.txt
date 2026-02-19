@@ -1,0 +1,14 @@
+
+STORE MODE FIX RESULTS
+======================================================================
+File                         |     Orig |   Before |    After | Mode       | OK
+----------------------------------------------------------------------
+Binary random                |      6 KB |   -19.8% |    -0.2% | STORED     | YES
+BMP photo 800x600            |   1406 KB |    -8.2% |    -0.0% | STORED     | YES
+Server log text              |    391 KB |    15.8% |    15.8% | COMPRESS   | YES
+JSON 2000 users              |    734 KB |    30.1% |    30.1% | COMPRESS   | YES
+CSV 5000 rows                |    414 KB |    15.6% |    15.6% | COMPRESS   | YES
+BMP gradient small           |     29 KB |    53.2% |    53.2% | COMPRESS   | YES
+======================================================================
+BEFORE = Phase 3 without store mode  (expansion was the bug)
+AFTER  = Phase 3 with store mode     (never expands, always lossless)

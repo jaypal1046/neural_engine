@@ -1,0 +1,42 @@
+
+========================================================================
+  CHECKSUM VERIFICATION TEST  (SHA-256)
+========================================================================
+
+  Part 1 — Normal compress/decompress cycle
+  --------------------------------------------------------------------
+  File                                 Mode        SHA-256 match   Result
+  -----------------------------------  ----------  --------------  ------
+  server_log_500kb.txt                 COMPRESSED  PASS            LOSSLESS
+  api_users_2k.json                    COMPRESSED  PASS            LOSSLESS
+  sales_5k.csv                         COMPRESSED  PASS            LOSSLESS
+  photo_800x600.bmp                    STORED      PASS            LOSSLESS
+  program_mixed.bin                    COMPRESSED  PASS            LOSSLESS
+  synthetic_binary.bin                 STORED      PASS            LOSSLESS
+
+  Part 1 result: ALL PASS
+
+  Part 2 — Corruption detection (flip 1 byte in compressed file)
+  --------------------------------------------------------------------
+  File          : server_log_500kb.txt
+  Original hash : d6c8bbdc1eb00d7520ce493f8b5d8513...
+  Corruption    : flipped byte at offset 60  (0x00 -> 0xFF)
+
+  Result: OTHER ERROR (also detects corruption): ValueError: Leftover bits after decoding: '001' — likely corrupt data.
+
+  Part 3 — verify_file() on a saved .myzip
+  --------------------------------------------------------------------
+  File        : integrity_test.myzip
+  Version     : MZIP v3
+  Mode        : COMPRESSED
+  Orig size   : 400,917 bytes
+  Stored hash : d6c8bbdc1eb00d7520ce493f8b5d8513f5e97992...
+  Actual hash : d6c8bbdc1eb00d7520ce493f8b5d8513f5e97992...
+  Match       : YES
+  LOSSLESS    : CONFIRMED
+
+========================================================================
+  SHA-256 is 256 bits (2^256 possible values).
+  Probability of a corrupted file passing checksum: ~1 in 10^77.
+  For practical purposes: impossible.
+========================================================================
