@@ -128,21 +128,43 @@ struct BinRangeDecoder {
 // Models
 // -----------------------------------------------------------------------------
 struct ContextModel {
-    std::vector<uint32_t> counts; // counts[ctx][0] and counts[ctx][1]
+    std::vector<uint32_t> counts; // counts[hash][0] and counts[hash][1]
     uint64_t mask;
+    uint32_t size_mask;
     
-    ContextModel(int bits) : mask(bits == 64 ? ~0ULL : (1ULL << bits) - 1) {
-        counts.resize(1 + ((mask + 1) * 2), 1); // init to 1 for smoothing
+    ContextModel(int bits) {
+        int hash_bits = bits;
+        if (hash_bits > 22) hash_bits = 22; // MAX: 4 million states = 32 MB RAM per active model
+        
+        mask = (bits == 64) ? ~0ULL : (1ULL << bits) - 1;
+        size_mask = (1U << hash_bits) - 1;
+        
+        counts.resize((size_mask + 1) * 2, 1); // init to 1 for smoothing
+    }
+    
+    uint32_t hash(uint64_t ctx) const {
+        ctx &= mask;
+        if (mask <= size_mask) return (uint32_t)ctx;
+        
+        // Fast hash for predicting histories longer than our exact memory
+        ctx ^= ctx >> 32;
+        ctx *= 0xbf58476d1ce4e5b9ULL;
+        ctx ^= ctx >> 32;
+        ctx *= 0x94d049bb133111ebULL;
+        ctx ^= ctx >> 32;
+        return (uint32_t)ctx & size_mask;
     }
     
     float predict(uint64_t ctx) {
-        uint32_t c0 = counts[ctx * 2 + 0];
-        uint32_t c1 = counts[ctx * 2 + 1];
+        uint32_t h = hash(ctx);
+        uint32_t c0 = counts[h * 2 + 0];
+        uint32_t c1 = counts[h * 2 + 1];
         return (float)c1 / (float)(c0 + c1);
     }
     
     void update(uint64_t ctx, int bit) {
-        uint32_t& c = counts[ctx * 2 + bit];
+        uint32_t h = hash(ctx);
+        uint32_t& c = counts[h * 2 + bit];
         if (c < 1000000) c++; // cap to avoid overflow/extreme inertia
     }
 };
@@ -152,7 +174,7 @@ struct ContextModel {
 // -----------------------------------------------------------------------------
 std::vector<uint8_t> cmix_encode(const uint8_t* data, size_t len) {
     BinRangeEncoder enc;
-    Mixer mixer(6); // 6 bit-level models
+    Mixer mixer(8); // 8 bit-level models
     
     ContextModel m0(0);  // Order-0 bit prior (overall 1 vs 0)
     ContextModel m1(8);  // Order-1 byte context
@@ -160,6 +182,8 @@ std::vector<uint8_t> cmix_encode(const uint8_t* data, size_t len) {
     ContextModel m3(24); // Order-3 byte context
     ContextModel m4(32); // Order-4 byte context
     ContextModel m5(40); // Order-5 byte context
+    ContextModel m6(48); // Order-6 byte context
+    ContextModel m7(56); // Order-7 byte context
     
     uint64_t history = 0; 
     
@@ -175,6 +199,8 @@ std::vector<uint8_t> cmix_encode(const uint8_t* data, size_t len) {
             int ctx3 = history & m3.mask;
             uint64_t ctx4 = history & m4.mask;
             uint64_t ctx5 = history & m5.mask;
+            uint64_t ctx6 = history & m6.mask;
+            uint64_t ctx7 = history & m7.mask;
             
             std::vector<float> preds = {
                 m0.predict(ctx0),
@@ -182,7 +208,9 @@ std::vector<uint8_t> cmix_encode(const uint8_t* data, size_t len) {
                 m2.predict(ctx2),
                 m3.predict(ctx3),
                 m4.predict(ctx4),
-                m5.predict(ctx5)
+                m5.predict(ctx5),
+                m6.predict(ctx6),
+                m7.predict(ctx7)
             };
             
             int p1 = mixer.mix(preds);
@@ -195,6 +223,8 @@ std::vector<uint8_t> cmix_encode(const uint8_t* data, size_t len) {
             m3.update(ctx3, bit);
             m4.update(ctx4, bit);
             m5.update(ctx5, bit);
+            m6.update(ctx6, bit);
+            m7.update(ctx7, bit);
             
             history = (history << 1) | bit;
         }
@@ -205,7 +235,7 @@ std::vector<uint8_t> cmix_encode(const uint8_t* data, size_t len) {
 std::vector<uint8_t> cmix_decode(const uint8_t* coded, size_t coded_len, size_t sym_count) {
     BinRangeDecoder dec;
     dec.init(coded, coded_len);
-    Mixer mixer(6);
+    Mixer mixer(8);
     
     ContextModel m0(0); 
     ContextModel m1(8); 
@@ -213,6 +243,8 @@ std::vector<uint8_t> cmix_decode(const uint8_t* coded, size_t coded_len, size_t 
     ContextModel m3(24);
     ContextModel m4(32);
     ContextModel m5(40);
+    ContextModel m6(48);
+    ContextModel m7(56);
     
     std::vector<uint8_t> out;
     out.reserve(sym_count);
@@ -228,6 +260,8 @@ std::vector<uint8_t> cmix_decode(const uint8_t* coded, size_t coded_len, size_t 
             int ctx3 = history & m3.mask;
             uint64_t ctx4 = history & m4.mask;
             uint64_t ctx5 = history & m5.mask;
+            uint64_t ctx6 = history & m6.mask;
+            uint64_t ctx7 = history & m7.mask;
             
             std::vector<float> preds = {
                 m0.predict(ctx0),
@@ -235,7 +269,9 @@ std::vector<uint8_t> cmix_decode(const uint8_t* coded, size_t coded_len, size_t 
                 m2.predict(ctx2),
                 m3.predict(ctx3),
                 m4.predict(ctx4),
-                m5.predict(ctx5)
+                m5.predict(ctx5),
+                m6.predict(ctx6),
+                m7.predict(ctx7)
             };
             
             int p1 = mixer.mix(preds);
@@ -248,6 +284,8 @@ std::vector<uint8_t> cmix_decode(const uint8_t* coded, size_t coded_len, size_t 
             m3.update(ctx3, bit);
             m4.update(ctx4, bit);
             m5.update(ctx5, bit);
+            m6.update(ctx6, bit);
+            m7.update(ctx7, bit);
             
             history = (history << 1) | bit;
             byte |= (bit << b);
