@@ -77,7 +77,8 @@ static void cmd_compress(const std::string& input, const std::string& output,
         exit(1);
     }
 
-    const char* mode_label = (mode == CompressMode::ULTRA) ? "PPM (--ultra)"
+    const char* mode_label = (mode == CompressMode::CMIX) ? "CMIX (--cmix)"
+                           : (mode == CompressMode::ULTRA) ? "PPM (--ultra)"
                            : (mode == CompressMode::BEST)  ? "BWT (--best)"
                            : "LZ77+delta (default)";
     printf("\n  Input   : %s\n",   input.c_str());
@@ -196,7 +197,7 @@ static void usage() {
         "\nmyzip - High-Performance Compressor (C++)\n"
         "\n"
         "Usage:\n"
-        "  myzip compress   <input> [-o <output>] [--best] [--ultra] [-v]\n"
+        "  myzip compress   <input> [-o <output>] [--best] [--ultra] [--cmix] [-v]\n"
         "  myzip decompress <input> [-o <output>] [-v]\n"
         "  myzip benchmark  <input>\n"
         "\n"
@@ -204,12 +205,14 @@ static void usage() {
         "  -o <path>   Output file path\n"
         "  --best      BWT+MTF+RLE+rANS mode (slower, better ratio on text)\n"
         "  --ultra     PPM order-4 + arithmetic coding (slow, best ratio)\n"
+        "  --cmix      Neural Net Context Mixing (slowest, world class ratio)\n"
         "  -v          Verbose output\n"
         "\n"
         "Examples:\n"
         "  myzip compress   data.txt\n"
         "  myzip compress   data.txt --best\n"
         "  myzip compress   data.txt --ultra\n"
+        "  myzip compress   data.txt --cmix\n"
         "  myzip compress   video.yuv -o video.myzip\n"
         "  myzip decompress video.myzip\n"
         "  myzip decompress video.myzip -o video_out.yuv\n"
@@ -241,6 +244,8 @@ int main(int argc, char* argv[]) {
             mode = CompressMode::BEST;
         } else if (a == "--ultra") {
             mode = CompressMode::ULTRA;
+        } else if (a == "--cmix") {
+            mode = CompressMode::CMIX;
         } else if (a[0] != '-') {
             if (input.empty()) input = a;
             else               output = a;  // positional output

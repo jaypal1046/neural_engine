@@ -5,6 +5,7 @@
 #include "ans.h"
 #include "bwt.h"
 #include "ppm.h"
+#include "cmix.h"
 
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
@@ -624,6 +625,43 @@ static std::vector<uint8_t> compress_block_ppm(
 }
 
 // -------------------------------------------------------
+// CMIX block compressor (v10 format / --cmix mode)
+// Block layout:
+//   1 byte : block_type  (0x00=CMIX_CODED, 0x01=STORED_RAW)
+//   if 0x00:
+//     4 bytes: sym_count
+//     N bytes: range-coded stream
+//   if 0x01:
+//     4 bytes: raw size
+//     N bytes: raw bytes
+// -------------------------------------------------------
+static std::vector<uint8_t> compress_block_cmix(
+    const uint8_t* data, size_t len,
+    ProgressCb& progress, size_t global_done, size_t global_total)
+{
+    if (progress) progress("cmix", global_done, global_total);
+
+    const size_t raw_size = 1 + 4 + len;  // STORED_RAW overhead
+
+    auto coded = cmix_encode(data, len);
+    size_t cmix_size = 1 + 4 + coded.size();
+
+    std::vector<uint8_t> out;
+    if (cmix_size < raw_size) {
+        out.reserve(cmix_size);
+        out.push_back(0x00);                          // CMIX_CODED
+        write_u32le(out, (uint32_t)len);
+        out.insert(out.end(), coded.begin(), coded.end());
+    } else {
+        out.reserve(raw_size);
+        out.push_back(0x01);                          // STORED_RAW
+        write_u32le(out, (uint32_t)len);
+        out.insert(out.end(), data, data + len);
+    }
+    return out;
+}
+
+// -------------------------------------------------------
 // compress_file  — Phase 18 streaming / memory-mapped I/O
 // -------------------------------------------------------
 // Input  : memory-mapped (OS paging — RAM = just the pages touched)
@@ -641,6 +679,7 @@ int compress_file(const std::string& input_path,
 {
     const bool best_mode  = (mode == CompressMode::BEST);
     const bool ultra_mode = (mode == CompressMode::ULTRA);
+    const bool cmix_mode  = (mode == CompressMode::CMIX);
 
     // --- 1. Memory-map the input file ---
     MappedFile mf;
@@ -657,9 +696,9 @@ int compress_file(const std::string& input_path,
     auto cksum = ctx.finish();
 
     // --- 3. Determine block layout ---
-    const uint32_t bsz = best_mode  ? BWT_BLOCK_SIZE
+    const uint32_t bsz = cmix_mode ? CMIX_BLOCK_SIZE
                        : ultra_mode ? PPM_BLOCK_SIZE
-                       : BLOCK_SIZE;
+                       : (best_mode ? BWT_BLOCK_SIZE : BLOCK_SIZE);
     uint32_t block_count = (uint32_t)((file_size + bsz - 1) / bsz);
     if (block_count == 0) block_count = 1;
 
@@ -676,7 +715,7 @@ int compress_file(const std::string& input_path,
     };
 
     // Header setup
-    uint8_t version_byte = ultra_mode ? 9 : (best_mode ? 8 : 7);
+    uint8_t version_byte = cmix_mode ? 10 : (ultra_mode ? 9 : (best_mode ? 8 : 7));
     uint8_t hdr[54] = {};
     hdr[0]='M'; hdr[1]='Z'; hdr[2]='I'; hdr[3]='P';
     hdr[4] = version_byte;
@@ -704,7 +743,9 @@ int compress_file(const std::string& input_path,
         const uint8_t* bdata = (file_size > 0) ? (mf.data + offset) : nullptr;
 
         std::vector<uint8_t> cblock;
-        if (ultra_mode)
+        if (cmix_mode)
+            cblock = compress_block_cmix(bdata, blen, progress, offset, file_size);
+        else if (ultra_mode)
             cblock = compress_block_ppm(bdata, blen, progress, offset, file_size);
         else if (best_mode)
             cblock = compress_block_bwt(bdata, blen, progress, offset, file_size);
@@ -784,9 +825,9 @@ int decompress_file(const std::string& input_path,
         fclose(fin); fprintf(stderr, "Not an MZIP file\n"); return 1;
     }
     uint8_t  version     = hdr[4];
-    if (version < 5 || version > 9) {
+    if (version < 5 || version > 10) {
         fclose(fin);
-        fprintf(stderr, "This decompressor handles v5-v9 (got v%d). Use Python for v4.\n", version);
+        fprintf(stderr, "This decompressor handles v5-v10 (got v%d). Use Python for v4.\n", version);
         return 1;
     }
     uint8_t  mode        = hdr[5];
@@ -916,24 +957,28 @@ int decompress_file(const std::string& input_path,
                 }
                 emit(block_out.data(), block_out.size());
 
-            } else if (version == 9) {
-                // v9: PPM + range coding
+            } else if (version == 9 || version == 10) {
+                // v9/v10
                 uint8_t block_type = *bp++;
-                std::vector<uint8_t> block_out;
                 if (block_type == 0x01) {
-                    uint32_t raw = read_u32le(bp); bp += 4;
-                    block_out.assign(bp, bp + raw);
+                    uint32_t raw_size = read_u32le(bp); bp += 4;
+                    emit(bp, raw_size);
                 } else if (block_type == 0x00) {
-                    uint32_t sc = read_u32le(bp); bp += 4;
-                    size_t coded_len = cs - 5;  // 1B type + 4B sym_count
-                    block_out = ppm_decode(bp, coded_len, sc);
+                    uint32_t sym_count = read_u32le(bp); bp += 4;
+                    size_t coded_len = cs - 1 - 4;
+                    if (version == 10) {
+                        auto out = cmix_decode(bp, coded_len, sym_count);
+                        emit(out.data(), out.size());
+                    } else {
+                        auto out = ppm_decode(bp, coded_len, sym_count);
+                        emit(out.data(), out.size());
+                    }
                 } else {
                     fclose(fin); fclose(fout);
-                    fprintf(stderr, "Unknown v9 block_type: 0x%02X\n", block_type); return 1;
+                    fprintf(stderr, "Unknown v9/v10 block type: %d\n", block_type);
+                    return 1;
                 }
-                emit(block_out.data(), block_out.size());
-
-            } else {
+            } else { // v7 or older
                 // v7: LZ77 + delta pre-filter + rANS order-0
                 uint8_t filter_type = *bp++;
                 AnsTable tbl = ans_read_freqs(bp); bp += 512;
