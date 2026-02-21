@@ -15,31 +15,29 @@ static inline float stretch(float p) {
     return std::log(p / (1.0f - p));
 }
 
-int Mixer::mix(const std::vector<float>& predictions) {
+int Mixer::mix(const float* stretched_preds, int n) {
     float dot = 0.0f;
-    for (size_t i = 0; i < weights.size(); ++i) {
-        dot += weights[i] * stretch(predictions[i]);
+    for (int i = 0; i < n; ++i) {
+        dot += weights[i] * stretched_preds[i];
     }
-    float p1 = squash(dot);
+    last_p1 = squash(dot);
     // Convert float probability [0, 1] to a 12-bit integer [1, 4095]
-    int p = (int)(p1 * 4096.0f);
+    int p = (int)(last_p1 * 4096.0f);
     if (p < 1) p = 1;
     if (p > 4095) p = 4095;
     return p;
 }
 
-void Mixer::update(int actual_bit, const std::vector<float>& predictions) {
-    // Learning rate
-    const float lr = 0.005f;
-    float dot = 0.0f;
-    for (size_t i = 0; i < weights.size(); ++i) {
-        dot += weights[i] * stretch(predictions[i]);
-    }
-    float p1 = squash(dot);
-    float error = (float)actual_bit - p1;
+void Mixer::update(int actual_bit, const float* stretched_preds, int n) {
+    // Dynamic learning rate: learn faster on chaotic data (p1 near 0.5)
+    // Slower on highly confident data (p1 near 0.0 or 1.0)
+    float confidence = std::abs(last_p1 - 0.5f);
+    float lr = 0.008f - (confidence * 0.012f);
+    if (lr < 0.001f) lr = 0.001f;
     
-    for (size_t i = 0; i < weights.size(); ++i) {
-        weights[i] += lr * error * stretch(predictions[i]);
+    float error = (float)actual_bit - last_p1;
+    for (int i = 0; i < n; ++i) {
+        weights[i] += lr * error * stretched_preds[i];
     }
 }
 
@@ -132,9 +130,9 @@ struct ContextModel {
     uint64_t mask;
     uint32_t size_mask;
     
-    ContextModel(int bits) {
+    ContextModel(int bits, int max_hash_bits = 22) {
         int hash_bits = bits;
-        if (hash_bits > 22) hash_bits = 22; // MAX: 4 million states = 32 MB RAM per active model
+        if (hash_bits > max_hash_bits) hash_bits = max_hash_bits; // limit dynamic size
         
         mask = (bits == 64) ? ~0ULL : (1ULL << bits) - 1;
         size_mask = (1U << hash_bits) - 1;
@@ -174,92 +172,82 @@ struct ContextModel {
 // -----------------------------------------------------------------------------
 std::vector<uint8_t> cmix_encode(const uint8_t* data, size_t len) {
     BinRangeEncoder enc;
-    Mixer mixer(16); // 16 bit-level models
+    int num_models = 68;
+    Mixer mixer(num_models);
     
-    ContextModel m0(0);  // Order-0 bit prior
-    ContextModel m1(8);  // 1-byte
-    ContextModel m2(16); // 2-byte
-    ContextModel m3(24); // 3-byte
-    ContextModel m4(32); // 4-byte
-    ContextModel m5(40); // 5-byte
-    ContextModel m6(48); // 6-byte
-    ContextModel m7(56); // 7-byte
-    ContextModel m8(64); // 8-byte
-    ContextModel m9(1);  // 1-bit
-    ContextModel m10(2); // 2-bit
-    ContextModel m11(3); // 3-bit
-    ContextModel m12(4); // 4-bit
-    ContextModel m13(5); // 5-bit
-    ContextModel m14(6); // 6-bit
-    ContextModel m15(7); // 7-bit
+    std::vector<ContextModel> models;
+    models.reserve(num_models);
+    models.emplace_back(0, 10); // 0: Order-0
+    for (int i = 1; i <= 8; i++) models.emplace_back(i * 8, 22); // 1-8: Bytes
+    for (int i = 1; i <= 7; i++) models.emplace_back(i, 20);     // 9-15: Bits
+    models.emplace_back(64, 22); // 16: Word Matcher
+    models.emplace_back(64, 20); // 17: Skip Matcher
+    for (int i = 1; i <= 16; i++) models.emplace_back(64, 18);   // 18-33: Sparce Bytes
+    for (int i = 1; i <= 16; i++) models.emplace_back(64, 18);   // 34-49: Audio Diffs
+    for (int i = 1; i <= 8; i++) models.emplace_back(64, 19);    // 50-57: Word Combinations
+    for (int i = 1; i <= 10; i++) models.emplace_back(64, 18);   // 58-67: Context Alignments
     
     uint64_t history = 0; 
+    uint32_t word_hash = 0;
+    uint32_t current_word = 0;
+    std::vector<uint8_t> last_bytes(32, 0);
+    std::vector<uint32_t> recent_words(16, 0);
+    std::vector<uint8_t> last_seen(256, 0);
     
+    float stretched[68];
+    uint64_t ctxs[68];
+    uint64_t masks[10] = {
+        0x5555555555555555ULL, 0x3333333333333333ULL, 0x0F0F0F0F0F0F0F0FULL,
+        0x00FF00FF00FF00FFULL, 0x0000FFFF0000FFFFULL, 0x00000000FFFFFFFFULL,
+        0xFEFEFEFEFEFEFEFEULL, 0x7F7F7F7F7F7F7F7FULL, 0xAAAAAAAAAAAAAAAAULL,
+        0xCCCCCCCCCCCCCCCCULL
+    };
+
     for (size_t i = 0; i < len; ++i) {
         uint8_t byte = data[i];
+        
         for (int b = 7; b >= 0; --b) {
             int bit = (byte >> b) & 1;
             
-            // Build contexts from the bit history
-            int ctx0 = 0;
-            int ctx1 = history & m1.mask;
-            int ctx2 = history & m2.mask;
-            int ctx3 = history & m3.mask;
-            uint64_t ctx4 = history & m4.mask;
-            uint64_t ctx5 = history & m5.mask;
-            uint64_t ctx6 = history & m6.mask;
-            uint64_t ctx7 = history & m7.mask;
-            uint64_t ctx8 = history & m8.mask;
-            uint64_t ctx9 = history & m9.mask;
-            uint64_t ctx10 = history & m10.mask;
-            uint64_t ctx11 = history & m11.mask;
-            uint64_t ctx12 = history & m12.mask;
-            uint64_t ctx13 = history & m13.mask;
-            uint64_t ctx14 = history & m14.mask;
-            uint64_t ctx15 = history & m15.mask;
+            ctxs[0] = 0;
+            for(int m=1; m<=15; ++m) ctxs[m] = history;
+            ctxs[16] = ((uint64_t)word_hash << 8) | (history & 0xFF);
+            ctxs[17] = ((uint64_t)last_bytes[1] << 16) | ((uint64_t)last_seen[last_bytes[1]] << 8) | (history & 0xFF);
             
-            std::vector<float> preds = {
-                m0.predict(ctx0),
-                m1.predict(ctx1),
-                m2.predict(ctx2),
-                m3.predict(ctx3),
-                m4.predict(ctx4),
-                m5.predict(ctx5),
-                m6.predict(ctx6),
-                m7.predict(ctx7),
-                m8.predict(ctx8),
-                m9.predict(ctx9),
-                m10.predict(ctx10),
-                m11.predict(ctx11),
-                m12.predict(ctx12),
-                m13.predict(ctx13),
-                m14.predict(ctx14),
-                m15.predict(ctx15)
-            };
+            for(int m=0; m<16; ++m) ctxs[18+m] = ((uint64_t)last_bytes[m] << 8) | (history & 0xFF);
+            for(int m=0; m<16; ++m) {
+                uint8_t diff = last_bytes[0] - last_bytes[m+1];
+                ctxs[34+m] = ((uint64_t)diff << 8) | (history & 0xFF);
+            }
+            for(int m=0; m<8; ++m) ctxs[50+m] = ((uint64_t)recent_words[m] << 8) | (history & 0xFF);
+            for(int m=0; m<10; ++m) ctxs[58+m] = history & masks[m];
+
+            for (int m = 0; m < 68; ++m) {
+                stretched[m] = stretch(models[m].predict(ctxs[m]));
+            }
             
-            int p1 = mixer.mix(preds);
+            int p1 = mixer.mix(stretched, 68);
             enc.encode(bit, p1);
-            mixer.update(bit, preds);
+            mixer.update(bit, stretched, 68);
             
-            m0.update(ctx0, bit);
-            m1.update(ctx1, bit);
-            m2.update(ctx2, bit);
-            m3.update(ctx3, bit);
-            m4.update(ctx4, bit);
-            m5.update(ctx5, bit);
-            m6.update(ctx6, bit);
-            m7.update(ctx7, bit);
-            m8.update(ctx8, bit);
-            m9.update(ctx9, bit);
-            m10.update(ctx10, bit);
-            m11.update(ctx11, bit);
-            m12.update(ctx12, bit);
-            m13.update(ctx13, bit);
-            m14.update(ctx14, bit);
-            m15.update(ctx15, bit);
-            
+            for (int m = 0; m < 68; ++m) {
+                models[m].update(ctxs[m], bit);
+            }
             history = (history << 1) | bit;
         }
+        
+        if (byte == ' ' || byte == '\n' || byte == '\r' || byte == '\t' || byte == '.' || byte == ',') {
+            for (int w = 15; w > 0; --w) recent_words[w] = recent_words[w - 1];
+            recent_words[0] = current_word;
+            word_hash = (word_hash * 31) ^ current_word;
+            current_word = 0;
+        } else {
+            current_word = (current_word * 31) + byte;
+        }
+        
+        last_seen[last_bytes[0]] = byte;
+        for (int m = 31; m > 0; --m) last_bytes[m] = last_bytes[m - 1];
+        last_bytes[0] = byte;
     }
     return enc.finish();
 }
@@ -267,93 +255,86 @@ std::vector<uint8_t> cmix_encode(const uint8_t* data, size_t len) {
 std::vector<uint8_t> cmix_decode(const uint8_t* coded, size_t coded_len, size_t sym_count) {
     BinRangeDecoder dec;
     dec.init(coded, coded_len);
-    Mixer mixer(16);
     
-    ContextModel m0(0); 
-    ContextModel m1(8); 
-    ContextModel m2(16);
-    ContextModel m3(24);
-    ContextModel m4(32);
-    ContextModel m5(40);
-    ContextModel m6(48);
-    ContextModel m7(56);
-    ContextModel m8(64);
-    ContextModel m9(1);
-    ContextModel m10(2);
-    ContextModel m11(3);
-    ContextModel m12(4);
-    ContextModel m13(5);
-    ContextModel m14(6);
-    ContextModel m15(7);
+    int num_models = 68;
+    Mixer mixer(num_models);
+    
+    std::vector<ContextModel> models;
+    models.reserve(num_models);
+    models.emplace_back(0, 10); 
+    for (int i = 1; i <= 8; i++) models.emplace_back(i * 8, 22);
+    for (int i = 1; i <= 7; i++) models.emplace_back(i, 20);
+    models.emplace_back(64, 22);
+    models.emplace_back(64, 20);
+    for (int i = 1; i <= 16; i++) models.emplace_back(64, 18);
+    for (int i = 1; i <= 16; i++) models.emplace_back(64, 18);
+    for (int i = 1; i <= 8; i++) models.emplace_back(64, 19);
+    for (int i = 1; i <= 10; i++) models.emplace_back(64, 18);
     
     std::vector<uint8_t> out;
     out.reserve(sym_count);
     
     uint64_t history = 0;
+    uint32_t word_hash = 0;
+    uint32_t current_word = 0;
+    std::vector<uint8_t> last_bytes(32, 0);
+    std::vector<uint32_t> recent_words(16, 0);
+    std::vector<uint8_t> last_seen(256, 0);
     
+    float stretched[68];
+    uint64_t ctxs[68];
+    uint64_t masks[10] = {
+        0x5555555555555555ULL, 0x3333333333333333ULL, 0x0F0F0F0F0F0F0F0FULL,
+        0x00FF00FF00FF00FFULL, 0x0000FFFF0000FFFFULL, 0x00000000FFFFFFFFULL,
+        0xFEFEFEFEFEFEFEFEULL, 0x7F7F7F7F7F7F7F7FULL, 0xAAAAAAAAAAAAAAAAULL,
+        0xCCCCCCCCCCCCCCCCULL
+    };
+
     for (size_t i = 0; i < sym_count; ++i) {
         uint8_t byte = 0;
+        
         for (int b = 7; b >= 0; --b) {
-            int ctx0 = 0;
-            int ctx1 = history & m1.mask;
-            int ctx2 = history & m2.mask;
-            int ctx3 = history & m3.mask;
-            uint64_t ctx4 = history & m4.mask;
-            uint64_t ctx5 = history & m5.mask;
-            uint64_t ctx6 = history & m6.mask;
-            uint64_t ctx7 = history & m7.mask;
-            uint64_t ctx8 = history & m8.mask;
-            uint64_t ctx9 = history & m9.mask;
-            uint64_t ctx10 = history & m10.mask;
-            uint64_t ctx11 = history & m11.mask;
-            uint64_t ctx12 = history & m12.mask;
-            uint64_t ctx13 = history & m13.mask;
-            uint64_t ctx14 = history & m14.mask;
-            uint64_t ctx15 = history & m15.mask;
+            ctxs[0] = 0;
+            for(int m=1; m<=15; ++m) ctxs[m] = history;
+            ctxs[16] = ((uint64_t)word_hash << 8) | (history & 0xFF);
+            ctxs[17] = ((uint64_t)last_bytes[1] << 16) | ((uint64_t)last_seen[last_bytes[1]] << 8) | (history & 0xFF);
             
-            std::vector<float> preds = {
-                m0.predict(ctx0),
-                m1.predict(ctx1),
-                m2.predict(ctx2),
-                m3.predict(ctx3),
-                m4.predict(ctx4),
-                m5.predict(ctx5),
-                m6.predict(ctx6),
-                m7.predict(ctx7),
-                m8.predict(ctx8),
-                m9.predict(ctx9),
-                m10.predict(ctx10),
-                m11.predict(ctx11),
-                m12.predict(ctx12),
-                m13.predict(ctx13),
-                m14.predict(ctx14),
-                m15.predict(ctx15)
-            };
+            for(int m=0; m<16; ++m) ctxs[18+m] = ((uint64_t)last_bytes[m] << 8) | (history & 0xFF);
+            for(int m=0; m<16; ++m) {
+                uint8_t diff = last_bytes[0] - last_bytes[m+1];
+                ctxs[34+m] = ((uint64_t)diff << 8) | (history & 0xFF);
+            }
+            for(int m=0; m<8; ++m) ctxs[50+m] = ((uint64_t)recent_words[m] << 8) | (history & 0xFF);
+            for(int m=0; m<10; ++m) ctxs[58+m] = history & masks[m];
+
+            for (int m = 0; m < 68; ++m) {
+                stretched[m] = stretch(models[m].predict(ctxs[m]));
+            }
             
-            int p1 = mixer.mix(preds);
+            int p1 = mixer.mix(stretched, 68);
             int bit = dec.decode(p1);
-            mixer.update(bit, preds);
+            mixer.update(bit, stretched, 68);
             
-            m0.update(ctx0, bit);
-            m1.update(ctx1, bit);
-            m2.update(ctx2, bit);
-            m3.update(ctx3, bit);
-            m4.update(ctx4, bit);
-            m5.update(ctx5, bit);
-            m6.update(ctx6, bit);
-            m7.update(ctx7, bit);
-            m8.update(ctx8, bit);
-            m9.update(ctx9, bit);
-            m10.update(ctx10, bit);
-            m11.update(ctx11, bit);
-            m12.update(ctx12, bit);
-            m13.update(ctx13, bit);
-            m14.update(ctx14, bit);
-            m15.update(ctx15, bit);
+            for (int m = 0; m < 68; ++m) {
+                models[m].update(ctxs[m], bit);
+            }
             
             history = (history << 1) | bit;
             byte |= (bit << b);
         }
+        
+        if (byte == ' ' || byte == '\n' || byte == '\r' || byte == '\t' || byte == '.' || byte == ',') {
+            for (int w = 15; w > 0; --w) recent_words[w] = recent_words[w - 1];
+            recent_words[0] = current_word;
+            word_hash = (word_hash * 31) ^ current_word;
+            current_word = 0;
+        } else {
+            current_word = (current_word * 31) + byte;
+        }
+        
+        last_seen[last_bytes[0]] = byte;
+        for (int m = 31; m > 0; --m) last_bytes[m] = last_bytes[m - 1];
+        last_bytes[0] = byte;
         out.push_back(byte);
     }
     return out;
