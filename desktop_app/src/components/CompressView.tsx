@@ -17,10 +17,9 @@ export function CompressView() {
                     <input type="file" ref={hiddenFileInput} style={{ display: 'none' }} onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
-                            // If running in browser, we can only get the file name, not absolute path due to security.
-                            // However, we just grab what we can to fulfill UI input.
                             (document.getElementById('input_file') as HTMLInputElement).value = file.name;
                             (document.getElementById('output_file') as HTMLInputElement).value = file.name + '.myzip';
+                            setTimeout(() => alert("Notice: Because you are running Neural Studio inside a standard Web Browser instead of the Desktop App, Javascript sandbox security prevents grabbing the absolute file path (e.g. C:/User/Data/...) \n\nWe have pasted the file's name into the box, but if it is not in the same folder as the server, you must manually type/paste the full C:/... path to compress it!"), 100);
                         }
                     }} />
 

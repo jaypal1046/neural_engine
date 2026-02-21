@@ -17,6 +17,7 @@ export function DecompressView() {
                         if (file) {
                             (document.getElementById('d_input_file') as HTMLInputElement).value = file.name;
                             (document.getElementById('d_output_file') as HTMLInputElement).value = file.name.replace('.myzip', '');
+                            setTimeout(() => alert("Notice: Because you are running Neural Studio inside a standard Web Browser instead of the Desktop App context, JS sandbox security prevents grabbing the absolute file path (e.g. C:/User/Data/...)\n\nWe have pasted the file's name into the box, but if it is not in the same folder as the server, you must manually type/paste the full C:/... path to decompress it!"), 100);
                         }
                     }} />
 

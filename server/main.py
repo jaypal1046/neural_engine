@@ -101,7 +101,7 @@ def compress_stream(payload: CompressRequest):
                 buf = b""
         process.wait()
 
-    return StreamingResponse(generator(), media_type="text/plain")
+    return StreamingResponse(generator(), media_type="text/event-stream", headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-cache"})
 
 @app.post("/api/decompress_stream")
 def decompress_stream(payload: DecompressRequest):
@@ -125,7 +125,7 @@ def decompress_stream(payload: DecompressRequest):
                 buf = b""
         process.wait()
 
-    return StreamingResponse(generator(), media_type="text/plain")
+    return StreamingResponse(generator(), media_type="text/event-stream", headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-cache"})
 
 class CommandRequest(BaseModel):
     command: str
