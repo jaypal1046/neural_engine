@@ -396,7 +396,7 @@ static std::vector<uint8_t> compress_block_with_filter(
     // LZ77
     auto lz_cb = [&](size_t done, size_t total) {
         if (progress)
-            progress("lz77", global_done + done, global_total);
+            progress("lz77", global_done + done, global_total, 0);
         (void)total;
     };
     auto tokens    = lz77_encode(src, src_len, lz_cb, use_lazy);
@@ -476,7 +476,7 @@ static std::vector<uint8_t> compress_block_bwt(
     const uint8_t* data, size_t len,
     ProgressCb& progress, size_t global_done, size_t global_total)
 {
-    if (progress) progress("bwt", global_done, global_total);
+    if (progress) progress("bwt", global_done, global_total, 0);
 
     // BWT
     std::vector<uint8_t> bwt_buf(len);
@@ -599,7 +599,7 @@ static std::vector<uint8_t> compress_block_ppm(
     const uint8_t* data, size_t len,
     ProgressCb& progress, size_t global_done, size_t global_total)
 {
-    if (progress) progress("ppm", global_done, global_total);
+    if (progress) progress("ppm", global_done, global_total, 0);
 
     const size_t raw_size = 1 + 4 + len;  // STORED_RAW overhead
 
@@ -639,11 +639,15 @@ static std::vector<uint8_t> compress_block_cmix(
     const uint8_t* data, size_t len,
     ProgressCb& progress, size_t global_done, size_t global_total)
 {
-    if (progress) progress("cmix", global_done, global_total);
+    if (progress) progress("cmix", global_done, global_total, 1046);
 
-    const size_t raw_size = 1 + 4 + len;  // STORED_RAW overhead
+    const size_t raw_size = 1 + 4 + len;
 
-    auto coded = cmix_encode(data, len);
+    auto cb = [&](size_t d, size_t t, int active) {
+        if (progress) progress("cmix", global_done + d, global_total, active);
+    };
+
+    auto coded = cmix_encode(data, len, cb);
     size_t cmix_size = 1 + 4 + coded.size();
 
     std::vector<uint8_t> out;
@@ -789,7 +793,7 @@ int compress_file(const std::string& input_path,
         }
     }
 
-    if (progress) progress("write", file_size, file_size);
+    if (progress) progress("write", file_size, file_size, 0);
     fclose(fout);
     unmap_file(mf);
     return 0;
@@ -1004,7 +1008,7 @@ int decompress_file(const std::string& input_path,
             }
 
             if (progress)
-                progress("decompress", recovered_size, (size_t)orig_size);
+                progress("decompress", recovered_size, (size_t)orig_size, 0);
         }
     }
 
@@ -1025,6 +1029,6 @@ int decompress_file(const std::string& input_path,
         return 1;
     }
 
-    if (progress) progress("write", (size_t)orig_size, (size_t)orig_size);
+    if (progress) progress("write", (size_t)orig_size, (size_t)orig_size, 0);
     return 0;
 }

@@ -12,7 +12,7 @@
 
 static auto g_start = std::chrono::steady_clock::now();
 
-static void print_progress(const char* stage, size_t done, size_t total) {
+static void print_progress(const char* stage, size_t done, size_t total, int models = 0) {
     if (total == 0) return;
 
     auto now     = std::chrono::steady_clock::now();
@@ -41,8 +41,15 @@ static void print_progress(const char* stage, size_t done, size_t total) {
     char slabel[8];
     snprintf(slabel, sizeof(slabel), "%-7s", stage);
 
-    printf("\r  [%s] %s  %5.1f%%  %5.1f/%5.1f MB  ETA %s",
-           bar, slabel, pct * 100.0, mb_done, mb_total, eta_str);
+    double mb_per_sec = (elapsed > 0) ? (mb_done / elapsed) : 0.0;
+    
+    if (models > 0) {
+        printf("\r  [%s] %s  %5.1f%%  %5.1f/%5.1f MB  ETA %s  [%.2f MB/s] Models: %4d   ",
+               bar, slabel, pct * 100.0, mb_done, mb_total, eta_str, mb_per_sec, models);
+    } else {
+        printf("\r  [%s] %s  %5.1f%%  %5.1f/%5.1f MB  ETA %s  [%.2f MB/s]               ",
+               bar, slabel, pct * 100.0, mb_done, mb_total, eta_str, mb_per_sec);
+    }
     fflush(stdout);
 
     if (done >= total) {
@@ -88,12 +95,12 @@ static void cmd_compress(const std::string& input, const std::string& output,
 
     g_start = std::chrono::steady_clock::now();
 
-    bool show_bar = (in_size > 500 * 1024);
+    bool show_bar = true;
     ProgressCb cb = nullptr;
     if (show_bar) {
-        cb = [](const char* stage, size_t done, size_t total) {
+        cb = [](const char* stage, size_t done, size_t total, int models) {
             if (strcmp(stage, "write") != 0)   // skip the write stage
-                print_progress(stage, done, total);
+                print_progress(stage, done, total, models);
         };
     }
 
@@ -127,9 +134,9 @@ static void cmd_decompress(const std::string& input, const std::string& output,
     bool show_bar = (in_size > 100 * 1024);
     ProgressCb cb = nullptr;
     if (show_bar) {
-        cb = [](const char* stage, size_t done, size_t total) {
+        cb = [](const char* stage, size_t done, size_t total, int models) {
             if (strcmp(stage, "decompress") == 0)
-                print_progress(stage, done, total);
+                print_progress(stage, done, total, models);
         };
     }
 

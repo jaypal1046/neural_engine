@@ -61,8 +61,8 @@ static constexpr uint32_t BWT_BLOCK_SIZE = 16 * 1024 * 1024; // 16 MB — v8 BES
 static constexpr uint32_t PPM_BLOCK_SIZE = 512 * 1024; // 512 KB — v9 ULTRA
 static constexpr uint32_t CMIX_BLOCK_SIZE = 512 * 1024; // 512 KB — v10 CMIX
 
-// Progress callback: (stage, bytes_done, bytes_total)
-using ProgressCb = std::function<void(const char*, size_t, size_t)>;
+// Progress callback: (stage, bytes_done, bytes_total, active_models)
+using ProgressCb = std::function<void(const char*, size_t, size_t, int)>;
 
 // -----------------------------------------------------------------------------
 // Compression mode — single flag replaces the old (best_mode, ultra_mode) pair.
