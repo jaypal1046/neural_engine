@@ -1058,17 +1058,497 @@ def extract_file_path(text: str) -> Optional[str]:
                 return word
     return None
 
+# =============================================================================
+# OLD BRAIN - DISABLED (Now using C++ neural_engine.exe)
+# =============================================================================
+
+# OLD PYTHON BRAIN - REMOVED
+# Replaced by C++ Smart Brain in neural_engine.exe (see lines 1546+)
+#
+# from neural_brain import (
+#     ensure_brain, store_knowledge, retrieve_knowledge,
+#     generate_response, learn_from_url, remember_conversation,
+#     brain_stats, get_knowledge_text
+# )
+
+class LearnRequest(BaseModel):
+    topic: str
+    content: str
+    source: str = "user"
+
+class LearnURLRequest(BaseModel):
+    topic: str
+    url: str
+
+class AskRequest(BaseModel):
+    question: str
+
+class BrainSearchRequest(BaseModel):
+    query: str
+    top_k: int = 5
+
+@app.post("/api/brain/learn")
+def brain_learn(payload: LearnRequest):
+    """Teach the brain new knowledge — it will be compressed and indexed."""
+    try:
+        result = store_knowledge(payload.topic, payload.content, source=payload.source)
+        return {"status": "success", **result}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/api/brain/learn_url")
+def brain_learn_url(payload: LearnURLRequest):
+    """Learn from a web page — scrape, extract, compress, and index."""
+    try:
+        result = learn_from_url(payload.topic, payload.url)
+        if "error" in result:
+            return result
+        return {"status": "success", **result}
+    except Exception as e:
+        return {"error": str(e)}
+
+class LearnFileRequest(BaseModel):
+    file_path: str
+    topic: Optional[str] = None
+
+@app.post("/api/brain/learn_file")
+def brain_learn_file(payload: LearnFileRequest):
+    """Learn from any local file — supports PDF, DOCX, XLSX, code, text, etc."""
+    path = os.path.expanduser(payload.file_path)
+    
+    if not os.path.exists(path):
+        return {"error": f"File not found: {path}"}
+    if os.path.isdir(path):
+        return {"error": "That's a directory. Use /api/brain/train to scan directories."}
+    
+    try:
+        from file_converter import extract_text, can_read
+        
+        if not can_read(path):
+            return {"error": f"Cannot extract text from this file type: {os.path.splitext(path)[1]}"}
+        
+        text = extract_text(path)
+        if not text or len(text.strip()) < 20:
+            return {"error": "Could not extract meaningful text from the file."}
+        
+        topic = payload.topic or os.path.splitext(os.path.basename(path))[0]
+        result = store_knowledge(topic, text, source="local_file")
+        return {"status": "success", "file": os.path.basename(path), **result}
+    except Exception as e:
+        return {"error": str(e)}
+
+class TrainRequest(BaseModel):
+    mode: str = "all"   # "local", "web", "all"
+    deep: bool = False
+
+@app.post("/api/brain/train")
+def brain_train(payload: TrainRequest):
+    """Trigger dynamic training — scan local files and/or learn from web."""
+    try:
+        sys_path_backup = sys.path.copy()
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        
+        from train_basics import scan_local_files, learn_from_web, SELF_KNOWLEDGE
+        
+        results = {"items_learned": 0}
+        
+        # Self knowledge
+        store_knowledge("neural studio identity", SELF_KNOWLEDGE.strip(), source="self")
+        results["items_learned"] += 1
+        
+        if payload.mode in ("local", "all"):
+            local_count = scan_local_files(deep=payload.deep)
+            results["local_files_learned"] = local_count
+            results["items_learned"] += local_count
+        
+        if payload.mode in ("web", "all"):
+            web_count = learn_from_web(deep=payload.deep)
+            results["web_sources_learned"] = web_count
+            results["items_learned"] += web_count
+        
+        stats = brain_stats()
+        results["total_knowledge"] = stats["total_knowledge_items"]
+        results["vocabulary_size"] = stats["vocabulary_size"]
+        results["compression_savings"] = stats["compression_savings_pct"]
+        results["status"] = "success"
+        
+        sys.path = sys_path_backup
+        return results
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/api/brain/ask")
+def brain_ask(payload: AskRequest):
+    """Ask the brain a question — retrieves from compressed knowledge."""
+    try:
+        result = generate_response(payload.question)
+        # Remember conversation
+        remember_conversation(payload.question, result.get("response", ""))
+        return {"status": "success", **result}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/api/brain/search")
+def brain_search(payload: BrainSearchRequest):
+    """Search the brain's knowledge base."""
+    try:
+        results = retrieve_knowledge(payload.query, top_k=payload.top_k)
+        return {"status": "success", "results": results, "count": len(results)}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/api/brain/stats")
+def brain_get_stats():
+    """Get brain statistics — knowledge items, compression savings, vocabulary size."""
+    try:
+        stats = brain_stats()
+        return {"status": "success", **stats}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/api/brain/knowledge/{entry_id}")
+def brain_get_knowledge(entry_id: str):
+    """Get the full text of a knowledge entry."""
+    try:
+        text = get_knowledge_text(entry_id)
+        if text is None:
+            return {"error": f"Knowledge entry '{entry_id}' not found."}
+        return {"status": "success", "entry_id": entry_id, "content": text}
+    except Exception as e:
+        return {"error": str(e)}
+
+# =============================================================================
+# Neural Engine — C++ Accelerated (math, transformer, embeddings)
+# =============================================================================
+
+NEURAL_ENGINE = os.path.join(BASE_DIR, "bin", "neural_engine.exe")
+
+def run_neural_engine(cmd: str, *args) -> dict:
+    """Call the C++ neural engine and parse JSON output."""
+    if not os.path.exists(NEURAL_ENGINE):
+        return {"error": "Neural engine not compiled. Run: g++ -O3 -std=c++17 -o bin/neural_engine.exe src/neural_engine.cpp"}
+    try:
+        full_cmd = [NEURAL_ENGINE, cmd] + list(args)
+        result = subprocess.run(full_cmd, capture_output=True, text=True, timeout=30)
+        if result.returncode == 0 and result.stdout.strip():
+            return json.loads(result.stdout.strip())
+        return {"error": result.stderr or "No output"}
+    except subprocess.TimeoutExpired:
+        return {"error": "Neural engine timed out"}
+    except json.JSONDecodeError:
+        return {"error": "Invalid JSON from neural engine"}
+    except Exception as e:
+        return {"error": str(e)}
+
+class MathEvalRequest(BaseModel):
+    expression: str
+
+class MathProcessRequest(BaseModel):
+    query: str
+
+class MathStatsRequest(BaseModel):
+    values: list
+
+@app.post("/api/math/eval")
+def math_eval_endpoint(payload: MathEvalRequest):
+    """Evaluate a mathematical expression via C++ engine."""
+    result = run_neural_engine("math", payload.expression)
+    return result
+
+@app.post("/api/math/process")
+def math_process_endpoint(payload: MathProcessRequest):
+    """Process a math query via C++ engine."""
+    # For natural language math, extract expression and send to C++ engine
+    import re
+    expr = re.sub(r'^(calculate|compute|eval|evaluate|what is|solve|math)\s*', '', payload.query.lower()).strip().rstrip('?.')
+    result = run_neural_engine("math", expr)
+    if "error" not in result:
+        result["type"] = "expression"
+        result["explanation"] = f"{expr} = {result.get('result', '')}"
+    return result
+
+@app.post("/api/math/stats")
+def math_stats_endpoint(payload: MathStatsRequest):
+    """Compute statistics (uses Python for now, simple math)."""
+    try:
+        values = sorted([float(v) for v in payload.values])
+        n = len(values)
+        if n == 0:
+            return {"error": "Empty dataset"}
+        mean_val = sum(values) / n
+        median_val = values[n // 2] if n % 2 else (values[n//2 - 1] + values[n//2]) / 2
+        variance = sum((x - mean_val) ** 2 for x in values) / max(n - 1, 1)
+        import math
+        return {
+            "status": "success", "count": n, "sum": sum(values),
+            "mean": round(mean_val, 6), "median": round(median_val, 6),
+            "min": values[0], "max": values[-1], "range": values[-1] - values[0],
+            "variance": round(variance, 6), "std_dev": round(math.sqrt(variance), 6),
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+# --- Transformer API (C++ engine) ---
+
+class TransformerTrainRequest(BaseModel):
+    text: str
+
+class TransformerGenerateRequest(BaseModel):
+    prompt: str
+    max_tokens: int = 30
+    temperature: float = 0.7
+
+class TransformerEncodeRequest(BaseModel):
+    text: str
+
+class TransformerSimilarityRequest(BaseModel):
+    text1: str
+    text2: str
+
+@app.post("/api/transformer/train")
+def transformer_train(payload: TransformerTrainRequest):
+    """Train the transformer via C++ engine."""
+    # Write text to temp file, train
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+        f.write(payload.text)
+        tmp = f.name
+    try:
+        result = run_neural_engine("train", tmp)
+        return result
+    finally:
+        try: os.unlink(tmp)
+        except: pass
+
+@app.post("/api/transformer/generate")
+def transformer_generate(payload: TransformerGenerateRequest):
+    """Generate text via C++ engine."""
+    return run_neural_engine("generate", payload.prompt, str(payload.max_tokens))
+
+@app.post("/api/transformer/predict")
+def transformer_predict(payload: TransformerTrainRequest):
+    """Predict next words via C++ engine."""
+    return run_neural_engine("predict", payload.text)
+
+@app.post("/api/transformer/encode")
+def transformer_encode(payload: TransformerEncodeRequest):
+    """Encode text via C++ engine."""
+    return run_neural_engine("encode", payload.text)
+
+@app.post("/api/transformer/similarity")
+def transformer_similarity(payload: TransformerSimilarityRequest):
+    """Compute similarity via C++ engine."""
+    return run_neural_engine("similarity", payload.text1, payload.text2)
+
+@app.get("/api/transformer/stats")
+def transformer_stats():
+    """Get C++ transformer stats."""
+    return run_neural_engine("stats")
+
+# =============================================================================
+# Neural Reasoning — Intelligent Processing Pipeline
+# =============================================================================
+
+from neural_reasoning import (
+    process_input, update_context, get_context,
+    detect_intent, extract_entity,
+    compose_greeting, compose_thanks, compose_goodbye, compose_opinion, compose_unknown,
+    assess_knowledge, extract_learnable_facts
+)
+
+class ThinkRequest(BaseModel):
+    message: str
+
+@app.post("/api/brain/think")
+def brain_think(payload: ThinkRequest):
+    """
+    The main intelligence endpoint. Processes natural language,
+    detects intent, extracts entities, and routes to the right handler.
+    This makes the brain an independent assistant.
+    """
+    try:
+        # Step 1: Reasoning pipeline
+        analysis = process_input(payload.message)
+        intent = analysis["intent"]["intent"]
+        confidence = analysis["intent"]["confidence"]
+        entities = analysis["entities"]
+        
+        response_text = ""
+        response_data = {}
+        
+        # Step 2: Route based on intent
+        
+        # ─── Greeting ───
+        if intent == "greeting":
+            response_text = compose_greeting()
+        
+        # ─── Thanks ───
+        elif intent == "thanks":
+            response_text = compose_thanks()
+        
+        # ─── Goodbye ───
+        elif intent == "goodbye":
+            response_text = compose_goodbye()
+        
+        # ─── Math ───
+        elif intent == "math":
+            expr = entities.get("expression", payload.message)
+            result = process_math_query(expr)
+            if result.get("type") == "unknown":
+                response_text = result.get("error", "Could not compute.")
+            elif result.get("type") == "expression":
+                response_text = f"`{result['expression']}` = **{result['result']}**"
+            elif result.get("type") == "statistics":
+                if isinstance(result["result"], dict):
+                    s = result["result"]
+                    response_text = (f"Statistics for [{', '.join(str(v) for v in result['data'])}]:\n\n"
+                                   f"Mean: **{s['mean']}** | Median: **{s['median']}** | "
+                                   f"Std Dev: **{s['std_dev']}** | Range: **{s['range']}**")
+                else:
+                    response_text = f"{result.get('function', 'Result')}: **{result['result']}**"
+            elif result.get("type") == "entropy":
+                response_text = f"Shannon Entropy: **{result['result']} bits**"
+            else:
+                response_text = f"**{result.get('explanation', result.get('result', 'Done'))}**"
+            response_data = result
+        
+        # ─── Ask / Knowledge Query ───
+        elif intent == "ask" or intent == "opinion":
+            question = entities.get("question", payload.message)
+            brain_result = generate_response(question)
+            
+            if brain_result["confidence"] > 0.1:
+                response_text = brain_result["response"]
+                if brain_result.get("sources"):
+                    response_text += "\n\n📚 " + ", ".join(
+                        f"*{s['topic']}*" for s in brain_result["sources"][:3]
+                    )
+                response_data = brain_result
+            else:
+                if intent == "opinion":
+                    response_text = compose_opinion(question, None)
+                else:
+                    # Self-assess knowledge
+                    assessment = assess_knowledge(question, brain_stats, retrieve_knowledge)
+                    response_text = assessment["suggestion"]
+                    response_data = assessment
+            
+            remember_conversation(question, response_text[:200])
+        
+        # ─── Learn ───
+        elif intent == "learn":
+            topic = entities.get("topic", "")
+            content = entities.get("content", "")
+            if topic and content:
+                result = store_knowledge(topic, content, source="user")
+                response_text = (f"🧠 **Learned about {topic}!**\n\n"
+                               f"Tokens: {result.get('token_count', 0)} | "
+                               f"Compressed: {result.get('savings_pct', 0)}% saved\n\n"
+                               f"Ask me about it anytime!")
+                response_data = result
+            else:
+                response_text = ("To teach me, say:\n\n"
+                               "`learn [topic]: [information]`\n\n"
+                               "Example: `learn quantum: Quantum mechanics is the physics of the very small...`")
+        
+        # ─── Analyze ───
+        elif intent == "analyze" and entities.get("file_path"):
+            fp = entities["file_path"]
+            if os.path.exists(fp):
+                file_size = os.path.getsize(fp)
+                with open(fp, "rb") as f:
+                    data = f.read(min(file_size, 16*1024*1024))
+                ent = compute_entropy(data)
+                file_info = detect_file_type(data, fp)
+                ai = generate_ai_insights(fp, file_size, ent, file_info)
+                response_text = (f"📊 **Analysis: {os.path.basename(fp)}**\n\n"
+                               f"Size: {file_size:,} bytes | Entropy: **{ent:.4f} bpb**\n"
+                               f"Type: {file_info.get('category', 'unknown')} | "
+                               f"Recommended: **{ai.get('recommended_algorithm', 'auto')}**\n"
+                               f"Est. savings: **{ai.get('compression_estimate_pct', 0)}%**")
+                response_data = {"entropy": ent, "ai": ai}
+            else:
+                response_text = f"File not found: `{fp}`"
+        
+        # ─── Status ───
+        elif intent == "status":
+            uptime = time.time() - START_TIME
+            stats = brain_stats()
+            response_text = (f"🟢 **Neural Studio V10 Online**\n\n"
+                           f"Uptime: {int(uptime)}s | Engine: CMIX\n"
+                           f"Brain: **{stats.get('total_knowledge_items', 0)}** items, "
+                           f"**{stats.get('vocabulary_size', 0)}** words\n"
+                           f"Compression savings: {stats.get('compression_savings_pct', 0)}%")
+        
+        # ─── Help ───
+        elif intent == "help":
+            response_text = ("**🧠 Neural Studio AI — I understand natural language!**\n\n"
+                           "Just talk to me naturally. I understand:\n\n"
+                           "**Learning:** \"learn about X: ...\" · \"study this URL\" · \"read this file\"\n"
+                           "**Questions:** \"what is entropy?\" · \"explain compression\" · \"how does BWT work?\"\n"
+                           "**Math:** \"calculate 2^10\" · \"what's the mean of 10 20 30\" · \"entropy of 0.5 0.3 0.2\"\n"
+                           "**Files:** \"list my files\" · \"read that document\" · \"find all PDFs\"\n"
+                           "**Compression:** \"compress this file\" · \"analyze it\" · \"store in vault\"\n"
+                           "**System:** \"status\" · \"train\" · \"brain stats\"\n\n"
+                           "I learn from every conversation and remember context. No explicit commands needed!")
+        
+        # ─── Recall ───
+        elif intent == "recall":
+            ctx = get_context()
+            if ctx.history:
+                recent = ctx.history[-5:]
+                lines = [f"• *You:* {t['user'][:60]}... → *Me:* {t['intent']}" for t in recent]
+                response_text = (f"**Recent conversation:**\n\n" + "\n".join(lines) +
+                               f"\n\nTopics: {', '.join(ctx.topics_discussed[-5:]) if ctx.topics_discussed else 'none'}")
+            else:
+                response_text = "We haven't talked much yet this session. Ask me something!"
+        
+        # ─── Fallback: Try asking knowledge base ───
+        else:
+            brain_result = generate_response(payload.message)
+            if brain_result["confidence"] > 0.15:
+                response_text = brain_result["response"]
+                if brain_result.get("sources"):
+                    response_text += "\n\n📚 " + ", ".join(
+                        f"*{s['topic']}*" for s in brain_result["sources"][:3]
+                    )
+                response_data = brain_result
+            else:
+                response_text = compose_unknown(payload.message, get_context())
+        
+        # Step 3: Update context
+        update_context(payload.message, response_text, intent, entities)
+        
+        # Step 4: Auto-learn from conversation
+        facts = extract_learnable_facts(payload.message, response_text)
+        auto_learned = 0
+        for fact in facts:
+            if fact["confidence"] > 0.7:
+                try:
+                    store_knowledge("conversation_fact", fact["text"], source="auto_learn")
+                    auto_learned += 1
+                except:
+                    pass
+        
+        return {
+            "status": "success",
+            "response": response_text,
+            "intent": intent,
+            "confidence": confidence,
+            "entities": entities,
+            "is_followup": analysis["is_followup"],
+            "context": analysis["context_summary"],
+            "auto_learned": auto_learned,
+            **response_data,
+        }
+        
+    except Exception as e:
+        return {"error": str(e), "response": f"Something went wrong: {str(e)}"}
+
 
 # =============================================================================
 # Smart Brain API Endpoints (C++ Engine Integration)
 # =============================================================================
-
-# Request models for Smart Brain
-class LearnRequest(BaseModel):
-    source: str  # URL or file path
-
-class AskRequest(BaseModel):
-    question: str
 
 @app.post("/api/brain/learn")
 async def brain_learn(req: LearnRequest):
@@ -1161,10 +1641,10 @@ async def brain_status():
 
 if __name__ == "__main__":
     ensure_vault()
-    # ensure_brain() - OLD Python brain removed, using C++ neural_engine.exe now
+    ensure_brain()
     print("\n  +----------------------------------------------------+")
     print("  |   Neural Studio V10 -- AI Compression API          |")
-    print("  |   C++ Neural Engine + Smart Brain + Vault          |")
+    print("  |   1,046-Advisor CMIX + Neural Brain + Vault        |")
     print("  +----------------------------------------------------+\n")
     uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
 

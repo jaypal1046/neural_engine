@@ -49,6 +49,14 @@
 #include <cassert>
 #include <regex>
 
+// Smart Brain integration
+#ifdef INCLUDE_SMART_BRAIN
+#include "knowledge_manager.h"
+#endif
+
+// Compression integration
+#include "compressor.h"
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -1323,6 +1331,81 @@ int main(int argc, char* argv[]) {
         double ent = byte_entropy(data);
         std::cout << "{\"status\":\"success\",\"entropy\":" << ent
                   << ",\"size\":" << data.size() << "}" << std::endl;
+    }
+    // Smart Brain commands (delegate to knowledge_manager)
+    else if (cmd == "learn" && argc >= 3) {
+        // neural_engine learn <url>
+        #ifdef INCLUDE_SMART_BRAIN
+        learn_and_store(argv[2]);
+        #else
+        std::cout << "{\"error\":\"Smart Brain not compiled in. Rebuild with -DINCLUDE_SMART_BRAIN\"}" << std::endl;
+        #endif
+    }
+    else if (cmd == "ask" && argc >= 3) {
+        // neural_engine ask "<question>"
+        std::string question;
+        for (int i = 2; i < argc; i++) { if (i > 2) question += " "; question += argv[i]; }
+        #ifdef INCLUDE_SMART_BRAIN
+        answer_from_knowledge(question);
+        #else
+        std::cout << "{\"error\":\"Smart Brain not compiled in. Rebuild with -DINCLUDE_SMART_BRAIN\"}" << std::endl;
+        #endif
+    }
+    else if (cmd == "status" && argc == 2) {
+        // neural_engine status
+        #ifdef INCLUDE_SMART_BRAIN
+        show_brain_status();
+        #else
+        std::cout << "{\"error\":\"Smart Brain not compiled in. Rebuild with -DINCLUDE_SMART_BRAIN\"}" << std::endl;
+        #endif
+    }
+    else if (cmd == "compress" && argc >= 3) {
+        // neural_engine compress <file> [--best|--ultra|--cmix]
+        std::string input_file = argv[2];
+        std::string output_file = input_file + ".myzip";
+        CompressMode mode = CompressMode::DEFAULT;
+
+        // Parse compression mode
+        if (argc >= 4) {
+            std::string flag = argv[3];
+            if (flag == "--best") mode = CompressMode::BEST;
+            else if (flag == "--ultra") mode = CompressMode::ULTRA;
+            else if (flag == "--cmix") mode = CompressMode::CMIX;
+        }
+
+        try {
+            compress_file(input_file, output_file, nullptr, mode);
+            std::cout << "{\"status\":\"success\",\"input\":\"" << input_file
+                      << "\",\"output\":\"" << output_file << "\"}" << std::endl;
+        } catch (const std::exception& e) {
+            std::cout << "{\"error\":\"" << e.what() << "\"}" << std::endl;
+            return 1;
+        }
+    }
+    else if (cmd == "decompress" && argc >= 3) {
+        // neural_engine decompress <file.myzip> [output_file]
+        std::string input_file = argv[2];
+        std::string output_file;
+
+        if (argc >= 4) {
+            output_file = argv[3];
+        } else {
+            // Remove .myzip extension
+            if (input_file.size() > 6 && input_file.substr(input_file.size() - 6) == ".myzip") {
+                output_file = input_file.substr(0, input_file.size() - 6);
+            } else {
+                output_file = input_file + ".decompressed";
+            }
+        }
+
+        try {
+            decompress_file(input_file, output_file, nullptr);
+            std::cout << "{\"status\":\"success\",\"input\":\"" << input_file
+                      << "\",\"output\":\"" << output_file << "\"}" << std::endl;
+        } catch (const std::exception& e) {
+            std::cout << "{\"error\":\"" << e.what() << "\"}" << std::endl;
+            return 1;
+        }
     }
     else {
         std::cout << "{\"error\":\"Unknown command: " << cmd << "\"}" << std::endl;

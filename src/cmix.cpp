@@ -1,6 +1,9 @@
 #include "cmix.h"
 #include <cmath>
 #include <vector>
+#include <fstream>
+#include <string>
+#include <cstdint>
 
 // -----------------------------------------------------------------------------
 // Logistic Mixer
@@ -41,7 +44,7 @@ void Mixer::update(int actual_bit, const std::vector<float>& stretched_preds, co
     float confidence = std::abs(last_p1 - 0.5f);
     float lr = 0.008f - (confidence * 0.012f);
     if (lr < 0.001f) lr = 0.001f;
-    
+
     float error = (float)actual_bit - last_p1;
     int n = active_models.size();
     #pragma GCC ivdep
@@ -52,6 +55,40 @@ void Mixer::update(int actual_bit, const std::vector<float>& stretched_preds, co
         global_weights[m] += update_val;
         niche_weights[m * 256 + last_byte] += update_val * 2.0f; // Niche expertise learns faster
     }
+}
+
+void Mixer::save_weights(const std::string& path) const {
+    std::ofstream f(path, std::ios::binary);
+    if (!f) return;  // Silently fail if can't save
+
+    // Write global weights
+    uint32_t n_global = global_weights.size();
+    f.write((char*)&n_global, sizeof(n_global));
+    f.write((char*)global_weights.data(), n_global * sizeof(float));
+
+    // Write niche weights
+    uint32_t n_niche = niche_weights.size();
+    f.write((char*)&n_niche, sizeof(n_niche));
+    f.write((char*)niche_weights.data(), n_niche * sizeof(float));
+}
+
+bool Mixer::load_weights(const std::string& path) {
+    std::ifstream f(path, std::ios::binary);
+    if (!f) return false;  // File doesn't exist yet
+
+    // Read global weights
+    uint32_t n_global;
+    f.read((char*)&n_global, sizeof(n_global));
+    if (n_global != global_weights.size()) return false;  // Size mismatch
+    f.read((char*)global_weights.data(), n_global * sizeof(float));
+
+    // Read niche weights
+    uint32_t n_niche;
+    f.read((char*)&n_niche, sizeof(n_niche));
+    if (n_niche != niche_weights.size()) return false;
+    f.read((char*)niche_weights.data(), n_niche * sizeof(float));
+
+    return true;
 }
 
 // -----------------------------------------------------------------------------

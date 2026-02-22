@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
+#include <string>
 
 // =============================================================================
 // Context Mixing (CMIX) — The "PAQ" Architecture
@@ -25,7 +26,7 @@ struct Mixer {
     std::vector<float> global_weights;
     std::vector<float> niche_weights; // Flattend to 1D for Cache Speed
     float last_p1;
-    
+
     Mixer(int num_models);
 
     // 1. Combine probabilities from models into a single bit prediction (0-4095)
@@ -33,6 +34,10 @@ struct Mixer {
 
     // 2. Gradient Descent: Adjust weights based on the actual bit that occurred
     void update(int actual_bit, const std::vector<float>& stretched_preds, const std::vector<int>& active_models, uint8_t last_byte);
+
+    // 3. Persistent weights: Save/load neural network state
+    void save_weights(const std::string& path) const;
+    bool load_weights(const std::string& path);
 };
 
 #include <functional> // needed for std::function

@@ -22,7 +22,7 @@ export function Sidebar({ activeTab, setActiveTab }: Props) {
             <hr className="divider" />
             <ul className="nav-links">
                 <li className={activeTab === 'helper' ? 'active' : ''} onClick={() => setActiveTab('helper')}>
-                    <BrainCircuit size={16} style={{ marginRight: '12px' }} /> AI Copilot
+                    <BrainCircuit size={16} style={{ marginRight: '12px' }} /> 🧠 AI Copilot
                 </li>
                 <li className={activeTab === 'compress' ? 'active' : ''} onClick={() => setActiveTab('compress')}>
                     <ArrowDownToLine size={16} style={{ marginRight: '12px' }} /> Compress

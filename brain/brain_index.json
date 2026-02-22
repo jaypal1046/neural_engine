@@ -1,9 +1,9 @@
 {
   "version": "1.0",
   "created": "2026-02-22T05:14:47Z",
-  "total_knowledge_items": 19,
-  "total_raw_bytes": 340330,
-  "total_compressed_bytes": 112132,
+  "total_knowledge_items": 20,
+  "total_raw_bytes": 340389,
+  "total_compressed_bytes": 112245,
   "topics": {
     "neural studio identity": {
       "count": 1,
@@ -99,6 +99,11 @@
       "count": 1,
       "first_seen": "2026-02-22T05:41:47Z",
       "last_updated": "2026-02-22T05:41:47Z"
+    },
+    "creator of Neural Studio": {
+      "count": 1,
+      "first_seen": "2026-02-22T11:39:48Z",
+      "last_updated": "2026-02-22T11:39:48Z"
     }
   },
   "entries": {
@@ -918,7 +923,31 @@
       "token_count": 1024,
       "unique_tokens": 272,
       "stored_at": "2026-02-22T05:41:47Z"
+    },
+    "creator_of_Neural_Studio_1b775e041eb2": {
+      "id": "creator_of_Neural_Studio_1b775e041eb2",
+      "topic": "creator of Neural Studio",
+      "source": "user",
+      "source_url": "",
+      "raw_file": "C:\\Jay\\_Plugin\\compress\\brain\\knowledge\\creator_of_Neural_Studio_1b775e041eb2.txt",
+      "compressed_file": "C:\\Jay\\_Plugin\\compress\\brain\\knowledge\\creator_of_Neural_Studio_1b775e041eb2.txt.myzip",
+      "raw_size": 59,
+      "compressed_size": 113,
+      "ratio": 1.9153,
+      "savings_pct": -91.5,
+      "keywords": [
+        "creator",
+        "neural",
+        "studio",
+        "name",
+        "jayprakash",
+        "pal"
+      ],
+      "summary": "I am creator of Neural Studio and my name is Jayprakash Pal.",
+      "token_count": 6,
+      "unique_tokens": 6,
+      "stored_at": "2026-02-22T11:39:48Z"
     }
   },
-  "conversations": 0
+  "conversations": 2
 }

@@ -948,12 +948,41 @@ export function HelperView() {
         // ═══════ HELP ═══════
         if (lower.includes('help') || lower === '?') {
             return {
-                content: `**🧠 Neural Studio AI — Command Reference**\n\n**Neural Brain (Learn & Ask)**\n• \`learn [topic]: [info]\` — teach me something new\n• \`learn_url [topic] [url]\` — learn from a web page\n• \`ask [question]\` — query my compressed knowledge\n• \`brain\` — brain stats (knowledge items, vocabulary, compression)\n\n**Compression Intelligence**\n• \`analyze [file]\` — deep entropy & pattern analysis with AI\n• \`compress [file]\` — neural compression (1,046 advisors)\n• \`decompress [archive]\` — mirror-mode restore\n\n**Neural Vault**\n• \`store [file]\` — compress & vault for later\n• \`access [key]\` — retrieve from vault\n• \`vault list\` — list stored files\n\n**Tools**\n• \`cmd [command]\` — terminal command\n• \`navigate [url]\` — browser bridge\n• \`status\` — server + brain health\n\nAll knowledge is stored compressed — my brain takes less space the more I learn! 🧠`
+                content: `**🧠 Neural Studio AI — Command Reference**\n\n**Smart Brain (C++ Knowledge Engine) 🆕**\n• \`learn https://wikipedia.org/...\` — learn from web (auto-compress)\n• \`brain status\` — show knowledge entries & compression stats\n• Just ask naturally: "What is X?" — auto Smart Brain!\n\n**File Operations**\n• \`ls\` or \`ls C:\\\\path\` — list directory\n• \`read C:\\\\file.txt\` — read file contents\n• \`find *.txt\` — find files by pattern\n\n**Compression**\n• \`analyze [file]\` — AI analysis (entropy, recommendations)\n• \`compress [file]\` — neural compression (CMIX)\n• \`decompress [file]\` — restore original\n\n**Neural Vault**\n• \`store [file]\` — compress & vault\n• \`access [key]\` — retrieve from vault\n• \`vault list\` — list stored files\n\n**Tools**\n• \`run [command]\` — execute shell command\n• \`calc 2 + 3 * 4\` — math calculations\n• \`status\` — server health\n\n**Examples:**\n\`\`\`\nlearn https://en.wikipedia.org/wiki/Data_compression\nWhat is data compression?\nbrain status\nanalyze C:\\\\data\\\\file.txt\ncompress C:\\\\data\\\\file.txt\n\`\`\`\n\n🧠 Smart Brain compresses everything — learns more, uses less space!`
             };
         }
 
-        // ═══════ FALLBACK — Intelligent Reasoning Engine ═══════
-        // Route through the brain's reasoning pipeline for natural language understanding
+        // ═══════ SMART BRAIN — C++ Knowledge Engine (Priority) ═══════
+        // Try Smart Brain FIRST for questions
+        if (cmd.trim().length > 5 && (cmd.includes('?') || /^(what|how|why|when|where|who|explain|tell|describe)/i.test(cmd))) {
+            try {
+                const askRes = await fetch(`${API}/api/brain/ask`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: cmd })
+                });
+                const askData = await askRes.json();
+
+                // Check if Smart Brain has an answer
+                if (!askData.error && askData.answer) {
+                    const conf = ((askData.confidence || 0) * 100).toFixed(0);
+                    return { content: `${askData.answer}\n\n📚 **Source:** ${askData.source} · **Confidence:** ${conf}%`, tool: 'smartbrain' };
+                }
+
+                // If low confidence, suggest learning
+                if (askData.action === 'learn_from_web') {
+                    const conf = ((askData.confidence || 0) * 100).toFixed(0);
+                    return {
+                        content: `🧠 **Low confidence (${conf}%)**\n\nI don't have enough knowledge about this topic yet.\n\n**Learn from Wikipedia:**\n\`learn https://en.wikipedia.org/wiki/${encodeURIComponent(cmd.replace(/^(what|how|why|when|where|who|explain|tell|describe)\s+/i, '').replace(/\?/g, ''))}\`\n\nOr I can use my basic reasoning (less accurate).`,
+                        tool: 'smartbrain'
+                    };
+                }
+            } catch (e) {
+                console.log('Smart Brain not available, trying fallback...', e);
+            }
+        }
+
+        // ═══════ FALLBACK — Old Reasoning Engine (If Smart Brain fails) ═══════
+        // Only used if Smart Brain is not built or has no answer
         try {
             const res = await fetch(`${API}/api/brain/think`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -965,7 +994,7 @@ export function HelperView() {
                 let response = data.response;
                 // Show intent for transparency
                 if (data.intent && data.intent !== 'unknown') {
-                    response += `\n\n*[${data.intent} · confidence: ${(data.confidence * 100).toFixed(0)}%${data.auto_learned ? ` · learned ${data.auto_learned} fact(s)` : ''}]*`;
+                    response += `\n\n*[old brain · ${data.intent} · confidence: ${(data.confidence * 100).toFixed(0)}%]*`;
                 }
                 return { content: response };
             }
