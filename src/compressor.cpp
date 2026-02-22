@@ -776,6 +776,20 @@ int compress_file(const std::string& input_path,
     // --- 6. STORED fallback ---
     size_t total_stored = 54 + file_size;
     if (total_comp >= total_stored && file_size > 0) {
+        if (!best_mode && !ultra_mode && !cmix_mode) {
+            unmap_file(mf);
+            fclose(fout);
+            return compress_file(input_path, output_path, progress, CompressMode::BEST);
+        } else if (best_mode) {
+            unmap_file(mf);
+            fclose(fout);
+            return compress_file(input_path, output_path, progress, CompressMode::ULTRA);
+        } else if (ultra_mode) {
+            unmap_file(mf);
+            fclose(fout);
+            return compress_file(input_path, output_path, progress, CompressMode::CMIX);
+        }
+
         freopen(output_path.c_str(), "wb", fout);
         hdr[5] = 0x01;  // STORED
         uint32_t bc1 = 1;
