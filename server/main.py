@@ -487,6 +487,43 @@ class FindFilesRequest(BaseModel):
 class FileInfoRequest(BaseModel):
     path: str
 
+class WriteFileRequest(BaseModel):
+    path: str
+    content: str
+    append: bool = False
+
+class DeleteFileRequest(BaseModel):
+    path: str
+
+@app.post("/api/fs/write")
+def fs_write_file(payload: WriteFileRequest):
+    """Write or append text to a file."""
+    path = os.path.expanduser(payload.path)
+    try:
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        mode = "a" if payload.append else "w"
+        with open(path, mode, encoding="utf-8") as f:
+            f.write(payload.content)
+        return {"status": "success", "message": f"Written successfully to {path}"}
+    except Exception as e:
+        return {"error": str(e)}
+
+import shutil
+@app.post("/api/fs/delete")
+def fs_delete_file(payload: DeleteFileRequest):
+    """Delete a file or directory."""
+    path = os.path.expanduser(payload.path)
+    if not os.path.exists(path):
+        return {"error": f"Path not found: {path}"}
+    try:
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+        return {"status": "success", "message": f"Deleted {path}"}
+    except Exception as e:
+        return {"error": str(e)}
+
 @app.post("/api/fs/list")
 def fs_list_dir(payload: ListDirRequest):
     """List contents of a directory. Defaults to project root."""
@@ -1162,6 +1199,18 @@ async def brain_status():
 if __name__ == "__main__":
     ensure_vault()
     # ensure_brain() - OLD Python brain removed, using C++ neural_engine.exe now
+    
+    # Start the simple conversational/training TCP socket on port 9000
+    try:
+        import threading
+        import chat_port
+        t = threading.Thread(target=chat_port.start_server)
+        t.daemon = True
+        t.start()
+        print(">> Background AI Chat Port started securely on TCP :9000 <<")
+    except Exception as e:
+        print(f"Failed to start TCP Chat Port: {e}")
+        
     print("\n  +----------------------------------------------------+")
     print("  |   Neural Studio V10 -- AI Compression API          |")
     print("  |   C++ Neural Engine + Smart Brain + Vault          |")

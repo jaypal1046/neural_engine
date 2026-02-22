@@ -606,6 +606,50 @@ export function HelperView() {
             }
         }
 
+        // ═══════ WRITE / APPEND FILE ═══════
+        if (lower.startsWith('write ') || lower.startsWith('append ') || lower.startsWith('create file ') || lower.startsWith('save file ')) {
+            const isAppend = lower.startsWith('append ');
+            const rest = cmd.replace(/^(write|append|create file|save file)\s*/i, '').trim();
+            const colonIdx = rest.indexOf(':');
+
+            if (colonIdx === -1) {
+                return { content: `To write a file, use format:\n\n\`${isAppend ? 'append' : 'write'} [path]: [content]\`\n\nExample: \`write C:\\\\script.py: print("Hello")\`` };
+            }
+
+            const fp = rest.substring(0, colonIdx).trim();
+            const content = rest.substring(colonIdx + 1).trim();
+
+            try {
+                const res = await fetch(`${API}/api/fs/write`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: fp, content, append: isAppend })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}` };
+                return { content: `📝 **File ${isAppend ? 'Appended' : 'Saved'}**\n\nPath: \`${fp}\`\nBytes ${isAppend ? 'added' : 'written'}: ${content.length}` };
+            } catch (e) {
+                return { content: `Failed to write file:\n\`\`\`\n${e}\n\`\`\`` };
+            }
+        }
+
+        // ═══════ DELETE FILE ═══════
+        if (lower.startsWith('delete ') || lower.startsWith('remove ') || lower.startsWith('rm ')) {
+            const fp = cmd.replace(/^(delete|remove|rm)\s*/i, '').trim();
+            if (!fp) return { content: 'Provide a path to delete.\n\nExample: `delete C:\\\\data\\\\old.txt`' };
+
+            try {
+                const res = await fetch(`${API}/api/fs/delete`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: fp })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}` };
+                return { content: `🗑️ **Deleted successfully:** \`${fp}\`` };
+            } catch (e) {
+                return { content: `Failed to delete file:\n\`\`\`\n${e}\n\`\`\`` };
+            }
+        }
+
         // ═══════ FIND FILES ═══════
         if (lower.startsWith('find ') || lower.startsWith('search files ')) {
             const pattern = cmd.replace(/^(find|search files)\s*/i, '').trim();
