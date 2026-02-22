@@ -1,8 +1,8 @@
 import { app, BrowserWindow, ipcMain, dialog } from "electron";
-import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-createRequire(import.meta.url);
+import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
@@ -10,17 +10,71 @@ const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
 const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
 let win;
+let serverProcess = null;
+function findPython() {
+  const candidates = ["python", "python3", "py"];
+  return candidates[0];
+}
+function startServer() {
+  var _a, _b;
+  const projectRoot = path.join(process.env.APP_ROOT, "..");
+  const serverScript = path.join(projectRoot, "server", "main.py");
+  if (!existsSync(serverScript)) {
+    console.error(`[Neural Studio] Server script not found: ${serverScript}`);
+    return;
+  }
+  console.log(`[Neural Studio] Starting Python server: ${serverScript}`);
+  const pythonCmd = findPython();
+  serverProcess = spawn(pythonCmd, [serverScript], {
+    cwd: path.join(projectRoot, "server"),
+    stdio: ["pipe", "pipe", "pipe"],
+    env: { ...process.env }
+  });
+  (_a = serverProcess.stdout) == null ? void 0 : _a.on("data", (data) => {
+    const msg = data.toString().trim();
+    if (msg)
+      console.log(`[Server] ${msg}`);
+    if (win) {
+      win.webContents.send("server-log", msg);
+    }
+  });
+  (_b = serverProcess.stderr) == null ? void 0 : _b.on("data", (data) => {
+    const msg = data.toString().trim();
+    if (msg)
+      console.log(`[Server:ERR] ${msg}`);
+  });
+  serverProcess.on("exit", (code) => {
+    console.log(`[Neural Studio] Server process exited with code ${code}`);
+    serverProcess = null;
+  });
+  serverProcess.on("error", (err) => {
+    console.error(`[Neural Studio] Failed to start server:`, err.message);
+    serverProcess = null;
+  });
+}
+function stopServer() {
+  if (serverProcess) {
+    console.log("[Neural Studio] Stopping Python server...");
+    if (process.platform === "win32" && serverProcess.pid) {
+      spawn("taskkill", ["/pid", String(serverProcess.pid), "/f", "/t"], { shell: true });
+    } else {
+      serverProcess.kill("SIGTERM");
+    }
+    serverProcess = null;
+  }
+}
 function createWindow() {
   win = new BrowserWindow({
-    width: 1120,
-    height: 720,
+    width: 1220,
+    height: 780,
     minWidth: 900,
     minHeight: 600,
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: path.join(process.env.VITE_PUBLIC || "", "electron-vite.svg"),
     webPreferences: {
       preload: path.join(__dirname$1, "preload.mjs")
     },
-    autoHideMenuBar: true
+    autoHideMenuBar: true,
+    title: "Neural Studio V10"
   });
   win.webContents.on("did-finish-load", () => {
     win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
@@ -33,9 +87,13 @@ function createWindow() {
 }
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
+    stopServer();
     app.quit();
     win = null;
   }
+});
+app.on("before-quit", () => {
+  stopServer();
 });
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
@@ -55,6 +113,15 @@ app.whenReady().then(() => {
       return filePath;
     return null;
   });
+  ipcMain.handle("server:status", () => {
+    return { running: serverProcess !== null, pid: serverProcess == null ? void 0 : serverProcess.pid };
+  });
+  ipcMain.handle("server:restart", () => {
+    stopServer();
+    setTimeout(startServer, 500);
+    return { status: "restarting" };
+  });
+  startServer();
   createWindow();
 });
 export {

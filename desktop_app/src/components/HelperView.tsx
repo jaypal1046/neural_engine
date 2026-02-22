@@ -314,10 +314,10 @@ export function HelperView() {
     const { connected, serverInfo, checkHealth } = useServerConnection();
 
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'system', content: 'Neural Compression Engine V10 initialized — 1,046 AI advisors loaded.', timestamp: new Date() },
+        { role: 'system', content: 'Neural Brain + Compression Engine V10 initialized — 1,046 AI advisors loaded.', timestamp: new Date() },
         {
             role: 'assistant',
-            content: `I'm your **Neural Studio AI** — powered by the same compression intelligence that drives our CMIX engine.\n\nI understand files at the byte level. Before compressing, I analyze entropy, detect patterns, and predict which of our **1,046 neural advisors** will perform best.\n\n• \`analyze C:\\path\\file.txt\` — deep file intelligence\n• \`compress C:\\path\\file.txt\` — compress with AI guidance\n• \`decompress archive.myzip\` — restore files\n• \`cmd dir\` — run terminal commands\n• \`help\` — see all commands\n\nDrop a file path and I'll show you what my neural network sees! 🧠`,
+            content: `I'm your **Neural Studio AI** — I learn, compress, and remember.\n\nI have my own **Neural Brain** that stores all knowledge compressed with our 1,046-advisor CMIX engine. Teach me anything and I'll remember it forever in minimal space!\n\n**Learn & Ask**\n• \`learn [topic]: [info]\` — teach me something\n• \`learn_url [topic] [url]\` — learn from the web\n• \`ask [question]\` — query my knowledge\n\n**Compression**\n• \`analyze [file]\` — deep file intelligence\n• \`compress [file]\` — compress with AI guidance\n\n• \`help\` — see all commands\n\nStart teaching me! 🧠`,
             timestamp: new Date()
         }
     ]);
@@ -559,16 +559,198 @@ export function HelperView() {
             }
         }
 
+        // ═══════ VAULT STORE ═══════
+        if (lower.startsWith('store ') || lower.startsWith('vault store ') || lower.startsWith('save ')) {
+            let fp = cmd.replace(/^(vault store|store|save)\s*/i, '').trim();
+            const file = atts.find(a => a.type === 'file')?.name || fp;
+            if (!file) return { content: 'Provide a file path to store in the neural vault.\n\nExample: `store C:\\\\data\\\\frankenstein.txt`', tool: 'compress' };
+
+            try {
+                const res = await fetch(`${API}/api/vault/store`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_path: file })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}`, tool: 'compress' };
+
+                return {
+                    content: `🗄️ **Stored in Neural Vault!**\n\nKey: \`${data.key}\`\nOriginal: ${(data.original_size / 1024).toFixed(1)} KB\nCompressed: ${(data.compressed_size / 1024).toFixed(1)} KB\nSavings: **${data.savings_pct}%** (${data.algorithm})\n\nRetrieve anytime with: \`access ${data.key}\``,
+                    tool: 'compress'
+                };
+            } catch (e) {
+                return { content: `Failed to connect to server:\n\`\`\`\n${e}\n\`\`\``, tool: 'compress' };
+            }
+        }
+
+        // ═══════ VAULT ACCESS ═══════
+        if (lower.startsWith('access ') || lower.startsWith('vault access ') || lower.startsWith('retrieve ') || lower.startsWith('fetch ')) {
+            let key = cmd.replace(/^(vault access|access|retrieve|fetch)\s*/i, '').trim();
+            if (!key) return { content: 'Provide a vault key to retrieve.\n\nUse `vault list` to see stored files.', tool: 'compress' };
+
+            try {
+                const res = await fetch(`${API}/api/vault/access`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}`, tool: 'compress' };
+
+                return {
+                    content: `📂 **Retrieved from Neural Vault!**\n\nKey: \`${data.key}\`\nRecovered: \`${data.output_path}\`\nSize: ${(data.recovered_size / 1024).toFixed(1)} KB\n\nDecompressed using mirror-mode — the neural network rebuilt itself from scratch and reproduced the exact original data.`,
+                    tool: 'compress'
+                };
+            } catch (e) {
+                return { content: `Failed to connect to server:\n\`\`\`\n${e}\n\`\`\``, tool: 'compress' };
+            }
+        }
+
+        // ═══════ VAULT LIST ═══════
+        if (lower === 'vault list' || lower === 'vault' || lower === 'list vault' || lower.startsWith('vault list')) {
+            try {
+                const res = await fetch(`${API}/api/vault/list`);
+                const data = await res.json();
+
+                if (data.count === 0) {
+                    return { content: `🗄️ **Neural Vault is empty.**\n\nStore a file: \`store C:\\\\path\\\\file.txt\``, tool: 'compress' };
+                }
+
+                let list = data.entries.map((e: any) =>
+                    `• \`${e.key}\` — ${(e.original_size / 1024).toFixed(0)} KB → ${(e.compressed_size / 1024).toFixed(0)} KB (${e.savings_pct}% saved, ${e.algorithm})`
+                ).join('\n');
+
+                return {
+                    content: `🗄️ **Neural Vault — ${data.count} files stored**\n\nTotal: ${(data.total_original_size / 1024).toFixed(0)} KB → ${(data.total_compressed_size / 1024).toFixed(0)} KB (**${data.total_savings_pct}% saved**)\n\n${list}\n\nRetrieve with: \`access [key]\``,
+                    tool: 'compress'
+                };
+            } catch (e) {
+                return { content: `Failed to connect to server:\n\`\`\`\n${e}\n\`\`\``, tool: 'compress' };
+            }
+        }
+
         // ═══════ SEARCH ═══════
         if (lower.startsWith('search') || lower.includes('search for ')) {
             const q = cmd.replace(/search for |search /gi, '').trim();
             return { content: `🔍 Searching for: **${q}**\n\nWeb bridge search initiated.`, tool: 'search' };
         }
 
+        // ═══════ LEARN — Teach the brain ═══════
+        if (lower.startsWith('learn ') && !lower.startsWith('learn_url')) {
+            // Format: learn [topic]: [content]
+            const rest = cmd.replace(/^learn\s*/i, '').trim();
+            const colonIdx = rest.indexOf(':');
+
+            if (colonIdx === -1) {
+                return { content: `To teach me, use this format:\n\n\`learn [topic]: [information]\`\n\nExample: \`learn quantum computing: Quantum computers use qubits that can exist in superposition...\`\n\nI'll compress and remember it forever! 🧠` };
+            }
+
+            const topic = rest.substring(0, colonIdx).trim();
+            const content = rest.substring(colonIdx + 1).trim();
+
+            if (!content || content.length < 10) {
+                return { content: 'Please provide more content to learn. At least a sentence or two!' };
+            }
+
+            try {
+                const res = await fetch(`${API}/api/brain/learn`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, content })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}` };
+
+                return {
+                    content: `🧠 **Knowledge Absorbed!**\n\nTopic: **${topic}**\nTokens processed: ${data.token_count}\nRaw: ${(data.raw_size / 1024).toFixed(1)} KB → Compressed: ${(data.compressed_size / 1024).toFixed(1)} KB\nSavings: **${data.savings_pct}%** (stored with CMIX neural compression)\n\nKeywords learned: ${data.keywords?.map((k: string) => `\`${k}\``).join(', ')}\n\n**Summary:** ${data.summary}\n\nAsk me about this anytime! Try: \`ask ${topic}\``
+                };
+            } catch (e) {
+                return { content: `Failed to connect:\n\`\`\`\n${e}\n\`\`\`` };
+            }
+        }
+
+        // ═══════ LEARN FROM URL ═══════
+        if (lower.startsWith('learn_url ') || lower.startsWith('learn url ') || lower.startsWith('study ')) {
+            const rest = cmd.replace(/^(learn_url|learn url|study)\s*/i, '').trim();
+            const parts = rest.split(/\s+/);
+
+            // Find the URL
+            const urlIdx = parts.findIndex(p => p.startsWith('http'));
+            let topic: string, url: string;
+
+            if (urlIdx >= 0) {
+                url = parts[urlIdx];
+                topic = parts.filter((_, i) => i !== urlIdx).join(' ') || 'web_article';
+            } else if (parts.length >= 2) {
+                topic = parts.slice(0, -1).join(' ');
+                url = parts[parts.length - 1];
+                if (!url.startsWith('http')) url = 'https://' + url;
+            } else {
+                return { content: `To learn from the web:\n\n\`learn_url [topic] [url]\`\n\nExample: \`learn_url machine learning https://en.wikipedia.org/wiki/Machine_learning\`\n\nI'll scrape, extract, compress, and index the knowledge! 🌐` };
+            }
+
+            try {
+                const res = await fetch(`${API}/api/brain/learn_url`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, url })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}` };
+
+                return {
+                    content: `🌐 **Learned from the Web!**\n\nURL: \`${url}\`\nTopic: **${topic}**\nTokens extracted: ${data.token_count}\nRaw: ${(data.raw_size / 1024).toFixed(1)} KB → Compressed: ${(data.compressed_size / 1024).toFixed(1)} KB\nSavings: **${data.savings_pct}%**\n\nKeywords: ${data.keywords?.map((k: string) => `\`${k}\``).join(', ')}\n\n**Summary:** ${data.summary}\n\nNow ask me anything about **${topic}**!`
+                };
+            } catch (e) {
+                return { content: `Failed to connect:\n\`\`\`\n${e}\n\`\`\`` };
+            }
+        }
+
+        // ═══════ ASK — Query the brain ═══════
+        if (lower.startsWith('ask ') || lower.startsWith('question ')) {
+            const question = cmd.replace(/^(ask|question)\s*/i, '').trim();
+            if (!question) return { content: 'What would you like to know?' };
+
+            try {
+                const res = await fetch(`${API}/api/brain/ask`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}` };
+
+                let response = `**${data.response}**`;
+
+                if (data.sources && data.sources.length > 0) {
+                    response += `\n\n---\n📚 *Sources (${data.knowledge_items_used} of ${data.total_knowledge} items):*`;
+                    for (const s of data.sources) {
+                        response += `\n• **${s.topic}** (score: ${s.score}${s.savings_pct ? `, ${s.savings_pct}% compressed` : ''})`;
+                        if (s.source_url) response += ` — [link](${s.source_url})`;
+                    }
+                    response += `\n\nConfidence: ${(data.confidence * 100).toFixed(0)}%`;
+                }
+
+                return { content: response };
+            } catch (e) {
+                return { content: `Failed to connect:\n\`\`\`\n${e}\n\`\`\`` };
+            }
+        }
+
+        // ═══════ BRAIN STATS ═══════
+        if (lower === 'brain' || lower === 'brain stats' || lower === 'memory' || lower.includes('brain status')) {
+            try {
+                const res = await fetch(`${API}/api/brain/stats`);
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}` };
+
+                return {
+                    content: `🧠 **Neural Brain Status**\n\nKnowledge items: **${data.total_knowledge_items}**\nTopics learned: **${data.total_topics}** (${data.topics?.join(', ') || 'none yet'})\nVocabulary size: **${data.vocabulary_size}** words\nConversations: **${data.conversations_remembered}**\n\nStorage: ${data.total_raw_human} raw → ${data.total_compressed_human} compressed\nSavings: **${data.compression_savings_pct}%** (all knowledge stored with CMIX neural compression)\n\nTeach me more:\n• \`learn [topic]: [info]\` — teach directly\n• \`learn_url [topic] [url]\` — learn from the web\n• \`ask [question]\` — query my knowledge`
+                };
+            } catch (e) {
+                return { content: `Failed to connect:\n\`\`\`\n${e}\n\`\`\`` };
+            }
+        }
+
         // ═══════ CODE ═══════
         if (lower.includes('code') || lower.includes('write') || lower.includes('generate')) {
             return {
-                content: `Here's a starter using our V10 Neural API:\n\n\`\`\`typescript\n// Analyze a file before compressing\nconst analysis = await fetch('${API}/api/analyze', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ file_path: 'data.txt' })\n}).then(r => r.json());\n\nconsole.log('Entropy:', analysis.entropy, 'bpb');\nconsole.log('AI recommends:', analysis.ai.recommended_algorithm);\nconsole.log('Est. savings:', analysis.ai.compression_estimate_pct + '%');\n\n// Then compress with the server's recommendation\nconst result = await fetch('${API}/api/compress', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({\n    file_path: 'data.txt',\n    algorithm: analysis.ai.recommended_algorithm\n  })\n}).then(r => r.json());\n\`\`\`\n\nThis uses the new V10 analysis pipeline — the AI first inspects entropy and byte patterns, then picks the best neural model!`,
+                content: `Here's a starter using our V10 Neural API:\n\n\`\`\`typescript\n// Analyze a file before compressing\nconst analysis = await fetch('${API}/api/analyze', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ file_path: 'data.txt' })\n}).then(r => r.json());\n\nconsole.log('Entropy:', analysis.entropy, 'bpb');\nconsole.log('AI recommends:', analysis.ai.recommended_algorithm);\n\n// Teach the brain\nawait fetch('${API}/api/brain/learn', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({\n    topic: 'my research',\n    content: 'Important findings about...'\n  })\n});\n\n// Ask the brain later\nconst answer = await fetch('${API}/api/brain/ask', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ question: 'What were the findings?' })\n}).then(r => r.json());\n\`\`\`\n\nThe brain stores all knowledge compressed — it learns, compresses, and retrieves!`,
                 tool: 'code'
             };
         }
@@ -578,8 +760,10 @@ export function HelperView() {
             try {
                 const res = await fetch(`${API}/api/health`);
                 const data = await res.json();
+                const brainRes = await fetch(`${API}/api/brain/stats`);
+                const brain = await brainRes.json();
                 return {
-                    content: `**🟢 Neural Studio V10 Server Status**\n\nVersion: \`${data.version}\`\nUptime: \`${Math.floor(data.uptime_seconds)}s\`\nEngine: ${data.engine}\nModels: **${data.models} AI Advisors** active\nExecutable: ${data.exe_available ? '✅' : '❌'}\n\nAlgorithms: ${data.algorithms?.map((a: string) => `\`${a}\``).join(', ')}`
+                    content: `**🟢 Neural Studio V10 Server Status**\n\nVersion: \`${data.version}\`\nUptime: \`${Math.floor(data.uptime_seconds)}s\`\nEngine: ${data.engine}\nModels: **${data.models} AI Advisors** active\nExecutable: ${data.exe_available ? '✅' : '❌'}\n\n🧠 **Brain:** ${brain.total_knowledge_items || 0} items, ${brain.vocabulary_size || 0} words, ${brain.compression_savings_pct || 0}% compressed\n\nAlgorithms: ${data.algorithms?.map((a: string) => `\`${a}\``).join(', ')}`
                 };
             } catch {
                 return { content: `❌ **Server Offline**\n\nStart the server:\n\`\`\`\ncd server && python main.py\n\`\`\`` };
@@ -589,13 +773,30 @@ export function HelperView() {
         // ═══════ HELP ═══════
         if (lower.includes('help') || lower === '?') {
             return {
-                content: `**🧠 Neural Studio AI — Command Reference**\n\n**Compression Intelligence**\n• \`analyze [file]\` — deep entropy & pattern analysis with AI insights\n• \`compress [file]\` — neural compression (auto-picks best algorithm)\n• \`compress [file] --cmix\` — force CMIX (16 neural advisors)\n• \`compress [file] --best\` — force BWT pipeline\n• \`decompress [archive]\` — restore with mirror-mode decompression\n\n**Browser Bridge**\n• \`navigate [url]\` — open any page\n• \`click [selector]\` — click element\n• \`screenshot\` — capture view\n\n**Terminal**\n• \`cmd [command]\` or \`> [command]\` — direct OS command\n\n**System**\n• \`status\` — server health & model count\n• \`help\` — this menu\n\nThe AI automatically pre-analyzes files before compression, showing entropy heatmaps and neural model predictions inline! 🧠`
+                content: `**🧠 Neural Studio AI — Command Reference**\n\n**Neural Brain (Learn & Ask)**\n• \`learn [topic]: [info]\` — teach me something new\n• \`learn_url [topic] [url]\` — learn from a web page\n• \`ask [question]\` — query my compressed knowledge\n• \`brain\` — brain stats (knowledge items, vocabulary, compression)\n\n**Compression Intelligence**\n• \`analyze [file]\` — deep entropy & pattern analysis with AI\n• \`compress [file]\` — neural compression (1,046 advisors)\n• \`decompress [archive]\` — mirror-mode restore\n\n**Neural Vault**\n• \`store [file]\` — compress & vault for later\n• \`access [key]\` — retrieve from vault\n• \`vault list\` — list stored files\n\n**Tools**\n• \`cmd [command]\` — terminal command\n• \`navigate [url]\` — browser bridge\n• \`status\` — server + brain health\n\nAll knowledge is stored compressed — my brain takes less space the more I learn! 🧠`
             };
         }
 
-        // ═══════ FALLBACK — Intelligent response ═══════
+        // ═══════ FALLBACK — Try asking the brain ═══════
+        // If no command matches, treat it as a question to the brain
+        try {
+            const res = await fetch(`${API}/api/brain/ask`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question: cmd })
+            });
+            const data = await res.json();
+
+            if (data.confidence && data.confidence > 0.1) {
+                let response = data.response;
+                if (data.sources && data.sources.length > 0) {
+                    response += `\n\n📚 *From: ${data.sources.map((s: any) => s.topic).join(', ')}*`;
+                }
+                return { content: response };
+            }
+        } catch { /* brain not available, fall back */ }
+
         return {
-            content: `Got it: "${cmd}"\n\nI'm your compression-aware AI. Try:\n• \`analyze [filepath]\` to see what my neural network detects\n• \`compress [filepath]\` to shrink with AI guidance\n• \`status\` to check the V10 engine\n• \`help\` for all commands`
+            content: `I don't know about "${cmd}" yet.\n\n**Teach me!**\n• \`learn ${cmd}: [your explanation]\`\n• \`learn_url ${cmd} https://...\`\n\nOr try: \`help\` for all commands`
         };
     };
 

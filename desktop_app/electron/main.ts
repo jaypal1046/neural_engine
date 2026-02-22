@@ -46,7 +46,6 @@ function startServer() {
         cwd: path.join(projectRoot, 'server'),
         stdio: ['pipe', 'pipe', 'pipe'],
         env: { ...process.env },
-        shell: true,
     })
 
     serverProcess.stdout?.on('data', (data: Buffer) => {

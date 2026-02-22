@@ -815,13 +815,101 @@ def extract_file_path(text: str) -> Optional[str]:
     return None
 
 # =============================================================================
+# Neural Brain API — Our own learning AI
+# =============================================================================
+
+from neural_brain import (
+    ensure_brain, store_knowledge, retrieve_knowledge,
+    generate_response, learn_from_url, remember_conversation,
+    brain_stats, get_knowledge_text
+)
+
+class LearnRequest(BaseModel):
+    topic: str
+    content: str
+    source: str = "user"
+
+class LearnURLRequest(BaseModel):
+    topic: str
+    url: str
+
+class AskRequest(BaseModel):
+    question: str
+
+class BrainSearchRequest(BaseModel):
+    query: str
+    top_k: int = 5
+
+@app.post("/api/brain/learn")
+def brain_learn(payload: LearnRequest):
+    """Teach the brain new knowledge — it will be compressed and indexed."""
+    try:
+        result = store_knowledge(payload.topic, payload.content, source=payload.source)
+        return {"status": "success", **result}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/api/brain/learn_url")
+def brain_learn_url(payload: LearnURLRequest):
+    """Learn from a web page — scrape, extract, compress, and index."""
+    try:
+        result = learn_from_url(payload.topic, payload.url)
+        if "error" in result:
+            return result
+        return {"status": "success", **result}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/api/brain/ask")
+def brain_ask(payload: AskRequest):
+    """Ask the brain a question — retrieves from compressed knowledge."""
+    try:
+        result = generate_response(payload.question)
+        # Remember conversation
+        remember_conversation(payload.question, result.get("response", ""))
+        return {"status": "success", **result}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/api/brain/search")
+def brain_search(payload: BrainSearchRequest):
+    """Search the brain's knowledge base."""
+    try:
+        results = retrieve_knowledge(payload.query, top_k=payload.top_k)
+        return {"status": "success", "results": results, "count": len(results)}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/api/brain/stats")
+def brain_get_stats():
+    """Get brain statistics — knowledge items, compression savings, vocabulary size."""
+    try:
+        stats = brain_stats()
+        return {"status": "success", **stats}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.get("/api/brain/knowledge/{entry_id}")
+def brain_get_knowledge(entry_id: str):
+    """Get the full text of a knowledge entry."""
+    try:
+        text = get_knowledge_text(entry_id)
+        if text is None:
+            return {"error": f"Knowledge entry '{entry_id}' not found."}
+        return {"status": "success", "entry_id": entry_id, "content": text}
+    except Exception as e:
+        return {"error": str(e)}
+
+# =============================================================================
 # Main
 # =============================================================================
 
 if __name__ == "__main__":
     ensure_vault()
-    print("\n  ╔════════════════════════════════════════════════════╗")
-    print("  ║   Neural Studio V10 — AI Compression API          ║")
-    print("  ║   1,046-Advisor CMIX · Entropy Analysis · Vault   ║")
-    print("  ╚════════════════════════════════════════════════════╝\n")
+    ensure_brain()
+    print("\n  +----------------------------------------------------+")
+    print("  |   Neural Studio V10 -- AI Compression API          |")
+    print("  |   1,046-Advisor CMIX + Neural Brain + Vault        |")
+    print("  +----------------------------------------------------+\n")
     uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
+
