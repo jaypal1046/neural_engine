@@ -1,13 +1,79 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
+import { BrainCircuit, ChevronRight, Cpu } from 'lucide-react';
+
+const API = 'http://127.0.0.1:8001';
 
 export function DecompressView() {
     const hiddenFileInput = useRef<HTMLInputElement>(null);
+    const [isDecompressing, setIsDecompressing] = useState(false);
+
+    const startDecompression = async () => {
+        const ap = (document.getElementById('d_input_file') as HTMLInputElement).value;
+        const op = (document.getElementById('d_output_file') as HTMLInputElement).value;
+        const out = document.querySelector('.log-area pre');
+        if (!out || !ap.trim()) return;
+
+        setIsDecompressing(true);
+        out.textContent = `Neural Mirror-Mode Decompression starting...\nArchive: ${ap}\nOutput: ${op}\n\nRebuilding 1,046 advisor neural network from scratch...\n\n`;
+
+        try {
+            const res = await fetch(`${API}/api/decompress_stream`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ archive_path: ap, output_path: op })
+            });
+
+            const reader = res.body?.getReader();
+            const decoder = new TextDecoder();
+
+            if (reader) {
+                let currentText = out.textContent || '';
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true });
+
+                    for (let i = 0; i < chunk.length; i++) {
+                        const c = chunk[i];
+                        if (c === '\r') {
+                            const lastNewline = currentText.lastIndexOf('\n');
+                            if (lastNewline !== -1) {
+                                currentText = currentText.substring(0, lastNewline + 1);
+                            } else {
+                                currentText = '';
+                            }
+                        } else {
+                            currentText += c;
+                        }
+                    }
+
+                    out.textContent = currentText;
+                    if (out.parentElement) out.parentElement.scrollTop = out.parentElement.scrollHeight;
+                }
+            }
+        } catch (e) {
+            out.textContent += `\nError: ${e}`;
+        }
+        setIsDecompressing(false);
+    };
 
     return (
         <div className="card">
             <h3>Configuration</h3>
             <hr className="divider" />
             <div className="card-content">
+                {/* Info banner */}
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
+                    background: 'rgba(74,158,255,0.06)', border: '1px solid rgba(74,158,255,0.15)',
+                    borderRadius: 8, marginBottom: 12, marginTop: 8
+                }}>
+                    <BrainCircuit size={14} color="#4A9EFF" />
+                    <span style={{ fontSize: 11, color: '#888', lineHeight: 1.5 }}>
+                        <strong style={{ color: '#4A9EFF' }}>Mirror-Mode:</strong> The decompressor creates a blank neural network and replays every bit.
+                        It learns at the same speed as the compressor — they stay in perfect sync.
+                    </span>
+                </div>
+
                 <div className="field-row">
                     <label>Archive (.myzip)</label>
                     <input type="text" placeholder="Select a .myzip archive..." id="d_input_file" />
@@ -56,52 +122,18 @@ export function DecompressView() {
                     }}>Browse</button>
                 </div>
             </div>
-            <button className="primary-btn mt-large" onClick={async () => {
-                const ap = (document.getElementById('d_input_file') as HTMLInputElement).value;
-                const op = (document.getElementById('d_output_file') as HTMLInputElement).value;
-                const out = document.querySelector('.log-area pre');
-                if (!out) return;
-
-                out.textContent += `\nCalling Python API to decompress: ${ap}...\n\n`;
-
-                try {
-                    const res = await fetch('http://127.0.0.1:8001/api/decompress_stream', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ archive_path: ap, output_path: op })
-                    });
-
-                    const reader = res.body?.getReader();
-                    const decoder = new TextDecoder();
-
-                    if (reader) {
-                        let currentText = out.textContent || '';
-                        while (true) {
-                            const { done, value } = await reader.read();
-                            if (done) break;
-                            const chunk = decoder.decode(value, { stream: true });
-
-                            for (let i = 0; i < chunk.length; i++) {
-                                const c = chunk[i];
-                                if (c === '\r') {
-                                    const lastNewline = currentText.lastIndexOf('\n');
-                                    if (lastNewline !== -1) {
-                                        currentText = currentText.substring(0, lastNewline + 1);
-                                    } else {
-                                        currentText = '';
-                                    }
-                                } else {
-                                    currentText += c;
-                                }
-                            }
-
-                            out.textContent = currentText;
-                            if (out.parentElement) out.parentElement.scrollTop = out.parentElement.scrollHeight;
-                        }
-                    }
-                } catch (e) {
-                    out.textContent += `\nError: ${e}`;
-                }
-            }}>Restore File →</button>
+            <button className="primary-btn mt-large" onClick={startDecompression}
+                disabled={isDecompressing}
+                style={{
+                    background: isDecompressing ? '#555' : 'var(--accent)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+                }}>
+                {isDecompressing ? (
+                    <>Decompressing... <Cpu size={14} style={{ animation: 'spin 1s linear infinite' }} /></>
+                ) : (
+                    <>Restore File <ChevronRight size={16} /></>
+                )}
+            </button>
         </div>
     );
 }

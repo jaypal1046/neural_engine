@@ -2,8 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import {
     Globe, Paperclip, Mic, ArrowUp, Image as ImageIcon, Code2,
     FileText, Terminal, Camera, Search, Zap, ChevronDown,
-    X, Square, Loader2, BrainCircuit, Wifi, WifiOff, Plus
+    X, Square, Loader2, BrainCircuit, Wifi, WifiOff, Plus,
+    Activity, Cpu, TrendingDown
 } from 'lucide-react';
+
+const API = 'http://127.0.0.1:8001';
 
 type Role = 'system' | 'assistant' | 'user';
 type AttachmentType = 'file' | 'image' | 'url';
@@ -15,16 +18,207 @@ interface Message {
     attachments?: Attachment[];
     timestamp?: Date;
     tool?: string;
+    widget?: any; // Rich inline widget data (entropy charts, model predictions, etc.)
 }
 
 const TOOL_ACTIONS = [
+    { id: 'analyze', icon: Activity, label: 'Analyze', color: '#4ADE80', desc: 'Deep file analysis with AI' },
+    { id: 'compress', icon: Zap, label: 'Compress', color: '#C97FDB', desc: 'Neural compression' },
     { id: 'browse', icon: Globe, label: 'Browse', color: '#4A9EFF', desc: 'Open a URL in the bridge' },
     { id: 'screenshot', icon: Camera, label: 'Screenshot', color: '#DA7555', desc: 'Capture the current page' },
     { id: 'search', icon: Search, label: 'Search', color: '#3BB37A', desc: 'Web or file search' },
-    { id: 'compress', icon: Zap, label: 'Compress', color: '#C97FDB', desc: 'Compress a file' },
     { id: 'script', icon: Terminal, label: 'Run Script', color: '#E6A340', desc: 'Execute a script' },
     { id: 'code', icon: Code2, label: 'Generate Code', color: '#FF6B9D', desc: 'Write code' },
 ];
+
+// ─── Inline Widgets for AI responses ────────────────────────
+
+function EntropyBar({ value, max = 8.0 }: { value: number; max?: number }) {
+    const pct = Math.min((value / max) * 100, 100);
+    const color = value < 3 ? '#4ADE80' : value < 5 ? '#FBBF24' : value < 7 ? '#F97316' : '#EF4444';
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0' }}>
+            <span style={{ fontSize: 11, color: '#888', width: 65, flexShrink: 0 }}>Entropy</span>
+            <div style={{ flex: 1, height: 8, background: '#1A1A1A', borderRadius: 4, overflow: 'hidden', border: '1px solid #333' }}>
+                <div style={{
+                    width: `${pct}%`, height: '100%', borderRadius: 4,
+                    background: `linear-gradient(90deg, ${color}CC, ${color})`,
+                    transition: 'width 1s ease',
+                    boxShadow: `0 0 8px ${color}44`
+                }} />
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 700, color, width: 55, textAlign: 'right' }}>{value.toFixed(2)} bpb</span>
+        </div>
+    );
+}
+
+function EntropyMap({ data }: { data: number[] }) {
+    if (!data || data.length === 0) return null;
+    const max = Math.max(...data, 0.01);
+    return (
+        <div style={{ margin: '8px 0' }}>
+            <div style={{ fontSize: 10, color: '#666', marginBottom: 4 }}>Entropy Heatmap (block-level)</div>
+            <div style={{
+                display: 'flex', gap: 1, height: 24, borderRadius: 4, overflow: 'hidden',
+                border: '1px solid #333'
+            }}>
+                {data.map((v, i) => {
+                    const intensity = v / max;
+                    const hue = (1 - intensity) * 120; // green to red
+                    return (
+                        <div key={i} title={`Block ${i}: ${v.toFixed(2)} bpb`} style={{
+                            flex: 1,
+                            background: `hsl(${hue}, 75%, ${20 + intensity * 30}%)`,
+                            transition: `background 0.3s ${i * 0.02}s`
+                        }} />
+                    );
+                })}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: '#555', marginTop: 2 }}>
+                <span>Start</span><span>End</span>
+            </div>
+        </div>
+    );
+}
+
+function ModelPredictions({ predictions }: { predictions: any[] }) {
+    if (!predictions || predictions.length === 0) return null;
+    return (
+        <div style={{ margin: '8px 0' }}>
+            <div style={{ fontSize: 10, color: '#666', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Cpu size={10} /> Neural Advisor Predictions
+            </div>
+            {predictions.map((m, i) => (
+                <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0',
+                    borderBottom: i < predictions.length - 1 ? '1px solid #2A2A2A' : 'none'
+                }}>
+                    <span style={{
+                        width: 22, height: 22, borderRadius: 6, fontSize: 9, fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: `rgba(201, 127, 219, ${0.1 + i * 0.05})`,
+                        color: '#C97FDB', border: '1px solid rgba(201,127,219,0.3)',
+                        flexShrink: 0
+                    }}>m{i}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 11, color: '#CCC' }}>{m.label} <span style={{ color: '#666' }}>— {m.description}</span></div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                            <div style={{ flex: 1, height: 4, background: '#1A1A1A', borderRadius: 2, overflow: 'hidden' }}>
+                                <div style={{
+                                    width: `${m.confidence}%`, height: '100%', borderRadius: 2,
+                                    background: `linear-gradient(90deg, #C97FDB88, #C97FDB)`,
+                                    transition: `width 0.8s ${i * 0.1}s ease`
+                                }} />
+                            </div>
+                            <span style={{ fontSize: 10, color: '#888', width: 30, textAlign: 'right' }}>{m.confidence}%</span>
+                        </div>
+                    </div>
+                    <span style={{ fontSize: 10, color: '#4ADE80', fontWeight: 600, flexShrink: 0 }}>{m.predicted_bpb} bpb</span>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function InsightCards({ insights }: { insights: any[] }) {
+    if (!insights || insights.length === 0) return null;
+    const colors: Record<string, string> = { success: '#4ADE80', warning: '#FBBF24', info: '#4A9EFF', error: '#EF4444' };
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, margin: '8px 0' }}>
+            {insights.map((ins, i) => (
+                <div key={i} style={{
+                    display: 'flex', gap: 8, padding: '8px 10px', borderRadius: 8,
+                    background: `${colors[ins.type] || '#4A9EFF'}08`,
+                    border: `1px solid ${colors[ins.type] || '#4A9EFF'}25`,
+                    animation: `msgSlide 0.3s ${i * 0.1}s ease both`
+                }}>
+                    <span style={{ fontSize: 16, lineHeight: 1 }}>{ins.icon}</span>
+                    <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: colors[ins.type] || '#4A9EFF' }}>{ins.title}</div>
+                        <div style={{ fontSize: 11, color: '#999', marginTop: 2, lineHeight: 1.4 }}>{ins.detail}</div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function CompressionEstimate({ pct, algo }: { pct: number; algo: string }) {
+    const algoLabels: Record<string, string> = {
+        '--cmix': 'CMIX Neural',
+        '--best': 'BWT Pipeline',
+        '--ultra': 'PPM Arithmetic',
+        'default': 'LZ77 Fast'
+    };
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px',
+            background: 'linear-gradient(135deg, rgba(74,222,128,0.06), rgba(201,127,219,0.06))',
+            border: '1px solid rgba(74,222,128,0.2)', borderRadius: 10, margin: '8px 0'
+        }}>
+            <div style={{
+                width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+                <TrendingDown size={20} color="#4ADE80" />
+            </div>
+            <div>
+                <div style={{ fontSize: 11, color: '#888' }}>AI Compression Estimate</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#4ADE80', letterSpacing: '-0.5px' }}>
+                    ~{pct}% <span style={{ fontSize: 12, fontWeight: 600, color: '#666' }}>savings</span>
+                </div>
+            </div>
+            <div style={{
+                marginLeft: 'auto', padding: '4px 10px', borderRadius: 16,
+                background: 'rgba(201,127,219,0.12)', border: '1px solid rgba(201,127,219,0.3)',
+                fontSize: 10, fontWeight: 700, color: '#C97FDB'
+            }}>{algoLabels[algo] || algo}</div>
+        </div>
+    );
+}
+
+function FileInfoWidget({ data }: { data: any }) {
+    if (!data) return null;
+    return (
+        <div style={{
+            background: '#1A1A1A', border: '1px solid #333', borderRadius: 10,
+            padding: '12px 14px', margin: '6px 0'
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <FileText size={14} color="#DA7555" />
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#F0F0F0' }}>{data.file_name}</span>
+                <span style={{ marginLeft: 'auto', fontSize: 11, color: '#888' }}>{data.file_size_human}</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
+                {[
+                    { label: 'Type', value: data.file_info?.category || '—', color: '#4A9EFF' },
+                    { label: 'Text Ratio', value: `${((data.file_info?.text_ratio || 0) * 100).toFixed(0)}%`, color: '#4ADE80' },
+                    { label: 'SHA-256', value: data.sha256 || '—', color: '#888' }
+                ].map((m, i) => (
+                    <div key={i} style={{ background: '#242424', borderRadius: 6, padding: '6px 8px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 9, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{m.label}</div>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: m.color, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.value}</div>
+                    </div>
+                ))}
+            </div>
+
+            <EntropyBar value={data.entropy || 0} />
+            <EntropyMap data={data.entropy_map} />
+
+            {data.ai && (
+                <>
+                    <CompressionEstimate pct={data.ai.compression_estimate_pct} algo={data.ai.recommended_algorithm} />
+                    <InsightCards insights={data.ai.insights} />
+                    <ModelPredictions predictions={data.ai.model_predictions} />
+                </>
+            )}
+        </div>
+    );
+}
+
+// ─── Formatting ─────────────────────────────────────
 
 function ToolBadge({ tool }: { tool: string }) {
     const t = TOOL_ACTIONS.find(a => a.id === tool);
@@ -85,31 +279,45 @@ function formatContent(text: string) {
 
 const fmt = (d?: Date) => d ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-// Icon button helper
-function IBtn({ Icon, title, onClick, active = false, color }: { Icon: any; title: string; onClick: () => void; active?: boolean; color?: string }) {
-    const [hov, setHov] = useState(false);
-    return (
-        <button title={title} onClick={onClick}
-            onMouseEnter={() => setHov(true)}
-            onMouseLeave={() => setHov(false)}
-            style={{
-                width: 34, height: 34, borderRadius: 8, border: 'none',
-                background: active || hov ? 'rgba(255,255,255,0.07)' : 'transparent',
-                color: active ? (color || '#DA7555') : hov ? '#F0F0F0' : '#888',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s'
-            }}>
-            <Icon size={16} />
-        </button>
-    );
+// ─── Server Connection Hook ─────────────────────────
+
+function useServerConnection() {
+    const [connected, setConnected] = useState(false);
+    const [serverInfo, setServerInfo] = useState<any>(null);
+
+    const checkHealth = async () => {
+        try {
+            const res = await fetch(`${API}/api/health`);
+            const data = await res.json();
+            setConnected(data.status === 'online');
+            setServerInfo(data);
+            return true;
+        } catch {
+            setConnected(false);
+            setServerInfo(null);
+            return false;
+        }
+    };
+
+    useEffect(() => {
+        checkHealth();
+        const interval = setInterval(checkHealth, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return { connected, serverInfo, checkHealth };
 }
 
+// ─── Main Component ─────────────────────────────────
+
 export function HelperView() {
+    const { connected, serverInfo, checkHealth } = useServerConnection();
+
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'system', content: 'Neural engine initialized — 1046 sub-models in cache.', timestamp: new Date() },
+        { role: 'system', content: 'Neural Compression Engine V10 initialized — 1,046 AI advisors loaded.', timestamp: new Date() },
         {
             role: 'assistant',
-            content: "Hi! I'm your **Neural Studio AI** assistant.\n\nI have full access to your browser, filesystem, scripts, and more. Try asking me:\n\n• `navigate youtube.com` — open any URL\n• `screenshot` — capture browser view\n• `compress file.txt` — compress with CMIX\n• `search for React hooks` — web search\n• `write code for file upload` — generate code\n• `help` — see all commands\n\nWhat would you like to do?",
+            content: `I'm your **Neural Studio AI** — powered by the same compression intelligence that drives our CMIX engine.\n\nI understand files at the byte level. Before compressing, I analyze entropy, detect patterns, and predict which of our **1,046 neural advisors** will perform best.\n\n• \`analyze C:\\path\\file.txt\` — deep file intelligence\n• \`compress C:\\path\\file.txt\` — compress with AI guidance\n• \`decompress archive.myzip\` — restore files\n• \`cmd dir\` — run terminal commands\n• \`help\` — see all commands\n\nDrop a file path and I'll show you what my neural network sees! 🧠`,
             timestamp: new Date()
         }
     ]);
@@ -119,7 +327,6 @@ export function HelperView() {
     const [isTyping, setIsTyping] = useState(false);
     const [showTools, setShowTools] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
-    const [webEnabled, setWebEnabled] = useState(true);
 
     const historyRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -144,66 +351,90 @@ export function HelperView() {
     const handleToolAction = (id: string) => {
         setShowTools(false);
         const m: Record<string, string> = {
+            analyze: 'analyze ', compress: 'compress ',
             browse: 'navigate ', screenshot: 'take a screenshot',
-            search: 'search for ', compress: 'compress ',
-            script: 'cmd ', code: 'write code for ',
+            search: 'search for ', script: 'cmd ', code: 'write code for ',
         };
         setInputVal(m[id] || '');
         setTimeout(() => inputRef.current?.focus(), 50);
     };
 
-    const processCommand = async (cmd: string, atts: Attachment[]): Promise<{ content: string; tool?: string }> => {
-        const lower = cmd.toLowerCase();
-        await new Promise(r => setTimeout(r, 400));
+    // ─── The Intelligence: Process Commands ─────────
+    const processCommand = async (cmd: string, atts: Attachment[]): Promise<{ content: string; tool?: string; widget?: any }> => {
+        const lower = cmd.toLowerCase().trim();
 
-        if (lower.startsWith('navigate ') || lower.includes('go to ') || lower.includes('open ')) {
-            let url = cmd.replace(/navigate |go to |open /gi, '').trim();
-            if (!url.startsWith('http')) url = 'https://' + url;
-            if (window.ws) window.ws.send(JSON.stringify({ id: `cmd_${Date.now()}`, type: 'command', from: 'vscode', command: 'browserAgent.navigate', params: { url } }));
-            return { content: `Navigating to **${url}**...\n\nBrowser bridge command sent. The page should load momentarily in your connected Chrome instance.`, tool: 'browse' };
-        }
-        if (lower.includes('screenshot') || lower.includes('capture')) {
-            if (window.ws) window.ws.send(JSON.stringify({ id: `cmd_${Date.now()}`, type: 'command', from: 'vscode', command: 'browserAgent.screenshot', params: { fullPage: false } }));
-            return { content: `📸 Screenshot captured!\n\nSaved via browser bridge. Check the console panel for the file path.`, tool: 'screenshot' };
-        }
-        if (lower.startsWith('click ')) {
-            const sel = cmd.substring(6);
-            if (window.ws) window.ws.send(JSON.stringify({ id: `cmd_${Date.now()}`, type: 'command', from: 'vscode', command: 'browserAgent.click', params: { selector: sel } }));
-            return { content: `Clicking element: \`${sel}\`\n\nDispatched to browser agent.`, tool: 'browse' };
-        }
+        // ═══════ ANALYZE — The Neural Eye ═══════
+        if (lower.startsWith('analyze') || lower.startsWith('scan') || lower.startsWith('inspect')) {
+            let fp = cmd.replace(/^(analyze|scan|inspect)\s*/i, '').trim();
+            const file = atts.find(a => a.type === 'file')?.name || fp;
+            if (!file) return { content: 'Please provide a file path to analyze.\n\nExample: `analyze C:\\Users\\data\\frankenstein.txt`', tool: 'analyze' };
 
-        if (lower.startsWith('cmd ') || lower.startsWith('> ')) {
-            const command = cmd.replace(/^(cmd|>)\s*/i, '');
             try {
-                const res = await fetch('http://127.0.0.1:8001/api/cmd', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ command })
+                const res = await fetch(`${API}/api/analyze`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_path: file })
                 });
                 const data = await res.json();
-                if (data.status === 'success') {
-                    let out = data.stdout || '';
-                    let err = data.stderr || '';
-                    if (!out && !err) out = 'Command executed successfully with no output.';
-                    return { content: `Ran command: \`${command}\`${out ? `\n\n**Output:**\n\`\`\`text\n${out}\n\`\`\`` : ''}${err ? `\n\n**Error:**\n\`\`\`text\n${err}\n\`\`\`` : ''}`, tool: 'script' };
+                if (data.error) return { content: `❌ ${data.error}`, tool: 'analyze' };
+
+                const algo = data.ai?.recommended_algorithm || '--cmix';
+                const quality = data.ai?.entropy_quality || 'unknown';
+
+                let commentary = `🧠 **Neural Analysis Complete**\n\nI've scanned **${data.file_name}** at the byte level. `;
+
+                if (quality === 'excellent') {
+                    commentary += `This file has **excellent** compressibility — low entropy means my neural advisors will learn its patterns incredibly fast. `;
+                } else if (quality === 'good') {
+                    commentary += `This file has **good** compressibility. There are clear repeating patterns my context models can exploit. `;
+                } else if (quality === 'moderate') {
+                    commentary += `Moderate entropy — there are patterns but also significant randomness. My higher-order advisors (Order-4, Order-5) will need to work harder. `;
                 } else {
-                    return { content: `Error running command: \`${data.error}\``, tool: 'script' };
+                    commentary += `⚠️ High entropy detected. This data is near-random — it may already be compressed or encrypted. `;
                 }
+
+                commentary += `\n\nI recommend **${algo === '--cmix' ? 'CMIX Neural' : algo === '--best' ? 'BWT' : 'PPM'}** compression. Ready to compress? Just say \`compress ${file}\``;
+
+                return { content: commentary, tool: 'analyze', widget: { type: 'file_analysis', data } };
             } catch (e) {
-                return { content: `Failed to connect to Neural Studio Backend API:\n\`\`\`\n${e}\n\`\`\``, tool: 'script' };
+                return { content: `Failed to connect to Neural Studio API. Make sure the server is running:\n\`\`\`\ncd server && python main.py\n\`\`\``, tool: 'analyze' };
             }
         }
 
+        // ═══════ COMPRESS — With AI Pre-Analysis ═══════
         if (lower.startsWith('compress') || lower.startsWith('archive')) {
             let fp = cmd.replace(/^(compress|archive)\s*/i, '').trim();
-            const file = atts.find(a => a.type === 'file')?.name || fp;
-            if (!file) return { content: `Please provide or attach a file path to compress (e.g., \`compress C:\\my_file.txt\`).`, tool: 'compress' };
 
+            // Extract algorithm flag if present
+            let algo = '--cmix';
+            if (fp.includes('--best')) { algo = '--best'; fp = fp.replace('--best', '').trim(); }
+            else if (fp.includes('--ultra')) { algo = '--ultra'; fp = fp.replace('--ultra', '').trim(); }
+            else if (fp.includes('--cmix')) { algo = '--cmix'; fp = fp.replace('--cmix', '').trim(); }
+
+            const file = atts.find(a => a.type === 'file')?.name || fp;
+            if (!file) return { content: `Please provide a file path to compress.\n\nExample: \`compress C:\\\\my_file.txt\``, tool: 'compress' };
+
+            // Step 1: Pre-analyze
+            let analysisWidget: any = null;
             try {
-                const res = await fetch('http://127.0.0.1:8001/api/compress_stream', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ file_path: file, algorithm: '--cmix' })
+                const aRes = await fetch(`${API}/api/analyze`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_path: file })
+                });
+                const aData = await aRes.json();
+                if (!aData.error) {
+                    analysisWidget = { type: 'file_analysis', data: aData };
+                    // Use AI-recommended algorithm
+                    if (aData.ai?.recommended_algorithm && algo === '--cmix') {
+                        algo = aData.ai.recommended_algorithm;
+                    }
+                }
+            } catch { /* continue even if analysis fails */ }
+
+            // Step 2: Stream compress  
+            try {
+                const res = await fetch(`${API}/api/compress_stream`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_path: file, algorithm: algo })
                 });
 
                 const reader = res.body?.getReader();
@@ -218,11 +449,8 @@ export function HelperView() {
                         for (let i = 0; i < chunk.length; i++) {
                             if (chunk[i] === '\r') {
                                 const lastNewline = fullOutput.lastIndexOf('\n');
-                                if (lastNewline !== -1) {
-                                    fullOutput = fullOutput.substring(0, lastNewline + 1);
-                                } else {
-                                    fullOutput = '';
-                                }
+                                if (lastNewline !== -1) fullOutput = fullOutput.substring(0, lastNewline + 1);
+                                else fullOutput = '';
                             } else {
                                 fullOutput += chunk[i];
                             }
@@ -230,25 +458,31 @@ export function HelperView() {
                     }
                 }
 
-                return { content: `🚀 **Compression Finished!**\n\nFile: \`${file}\`\nAlgorithm: CMIX\n\n**Output:**\n\`\`\`text\n${fullOutput}\n\`\`\``, tool: 'compress' };
+                let msg = `🚀 **Compression Complete!**\n\nFile: \`${file}\`\nAlgorithm: ${algo === '--cmix' ? 'CMIX Neural (1,046 advisors)' : algo === '--best' ? 'BWT Pipeline' : 'PPM Arithmetic'}`;
+
+                if (fullOutput.trim()) {
+                    msg += `\n\n**Engine Output:**\n\`\`\`text\n${fullOutput.trim()}\n\`\`\``;
+                }
+
+                return { content: msg, tool: 'compress', widget: analysisWidget };
 
             } catch (e) {
                 return { content: `Failed to connect to Neural Studio Backend API:\n\`\`\`\n${e}\n\`\`\``, tool: 'compress' };
             }
         }
 
+        // ═══════ DECOMPRESS ═══════
         if (lower.startsWith('decompress') || lower.startsWith('restore') || lower.startsWith('extract')) {
             let fp = cmd.replace(/^(decompress|restore|extract)\s*/i, '').trim();
             const file = atts.find(a => a.type === 'file')?.name || fp;
-            if (!file) return { content: `Please provide or attach a \`.myzip\` archive path to decompress.`, tool: 'compress' };
+            if (!file) return { content: `Please provide a \`.myzip\` archive path to decompress.`, tool: 'compress' };
 
             let op = file.replace('.myzip', '');
             if (op === file) op = file + '_out';
 
             try {
-                const res = await fetch('http://127.0.0.1:8001/api/decompress_stream', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                const res = await fetch(`${API}/api/decompress_stream`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ archive_path: file, output_path: op })
                 });
 
@@ -264,11 +498,8 @@ export function HelperView() {
                         for (let i = 0; i < chunk.length; i++) {
                             if (chunk[i] === '\r') {
                                 const lastNewline = fullOutput.lastIndexOf('\n');
-                                if (lastNewline !== -1) {
-                                    fullOutput = fullOutput.substring(0, lastNewline + 1);
-                                } else {
-                                    fullOutput = '';
-                                }
+                                if (lastNewline !== -1) fullOutput = fullOutput.substring(0, lastNewline + 1);
+                                else fullOutput = '';
                             } else {
                                 fullOutput += chunk[i];
                             }
@@ -276,25 +507,96 @@ export function HelperView() {
                     }
                 }
 
-                return { content: `🚀 **Decompression Finished!**\n\nArchive: \`${file}\`\nTarget: \`${op}\`\n\n**Output:**\n\`\`\`text\n${fullOutput}\n\`\`\``, tool: 'compress' };
-
+                return {
+                    content: `🔄 **Decompression Complete!**\n\nThe neural network rebuilt itself from scratch — same advisors, same gradient descent, same weights. Mirror-mode decompression is pure math!\n\nArchive: \`${file}\`\nRecovered: \`${op}\`${fullOutput.trim() ? `\n\n\`\`\`text\n${fullOutput.trim()}\n\`\`\`` : ''}`,
+                    tool: 'compress'
+                };
             } catch (e) {
                 return { content: `Failed to connect to Neural Studio Backend API:\n\`\`\`\n${e}\n\`\`\``, tool: 'compress' };
             }
         }
 
-        if (lower.startsWith('search') || lower.includes('search for ')) {
-            const q = cmd.replace(/search for |search /gi, '').trim();
-            return { content: `🔍 Searching for: **${q}**\n\nWeb bridge search initiated. Results appear in the console output.`, tool: 'search' };
-        }
-        if (lower.includes('code') || lower.includes('write') || lower.includes('generate')) {
-            return { content: `Here's a starter:\n\n\`\`\`typescript\nasync function compressFile(path: string) {\n  const res = await fetch('http://127.0.0.1:8001/api/compress', {\n    method: 'POST',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({ file_path: path, algorithm: '--cmix' })\n  });\n  return res.json();\n}\n\`\`\`\n\nWould you like me to refine this?`, tool: 'code' };
-        }
-        if (lower.includes('help') || lower === '?') {
-            return { content: `**What I can do:**\n\n**Browser**\n• \`navigate [url]\` — open any page\n• \`click [selector]\` — click element\n• \`screenshot\` — capture view\n\n**Files**\n• \`compress [file]\` — Neural compression\n• \`decompress [myzip]\` — Restore files\n• Attach files with 📎\n\n**Terminal**\n• \`cmd [command]\` or \`> [command]\` — Run raw OS terminals scripts directly here\n\n**Utilities**\n• \`search [query]\` — web search\n• \`write code for [task]\` — generate code\n\nUse the quick pills for one-click actions!` };
+        // ═══════ NAVIGATE ═══════
+        if (lower.startsWith('navigate ') || lower.includes('go to ') || lower.startsWith('open ')) {
+            let url = cmd.replace(/navigate |go to |open /gi, '').trim();
+            if (!url.startsWith('http')) url = 'https://' + url;
+            if (window.ws) window.ws.send(JSON.stringify({ id: `cmd_${Date.now()}`, type: 'command', from: 'vscode', command: 'browserAgent.navigate', params: { url } }));
+            return { content: `Navigating to **${url}**...\n\nBrowser bridge command sent.`, tool: 'browse' };
         }
 
-        return { content: `Got it: "${cmd}"\n\nI'm connected to your browser bridge and filesystem. Try \`help\` for the full command list, or use the quick-action pills below.` };
+        // ═══════ SCREENSHOT ═══════
+        if (lower.includes('screenshot') || lower.includes('capture')) {
+            if (window.ws) window.ws.send(JSON.stringify({ id: `cmd_${Date.now()}`, type: 'command', from: 'vscode', command: 'browserAgent.screenshot', params: { fullPage: false } }));
+            return { content: `📸 Screenshot captured!\n\nSaved via browser bridge.`, tool: 'screenshot' };
+        }
+
+        // ═══════ CLICK ═══════
+        if (lower.startsWith('click ')) {
+            const sel = cmd.substring(6);
+            if (window.ws) window.ws.send(JSON.stringify({ id: `cmd_${Date.now()}`, type: 'command', from: 'vscode', command: 'browserAgent.click', params: { selector: sel } }));
+            return { content: `Clicking element: \`${sel}\``, tool: 'browse' };
+        }
+
+        // ═══════ CMD / TERMINAL ═══════
+        if (lower.startsWith('cmd ') || lower.startsWith('> ')) {
+            const command = cmd.replace(/^(cmd|>)\s*/i, '');
+            try {
+                const res = await fetch(`${API}/api/cmd`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    let out = data.stdout || '';
+                    let err = data.stderr || '';
+                    if (!out && !err) out = 'Command executed successfully with no output.';
+                    return { content: `Ran command: \`${command}\`${out ? `\n\n**Output:**\n\`\`\`text\n${out}\n\`\`\`` : ''}${err ? `\n\n**Error:**\n\`\`\`text\n${err}\n\`\`\`` : ''}`, tool: 'script' };
+                } else {
+                    return { content: `Error: \`${data.error}\``, tool: 'script' };
+                }
+            } catch (e) {
+                return { content: `Failed to connect to Neural Studio Backend API:\n\`\`\`\n${e}\n\`\`\``, tool: 'script' };
+            }
+        }
+
+        // ═══════ SEARCH ═══════
+        if (lower.startsWith('search') || lower.includes('search for ')) {
+            const q = cmd.replace(/search for |search /gi, '').trim();
+            return { content: `🔍 Searching for: **${q}**\n\nWeb bridge search initiated.`, tool: 'search' };
+        }
+
+        // ═══════ CODE ═══════
+        if (lower.includes('code') || lower.includes('write') || lower.includes('generate')) {
+            return {
+                content: `Here's a starter using our V10 Neural API:\n\n\`\`\`typescript\n// Analyze a file before compressing\nconst analysis = await fetch('${API}/api/analyze', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ file_path: 'data.txt' })\n}).then(r => r.json());\n\nconsole.log('Entropy:', analysis.entropy, 'bpb');\nconsole.log('AI recommends:', analysis.ai.recommended_algorithm);\nconsole.log('Est. savings:', analysis.ai.compression_estimate_pct + '%');\n\n// Then compress with the server's recommendation\nconst result = await fetch('${API}/api/compress', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({\n    file_path: 'data.txt',\n    algorithm: analysis.ai.recommended_algorithm\n  })\n}).then(r => r.json());\n\`\`\`\n\nThis uses the new V10 analysis pipeline — the AI first inspects entropy and byte patterns, then picks the best neural model!`,
+                tool: 'code'
+            };
+        }
+
+        // ═══════ STATUS ═══════
+        if (lower === 'status' || lower === 'health' || lower.includes('server status')) {
+            try {
+                const res = await fetch(`${API}/api/health`);
+                const data = await res.json();
+                return {
+                    content: `**🟢 Neural Studio V10 Server Status**\n\nVersion: \`${data.version}\`\nUptime: \`${Math.floor(data.uptime_seconds)}s\`\nEngine: ${data.engine}\nModels: **${data.models} AI Advisors** active\nExecutable: ${data.exe_available ? '✅' : '❌'}\n\nAlgorithms: ${data.algorithms?.map((a: string) => `\`${a}\``).join(', ')}`
+                };
+            } catch {
+                return { content: `❌ **Server Offline**\n\nStart the server:\n\`\`\`\ncd server && python main.py\n\`\`\`` };
+            }
+        }
+
+        // ═══════ HELP ═══════
+        if (lower.includes('help') || lower === '?') {
+            return {
+                content: `**🧠 Neural Studio AI — Command Reference**\n\n**Compression Intelligence**\n• \`analyze [file]\` — deep entropy & pattern analysis with AI insights\n• \`compress [file]\` — neural compression (auto-picks best algorithm)\n• \`compress [file] --cmix\` — force CMIX (16 neural advisors)\n• \`compress [file] --best\` — force BWT pipeline\n• \`decompress [archive]\` — restore with mirror-mode decompression\n\n**Browser Bridge**\n• \`navigate [url]\` — open any page\n• \`click [selector]\` — click element\n• \`screenshot\` — capture view\n\n**Terminal**\n• \`cmd [command]\` or \`> [command]\` — direct OS command\n\n**System**\n• \`status\` — server health & model count\n• \`help\` — this menu\n\nThe AI automatically pre-analyzes files before compression, showing entropy heatmaps and neural model predictions inline! 🧠`
+            };
+        }
+
+        // ═══════ FALLBACK — Intelligent response ═══════
+        return {
+            content: `Got it: "${cmd}"\n\nI'm your compression-aware AI. Try:\n• \`analyze [filepath]\` to see what my neural network detects\n• \`compress [filepath]\` to shrink with AI guidance\n• \`status\` to check the V10 engine\n• \`help\` for all commands`
+        };
     };
 
     const sendMessage = async () => {
@@ -306,8 +608,8 @@ export function HelperView() {
         setAttachments([]);
         setIsTyping(true);
         try {
-            const { content, tool } = await processCommand(cmd, userMsg.attachments || []);
-            setMessages(p => [...p, { role: 'assistant', content, tool, timestamp: new Date() }]);
+            const { content, tool, widget } = await processCommand(cmd, userMsg.attachments || []);
+            setMessages(p => [...p, { role: 'assistant', content, tool, widget, timestamp: new Date() }]);
         } finally {
             setIsTyping(false);
         }
@@ -321,32 +623,48 @@ export function HelperView() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
                     <div style={{
                         width: 38, height: 38, borderRadius: 11, flexShrink: 0,
-                        background: 'linear-gradient(135deg, #DA7555, #b85a38)',
+                        background: 'linear-gradient(135deg, #C97FDB, #8B5CF6)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', boxShadow: '0 2px 10px rgba(218,117,85,0.3)'
+                        color: '#fff', boxShadow: '0 2px 10px rgba(201,127,219,0.3)'
                     }}>
                         <BrainCircuit size={19} />
                     </div>
                     <div>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: '#F0F0F0' }}>Neural Studio AI</div>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: '#F0F0F0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            Neural Studio AI
+                            <span style={{
+                                fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
+                                background: 'rgba(201,127,219,0.15)', color: '#C97FDB',
+                                border: '1px solid rgba(201,127,219,0.3)'
+                            }}>V10</span>
+                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#3BB37A', boxShadow: '0 0 5px #3BB37A', display: 'inline-block' }} />
-                            <span style={{ fontSize: 11, color: '#666' }}>Online · WS {window.ws ? 'Connected' : 'Disconnected'}</span>
+                            <span style={{
+                                width: 6, height: 6, borderRadius: '50%',
+                                background: connected ? '#4ADE80' : '#EF4444',
+                                boxShadow: connected ? '0 0 5px #4ADE80' : '0 0 5px #EF4444',
+                                display: 'inline-block'
+                            }} />
+                            <span style={{ fontSize: 11, color: '#666' }}>
+                                {connected ? `Online · ${serverInfo?.models || 1046} advisors` : 'Server offline'}
+                            </span>
                         </div>
                     </div>
                 </div>
-                <button onClick={() => setWebEnabled(v => !v)}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
-                        borderRadius: 20, cursor: 'pointer', fontSize: 12, fontWeight: 600,
-                        border: webEnabled ? '1px solid #4A9EFF55' : '1px solid #333',
-                        background: webEnabled ? 'rgba(74,158,255,0.1)' : '#242424',
-                        color: webEnabled ? '#4A9EFF' : '#666',
-                        transition: 'all 0.2s'
-                    }}>
-                    {webEnabled ? <Wifi size={13} /> : <WifiOff size={13} />}
-                    Web {webEnabled ? 'On' : 'Off'}
-                </button>
+                <div style={{ display: 'flex', gap: 6 }}>
+                    <button onClick={() => checkHealth()}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px',
+                            borderRadius: 20, cursor: 'pointer', fontSize: 11, fontWeight: 600,
+                            border: connected ? '1px solid rgba(74,222,128,0.3)' : '1px solid #333',
+                            background: connected ? 'rgba(74,222,128,0.08)' : '#242424',
+                            color: connected ? '#4ADE80' : '#666',
+                            transition: 'all 0.2s'
+                        }}>
+                        {connected ? <Wifi size={12} /> : <WifiOff size={12} />}
+                        {connected ? 'Connected' : 'Retry'}
+                    </button>
+                </div>
             </div>
 
             {/* ── Chat History ── */}
@@ -371,14 +689,14 @@ export function HelperView() {
                                     width: 30, height: 30, borderRadius: 9, flexShrink: 0, marginTop: 2,
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     ...(m.role === 'assistant'
-                                        ? { background: 'linear-gradient(135deg, #DA7555, #b85a38)', color: '#fff' }
-                                        : { background: '#1A1A1A', color: '#DA7555', border: '1px solid #333' })
+                                        ? { background: 'linear-gradient(135deg, #C97FDB, #8B5CF6)', color: '#fff' }
+                                        : { background: '#1A1A1A', color: '#C97FDB', border: '1px solid #333' })
                                 }}>
                                     {m.role === 'assistant' ? <BrainCircuit size={14} /> : <span style={{ fontSize: 11, fontWeight: 700 }}>Y</span>}
                                 </div>
 
                                 {/* Column */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 'min(72%, 560px)', alignItems: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxWidth: 'min(78%, 620px)', alignItems: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                                         <span style={{ fontSize: 10, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                             {m.role === 'user' ? 'You' : 'Neural AI'}
@@ -397,8 +715,12 @@ export function HelperView() {
                                             borderRadius: m.role === 'assistant' ? '3px 12px 12px 12px' : '12px 3px 12px 12px',
                                             ...(m.role === 'assistant'
                                                 ? { background: '#242424', border: '1px solid #333' }
-                                                : { background: '#3A2A25', border: '1px solid rgba(218,117,85,0.3)' })
+                                                : { background: '#2A1F35', border: '1px solid rgba(201,127,219,0.3)' })
                                         }} />
+                                    )}
+                                    {/* Rich Widget — Analysis Results */}
+                                    {m.widget?.type === 'file_analysis' && (
+                                        <FileInfoWidget data={m.widget.data} />
                                     )}
                                 </div>
                             </div>
@@ -409,7 +731,7 @@ export function HelperView() {
                 {/* Typing indicator */}
                 {isTyping && (
                     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                        <div style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, background: 'linear-gradient(135deg, #DA7555, #b85a38)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                        <div style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, background: 'linear-gradient(135deg, #C97FDB, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                             <BrainCircuit size={14} />
                         </div>
                         <div style={{ background: '#242424', border: '1px solid #333', borderRadius: '3px 12px 12px 12px', padding: '12px 16px' }}>
@@ -428,12 +750,9 @@ export function HelperView() {
 
             {/* ── Quick Tool Pills ── */}
             <div style={{ display: 'flex', gap: 6, padding: '9px 0 6px', overflowX: 'auto', flexShrink: 0, scrollbarWidth: 'none' }}>
-                {TOOL_ACTIONS.map(tool => {
-                    const Icon = tool.icon;
-                    return (
-                        <QuickPill key={tool.id} tool={tool} onClick={() => handleToolAction(tool.id)} />
-                    );
-                })}
+                {TOOL_ACTIONS.map(tool => (
+                    <QuickPill key={tool.id} tool={tool} onClick={() => handleToolAction(tool.id)} />
+                ))}
             </div>
 
             {/* ── Input Area ── */}
@@ -472,9 +791,9 @@ export function HelperView() {
                 )}
             </div>
 
-            {/* Footer note */}
+            {/* Footer */}
             <div style={{ textAlign: 'center', fontSize: 10, color: '#555', paddingBottom: 6, flexShrink: 0 }}>
-                Neural Studio AI · Browser, Files, Code & More · Press Enter to send
+                Neural Studio V10 · Compression AI + Assistant · {connected ? '🟢' : '🔴'} Server {connected ? 'Online' : 'Offline'}
             </div>
 
             <input ref={fileRef} type="file" style={{ display: 'none' }} onChange={e => handleFile(e, 'file')} />
@@ -494,7 +813,7 @@ export function HelperView() {
     );
 }
 
-/* ─ Sub-components (kept small for clarity) ─ */
+/* ─ Sub-components ─ */
 
 function QuickPill({ tool, onClick }: { tool: typeof TOOL_ACTIONS[0]; onClick: () => void }) {
     const [hov, setHov] = useState(false);
@@ -522,12 +841,11 @@ function InputBox({ inputRef, inputVal, setInputVal, onSend, onFileClick, onImgC
         <div style={{
             display: 'flex', alignItems: 'center',
             background: '#242424',
-            border: `1px solid ${focused ? '#DA7555' : '#333'}`,
-            boxShadow: focused ? '0 0 0 3px rgba(218,117,85,0.1)' : 'none',
+            border: `1px solid ${focused ? '#C97FDB' : '#333'}`,
+            boxShadow: focused ? '0 0 0 3px rgba(201,127,219,0.1)' : 'none',
             borderRadius: 13, padding: '4px 4px 4px 6px', gap: 2,
             transition: 'border-color 0.2s, box-shadow 0.2s'
         }}>
-            {/* Left icons */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
                 <IBtn2 Icon={Paperclip} title="Attach file" onClick={onFileClick} />
                 <IBtn2 Icon={ImageIcon} title="Attach image" onClick={onImgClick} />
@@ -541,7 +859,7 @@ function InputBox({ inputRef, inputVal, setInputVal, onSend, onFileClick, onImgC
             <input
                 ref={inputRef}
                 type="text"
-                placeholder="Message Neural Studio AI...  (try 'navigate youtube.com')"
+                placeholder="analyze · compress · cmd · ask anything..."
                 value={inputVal}
                 onChange={e => setInputVal(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') onSend(); }}
@@ -553,7 +871,6 @@ function InputBox({ inputRef, inputVal, setInputVal, onSend, onFileClick, onImgC
                 }}
             />
 
-            {/* Right icons */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                 <button onClick={() => setIsRecording((v: boolean) => !v)} title="Voice input"
                     style={{
@@ -584,8 +901,8 @@ function IBtn2({ Icon, title, onClick, active, extra }: { Icon: any; title: stri
             style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 height: 32, padding: '0 7px', borderRadius: 7, border: 'none',
-                background: active ? 'rgba(218,117,85,0.15)' : hov ? 'rgba(255,255,255,0.06)' : 'transparent',
-                color: active ? '#DA7555' : hov ? '#CCC' : '#777',
+                background: active ? 'rgba(201,127,219,0.15)' : hov ? 'rgba(255,255,255,0.06)' : 'transparent',
+                color: active ? '#C97FDB' : hov ? '#CCC' : '#777',
                 cursor: 'pointer', flexShrink: 0, transition: 'all 0.13s'
             }}>
             <Icon size={15} />
