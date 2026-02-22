@@ -242,22 +242,6 @@ def store_knowledge(topic: str, content: str, source: str = "user",
     
     save_index(index)
     
-    # Auto-train C++ transformer on new knowledge
-    try:
-        engine = os.path.join(BASE_DIR, "bin", "neural_engine.exe")
-        if os.path.exists(engine):
-            import tempfile
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
-                f.write(content)
-                tmp = f.name
-            try:
-                subprocess.run([engine, "train", tmp], capture_output=True, timeout=30)
-            finally:
-                try: os.unlink(tmp)
-                except: pass
-    except Exception:
-        pass  # Don't break learning if engine fails
-    
     return {
         "status": "learned",
         "entry_id": entry_id,
@@ -366,17 +350,12 @@ def get_knowledge_text(entry_id: str) -> Optional[str]:
 
 def generate_response(query: str) -> dict:
     """
-    Generate a response using:
-    1. TF-IDF retrieval (find relevant documents)
-    2. Transformer semantic matching (re-rank by meaning)
-    3. Attention (focus on relevant sentences)
-    4. Language model (generate coherent continuation)
-    
-    This combines retrieval + generation like a real LLM.
+    Generate a response to a query using retrieved knowledge.
+    This is our own "LLM" — retrieval-augmented from compressed data.
     """
     ensure_brain()
     
-    # Step 1: Retrieve relevant knowledge with TF-IDF
+    # Retrieve relevant knowledge
     results = retrieve_knowledge(query, top_k=5)
     
     if not results:
@@ -388,7 +367,7 @@ def generate_response(query: str) -> dict:
             "confidence": 0.0,
         }
     
-    # Step 2: Get full text of top results
+    # Get full text of top results
     context_parts = []
     sources = []
     
@@ -405,75 +384,40 @@ def generate_response(query: str) -> dict:
     
     if not context_parts:
         return {
-            "response": "I found related topics but couldn't load the knowledge.",
+            "response": "I found related topics but couldn't load the knowledge. It may need decompression.",
             "sources": [{"topic": r["topic"], "score": r["score"]} for r in results[:3]],
             "confidence": 0.1,
         }
     
-    # Step 3: Use transformer attention to find most relevant sentences
+    # Build response from context
+    query_tokens = set(tokenize(query))
+    
+    # Find the most relevant sentences across all context
     all_sentences = []
     for text in context_parts:
         sentences = re.split(r'[.!?\n]+', text)
         for sent in sentences:
             sent = sent.strip()
-            if len(sent) >= 15:
-                all_sentences.append(sent)
-    
-    if not all_sentences:
-        response_text = '\n\n'.join(r.get("summary", "") for r in results[:3])
-    else:
-        # Score sentences with both keyword matching and transformer similarity
-        query_tokens = set(tokenize(query))
-        scored_sentences = []
-        
-        # Check if C++ engine is available for semantic similarity
-        engine = os.path.join(BASE_DIR, "bin", "neural_engine.exe")
-        has_engine = os.path.exists(engine)
-        
-        for sent in all_sentences:
-            # Keyword score (TF-IDF style)
+            if len(sent) < 15:
+                continue
             sent_tokens = set(tokenize(sent))
-            keyword_score = len(query_tokens & sent_tokens)
-            
-            # C++ transformer semantic score
-            semantic_score = 0.0
-            if has_engine and keyword_score > 0:
-                try:
-                    result = subprocess.run([engine, "similarity", query, sent],
-                                           capture_output=True, text=True, timeout=5)
-                    if result.returncode == 0:
-                        import json as _json
-                        data = _json.loads(result.stdout)
-                        semantic_score = data.get("similarity", 0) * 3.0
-                except Exception:
-                    pass
-            
-            total_score = keyword_score + semantic_score
-            if total_score > 0:
-                scored_sentences.append((total_score, sent))
-        
-        scored_sentences.sort(reverse=True)
-        
-        if scored_sentences:
-            seen = set()
-            top_sentences = []
-            for score, sent in scored_sentences:
-                normalized = sent.strip().lower()
-                if normalized not in seen:
-                    seen.add(normalized)
-                    top_sentences.append(sent)
-                if len(top_sentences) >= 5:
-                    break
-            
-            response_text = '. '.join(s.strip().rstrip('.') for s in top_sentences) + '.'
-        else:
-            response_text = '\n\n'.join(r.get("summary", "") for r in results[:3])
+            relevance = len(query_tokens & sent_tokens)
+            if relevance > 0:
+                all_sentences.append((relevance, sent))
     
-    # Confidence scoring
+    all_sentences.sort(reverse=True)
+    
+    # Build coherent response
+    if all_sentences:
+        top_sentences = all_sentences[:6]
+        response_text = '. '.join(s[1].strip().rstrip('.') for s in top_sentences) + '.'
+    else:
+        # Fall back to summaries
+        response_text = '\n\n'.join(r.get("summary", "") for r in results[:3])
+    
+    # Confidence based on score
     max_score = max(r["score"] for r in results)
     confidence = min(max_score / 10.0, 1.0)
-    if has_engine:
-        confidence = min(confidence * 1.2, 1.0)  # Boost confidence when transformer is active
     
     return {
         "response": response_text,
@@ -481,7 +425,6 @@ def generate_response(query: str) -> dict:
         "confidence": round(confidence, 2),
         "knowledge_items_used": len(sources),
         "total_knowledge": load_index().get("total_knowledge_items", 0),
-        "used_transformer": has_engine,
     }
 
 # =============================================================================

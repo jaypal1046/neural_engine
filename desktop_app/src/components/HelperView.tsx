@@ -559,7 +559,120 @@ export function HelperView() {
             }
         }
 
-        // ═══════ VAULT STORE ═══════
+        // ═══════ LIST DIRECTORY ═══════
+        if (lower.startsWith('ls') || lower.startsWith('list ') || lower.startsWith('dir ') || lower === 'ls' || lower === 'dir') {
+            const dirPath = cmd.replace(/^(ls|list|dir)\s*/i, '').trim() || '';
+            try {
+                const res = await fetch(`${API}/api/fs/list`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: dirPath || null })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}` };
+
+                let listing = data.items.map((item: any) => {
+                    if (item.type === 'directory') return `📁 ${item.name}/ (${item.children} items)`;
+                    return `📄 ${item.name} (${item.size_human || '?'})`;
+                }).join('\n');
+
+                return { content: `📂 **${data.path}** (${data.count} items)\n\n${listing}` };
+            } catch (e) {
+                return { content: `Failed to list directory:\n\`\`\`\n${e}\n\`\`\`` };
+            }
+        }
+
+        // ═══════ READ FILE ═══════
+        if (lower.startsWith('read ') || lower.startsWith('cat ') || lower.startsWith('view ') || lower.startsWith('open ')) {
+            const fp = cmd.replace(/^(read|cat|view|open)\s*/i, '').trim();
+            if (!fp) return { content: 'Provide a file path to read.\n\nExample: `read C:\\\\data\\\\notes.txt`' };
+
+            try {
+                const res = await fetch(`${API}/api/fs/read`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: fp })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}` };
+
+                const ext = data.extension || '';
+                const lang = ext.replace('.', '') || 'text';
+                let header = `📄 **${data.file_name}** (${data.total_lines} lines, ${(data.size / 1024).toFixed(1)} KB)`;
+                if (data.converted) header += ` — *converted from ${data.format}*`;
+                if (data.truncated) header += `\n⚠️ Showing first ${data.lines_shown} of ${data.total_lines} lines`;
+
+                return { content: `${header}\n\n\`\`\`${lang}\n${data.content}\n\`\`\`` };
+            } catch (e) {
+                return { content: `Failed to read file:\n\`\`\`\n${e}\n\`\`\`` };
+            }
+        }
+
+        // ═══════ FIND FILES ═══════
+        if (lower.startsWith('find ') || lower.startsWith('search files ')) {
+            const pattern = cmd.replace(/^(find|search files)\s*/i, '').trim();
+            if (!pattern) return { content: 'Provide a search pattern.\n\nExamples:\n`find *.txt`\n`find *.pdf`\n`find main.*`' };
+
+            try {
+                const res = await fetch(`${API}/api/fs/find`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pattern })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}` };
+
+                if (data.count === 0) return { content: `No files found matching \`${pattern}\`` };
+
+                let list = data.results.map((r: any) =>
+                    `${r.type === 'directory' ? '📁' : '📄'} ${r.path}${r.size ? ` (${(r.size / 1024).toFixed(1)} KB)` : ''}`
+                ).join('\n');
+
+                return { content: `🔍 Found **${data.count}** of ${data.total_found} matches for \`${pattern}\`:\n\n${list}` };
+            } catch (e) {
+                return { content: `Failed to search:\n\`\`\`\n${e}\n\`\`\`` };
+            }
+        }
+
+        // ═══════ LEARN FROM FILE ═══════
+        if (lower.startsWith('learn_file ') || lower.startsWith('learn file ') || lower.startsWith('read and learn ')) {
+            const rest = cmd.replace(/^(learn_file|learn file|read and learn)\s*/i, '').trim();
+            if (!rest) return { content: 'Provide a file path to learn from.\n\nExample: `learn_file C:\\\\docs\\\\research.pdf`\n\nI can read: PDF, Word, Excel, code, text, and more!' };
+
+            try {
+                const res = await fetch(`${API}/api/brain/learn_file`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_path: rest })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}` };
+
+                return {
+                    content: `📖 **Learned from file: ${data.file}**\n\nTokens: ${data.token_count}\nRaw: ${(data.raw_size / 1024).toFixed(1)} KB → Compressed: ${(data.compressed_size / 1024).toFixed(1)} KB\nSavings: **${data.savings_pct}%**\n\nKeywords: ${data.keywords?.map((k: string) => `\`${k}\``).join(', ')}\n\nAsk me about it anytime!`
+                };
+            } catch (e) {
+                return { content: `Failed:\n\`\`\`\n${e}\n\`\`\`` };
+            }
+        }
+
+        // ═══════ TRAIN ═══════
+        if (lower === 'train' || lower.startsWith('train ')) {
+            const mode = lower.includes('web') ? 'web' : lower.includes('local') ? 'local' : 'all';
+            const deep = lower.includes('deep');
+
+            try {
+                const res = await fetch(`${API}/api/brain/train`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode, deep })
+                });
+                const data = await res.json();
+                if (data.error) return { content: `❌ ${data.error}` };
+
+                return {
+                    content: `🎓 **Training Complete!**\n\nItems learned: **${data.items_learned}**${data.local_files_learned !== undefined ? `\nLocal files: ${data.local_files_learned}` : ''}${data.web_sources_learned !== undefined ? `\nWeb sources: ${data.web_sources_learned}` : ''}\nTotal knowledge: ${data.total_knowledge}\nVocabulary: ${data.vocabulary_size} words\nCompression: ${data.compression_savings}% saved`
+                };
+            } catch (e) {
+                return { content: `Failed:\n\`\`\`\n${e}\n\`\`\`` };
+            }
+        }
+
         if (lower.startsWith('store ') || lower.startsWith('vault store ') || lower.startsWith('save ')) {
             let fp = cmd.replace(/^(vault store|store|save)\s*/i, '').trim();
             const file = atts.find(a => a.type === 'file')?.name || fp;
@@ -624,6 +737,49 @@ export function HelperView() {
                 };
             } catch (e) {
                 return { content: `Failed to connect to server:\n\`\`\`\n${e}\n\`\`\``, tool: 'compress' };
+            }
+        }
+
+        // ═══════ MATH / CALC ═══════
+        const isMathCmd = lower.startsWith('math ') || lower.startsWith('calc ') || lower.startsWith('calculate ') || lower.startsWith('compute ') || lower.startsWith('solve ') || lower.startsWith('stats ') || lower.startsWith('entropy ');
+        const isPureMath = /^[a-z0-9\s()+\-*/^.,]+$/i.test(lower) && /\d/.test(lower) && /[+\-*/^()]/.test(lower) && !/^[a-z\s()]+$/i.test(lower);
+
+        if (isMathCmd || isPureMath) {
+            const query = cmd.replace(/^(math|calc|calculate|compute|solve)\s*/i, '').trim();
+            try {
+                const res = await fetch(`${API}/api/math/process`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+                const data = await res.json();
+
+                if (data.error || data.type === 'unknown') {
+                    return { content: `❌ ${data.error || 'Could not compute.'}\n\n${data.hint || 'Try: `calc 2 + 3 * 4`, `stats 1 2 3 4 5`, `entropy 0.5 0.3 0.2`'}` };
+                }
+
+                let response = `🔢 **Math Result**\n\n`;
+
+                if (data.type === 'expression') {
+                    response += `\`${data.expression}\` = **${data.result}**`;
+                } else if (data.type === 'statistics') {
+                    if (data.function) {
+                        response += `${data.function}(${data.data.join(', ')}) = **${data.result}**`;
+                    } else {
+                        const s = data.result;
+                        response += `Dataset: [${data.data.join(', ')}]\n\n`;
+                        response += `| Metric | Value |\n|--------|-------|\n`;
+                        response += `| Count | ${s.count} |\n| Mean | ${s.mean} |\n| Median | ${s.median} |\n`;
+                        response += `| Std Dev | ${s.std_dev} |\n| Min | ${s.min} |\n| Max | ${s.max} |\n| Range | ${s.range} |`;
+                    }
+                } else if (data.type === 'entropy') {
+                    response += `Shannon Entropy: **${data.result} bits**\n\nProbabilities: [${data.probabilities.map((p: number) => p.toFixed(3)).join(', ')}]`;
+                } else {
+                    response += `**${data.explanation || JSON.stringify(data.result)}**`;
+                }
+
+                return { content: response };
+            } catch (e) {
+                return { content: `Math engine error:\n\`\`\`\n${e}\n\`\`\`` };
             }
         }
 
@@ -770,6 +926,25 @@ export function HelperView() {
             }
         }
 
+        // ═══════ TEST BRAIN ═══════
+        if (lower === 'test brain' || lower === 'test engine' || lower === 'diagnostics') {
+            try {
+                // Run the comprehensive test script
+                const res = await fetch(`${API}/api/cmd`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: 'python ../test_neural_engine.py' })
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    return { content: `**🧠 Neural Engine Full Diagnostics**\n\n\`\`\`text\n${data.stdout}\n\`\`\``, tool: 'script' };
+                } else {
+                    return { content: `❌ Test failed:\n\`\`\`text\n${data.error}\n\`\`\``, tool: 'script' };
+                }
+            } catch (e) {
+                return { content: `Failed to run diagnostics:\n\`\`\`\n${e}\n\`\`\``, tool: 'script' };
+            }
+        }
+
         // ═══════ HELP ═══════
         if (lower.includes('help') || lower === '?') {
             return {
@@ -777,26 +952,27 @@ export function HelperView() {
             };
         }
 
-        // ═══════ FALLBACK — Try asking the brain ═══════
-        // If no command matches, treat it as a question to the brain
+        // ═══════ FALLBACK — Intelligent Reasoning Engine ═══════
+        // Route through the brain's reasoning pipeline for natural language understanding
         try {
-            const res = await fetch(`${API}/api/brain/ask`, {
+            const res = await fetch(`${API}/api/brain/think`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: cmd })
+                body: JSON.stringify({ message: cmd })
             });
             const data = await res.json();
 
-            if (data.confidence && data.confidence > 0.1) {
+            if (data.response) {
                 let response = data.response;
-                if (data.sources && data.sources.length > 0) {
-                    response += `\n\n📚 *From: ${data.sources.map((s: any) => s.topic).join(', ')}*`;
+                // Show intent for transparency
+                if (data.intent && data.intent !== 'unknown') {
+                    response += `\n\n*[${data.intent} · confidence: ${(data.confidence * 100).toFixed(0)}%${data.auto_learned ? ` · learned ${data.auto_learned} fact(s)` : ''}]*`;
                 }
                 return { content: response };
             }
-        } catch { /* brain not available, fall back */ }
+        } catch { /* reasoning engine not available */ }
 
         return {
-            content: `I don't know about "${cmd}" yet.\n\n**Teach me!**\n• \`learn ${cmd}: [your explanation]\`\n• \`learn_url ${cmd} https://...\`\n\nOr try: \`help\` for all commands`
+            content: `I don't understand "${cmd}" yet.\n\nTalk to me naturally — I can understand questions, math, file operations, and more.\nOr: \`help\` for examples`
         };
     };
 
