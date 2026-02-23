@@ -1097,6 +1097,61 @@ def extract_file_path(text: str) -> Optional[str]:
 
 
 # =============================================================================
+# Math API Endpoint (C++ Neural Engine Integration)
+# =============================================================================
+
+class MathRequest(BaseModel):
+    query: str
+
+@app.post("/api/math/process")
+async def math_process(req: MathRequest):
+    """
+    Process mathematical expressions using the neural engine.
+    Supports: expressions, statistics, entropy calculations.
+    """
+    if not os.path.exists(NEURAL_ENGINE_EXE):
+        return {"error": "Neural engine not built", "message": "Run build_smart_brain.bat first"}
+
+    try:
+        # Call neural_engine.exe math <query>
+        result = subprocess.run(
+            [NEURAL_ENGINE_EXE, "math", req.query],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+
+        # Parse JSON output from neural_engine
+        try:
+            import json
+            response = json.loads(result.stdout)
+
+            # neural_engine returns: {"status":"success","expression":"2+2","result":4}
+            # Frontend expects: {"type":"expression","expression":"2+2","result":4}
+            if response.get("status") == "success":
+                # Convert to frontend format
+                return {
+                    "type": "expression",
+                    "expression": response.get("expression", req.query),
+                    "result": response.get("result", 0)
+                }
+            else:
+                return {"error": response.get("error", "Unknown error"), "type": "unknown"}
+
+        except json.JSONDecodeError:
+            return {
+                "error": "Failed to parse result",
+                "type": "unknown",
+                "stdout": result.stdout,
+                "stderr": result.stderr
+            }
+
+    except subprocess.TimeoutExpired:
+        return {"error": "Math computation timeout", "type": "unknown"}
+    except Exception as e:
+        return {"error": str(e), "type": "unknown"}
+
+# =============================================================================
 # Smart Brain API Endpoints (C++ Engine Integration)
 # =============================================================================
 
@@ -1193,6 +1248,136 @@ async def brain_status():
 
     except Exception as e:
         return {"entries": 0, "error": str(e)}
+
+class ThinkRequest(BaseModel):
+    message: str
+
+@app.post("/api/brain/think")
+async def brain_think(req: ThinkRequest):
+    """
+    Intelligent conversational AI with automatic web learning.
+    - Handles greetings and small talk
+    - For questions: searches knowledge base first
+    - If unknown: automatically learns from Wikipedia
+    - Self-improving through web access
+    """
+    msg = req.message.lower().strip()
+
+    # Greetings
+    if msg in ['hi', 'hello', 'hey', 'greetings', 'yo']:
+        return {
+            "response": "👋 Hello! What would you like to do?",
+            "intent": "greeting",
+            "confidence": 1.0
+        }
+
+    # How are you
+    if any(x in msg for x in ['how are you', 'how r u', 'hows it going', "what's up", 'whats up']):
+        return {
+            "response": "I'm running great! 🚀\n\nMy neural engine is online with 9 AI systems ready:\n• Compression (CMIX/BWT/PPM)\n• Smart Brain\n• Embeddings\n• RAG\n• Memory\n• Reasoning\n\nHow can I help you today?",
+            "intent": "smalltalk",
+            "confidence": 1.0
+        }
+
+    # Thanks
+    if any(x in msg for x in ['thank', 'thanks', 'thx', 'appreciate']):
+        return {
+            "response": "You're welcome! Happy to help. 😊",
+            "intent": "gratitude",
+            "confidence": 1.0
+        }
+
+    # Goodbye
+    if any(x in msg for x in ['bye', 'goodbye', 'see you', 'later', 'exit', 'quit']):
+        return {
+            "response": "Goodbye! Come back anytime. 👋",
+            "intent": "farewell",
+            "confidence": 1.0
+        }
+
+    # For questions: Try Smart Brain first
+    if not os.path.exists(NEURAL_ENGINE_EXE):
+        return {
+            "response": "Neural engine not available. Run build_smart_brain.bat first.",
+            "intent": "error",
+            "confidence": 0.0
+        }
+
+    try:
+        # Step 1: Check existing knowledge
+        result = subprocess.run(
+            [NEURAL_ENGINE_EXE, "ask", req.message],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+
+        import json
+        brain_response = json.loads(result.stdout)
+
+        # If Smart Brain has high confidence answer, return it
+        if brain_response.get("confidence", 0) > 0.5:
+            return {
+                "response": f"{brain_response.get('answer', 'No answer')}\n\n📚 Confidence: {int(brain_response.get('confidence', 0) * 100)}%",
+                "intent": "knowledge",
+                "confidence": brain_response.get("confidence", 0)
+            }
+
+        # Step 2: Low confidence - Learn from Wikipedia automatically
+        # Extract topic from question
+        import re
+        topic = req.message
+        # Remove question words
+        topic = re.sub(r'^(what|how|why|when|where|who|explain|tell|describe|can you)\s+(is|are|was|were|about|know|about)?\s*', '', topic, flags=re.IGNORECASE)
+        topic = topic.replace('?', '').strip()
+
+        if len(topic) > 3:
+            # Try to learn from Wikipedia
+            wiki_url = f"https://en.wikipedia.org/wiki/{topic.replace(' ', '_')}"
+
+            try:
+                learn_result = subprocess.run(
+                    [NEURAL_ENGINE_EXE, "learn", wiki_url],
+                    capture_output=True,
+                    text=True,
+                    timeout=60
+                )
+
+                # Now ask again after learning
+                result2 = subprocess.run(
+                    [NEURAL_ENGINE_EXE, "ask", req.message],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+
+                brain_response2 = json.loads(result2.stdout)
+
+                if brain_response2.get("confidence", 0) > 0.3:
+                    return {
+                        "response": f"🌐 **Learned from Wikipedia!**\n\n{brain_response2.get('answer', 'No answer')}\n\n📚 Source: {wiki_url}\n📊 Confidence: {int(brain_response2.get('confidence', 0) * 100)}%",
+                        "intent": "learned",
+                        "confidence": brain_response2.get("confidence", 0)
+                    }
+
+            except subprocess.TimeoutExpired:
+                pass
+            except Exception as e:
+                print(f"Auto-learn error: {e}")
+
+        # Step 3: Still don't know - suggest manual learning
+        return {
+            "response": f"🤔 I don't know about '{req.message}' yet.\n\n**I tried to learn from Wikipedia but couldn't find good information.**\n\nYou can teach me:\n• `learn https://wikipedia.org/wiki/{topic.replace(' ', '_')}`\n• Or ask something else!",
+            "intent": "unknown",
+            "confidence": 0.2
+        }
+
+    except Exception as e:
+        return {
+            "response": f"Error: {str(e)}\n\nTry: `help` for examples",
+            "intent": "error",
+            "confidence": 0.0
+        }
 
 # =============================================================================
 

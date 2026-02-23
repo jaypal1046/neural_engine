@@ -57,6 +57,17 @@
 // Compression integration
 #include "compressor.h"
 
+// Advanced AI integration (Phases 13-17)
+#include "word_tokenizer.h"
+#include "word_ppm.h"
+#include "embedding_trainer.h"
+#include "rag_engine.h"
+#include "conversation_memory.h"
+#include "reasoning_engine.h"
+#include "bpe_tokenizer.h"
+#include "real_embeddings.h"
+#include "mini_transformer.h"
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -1111,6 +1122,14 @@ int main(int argc, char* argv[]) {
     WordEmbeddings embeddings;
     InferenceEngine inference;
 
+    // Advanced AI components (Phases 13-17)
+    static WordTokenizer word_tok;
+    static WordPPM word_model;
+    static EmbeddingTrainer advanced_embeddings(64);
+    static RAGEngine rag;
+    static ConversationMemory memory;
+    static ReasoningEngine reasoner;
+
     if (cmd == "train" && argc >= 3) {
         // Train ALL engines on a text file
         std::ifstream file(argv[2]);
@@ -1406,6 +1425,415 @@ int main(int argc, char* argv[]) {
             std::cout << "{\"error\":\"" << e.what() << "\"}" << std::endl;
             return 1;
         }
+    }
+    // =========================================================================
+    // PHASE 13-17: Advanced AI Commands
+    // =========================================================================
+
+    // Phase 15: RAG Engine
+    else if (cmd == "rag_ask" && argc >= 3) {
+        std::string question;
+        for (int i = 2; i < argc; i++) { if (i > 2) question += " "; question += argv[i]; }
+
+        auto answer = rag.answer_question(question);
+
+        std::cout << "{\"status\":\"success\",\"answer\":";
+        print_json_string(answer.text);
+        std::cout << ",\"confidence\":" << answer.confidence;
+        std::cout << ",\"sources\":[";
+        for (int i = 0; i < (int)answer.sources.size(); i++) {
+            if (i) std::cout << ",";
+            print_json_string(answer.sources[i]);
+        }
+        std::cout << "],\"reasoning\":[";
+        for (int i = 0; i < (int)answer.reasoning_steps.size(); i++) {
+            if (i) std::cout << ",";
+            print_json_string(answer.reasoning_steps[i]);
+        }
+        std::cout << "]}" << std::endl;
+    }
+    else if (cmd == "rag_add_doc" && argc >= 3) {
+        std::ifstream file(argv[2]);
+        if (!file) {
+            std::cout << "{\"error\":\"Cannot open file\"}" << std::endl;
+            return 1;
+        }
+        std::string content((std::istreambuf_iterator<char>(file)),
+                            std::istreambuf_iterator<char>());
+        rag.add_knowledge(argv[2], content);
+        std::cout << "{\"status\":\"success\",\"document\":\"" << argv[2] << "\"}" << std::endl;
+    }
+    else if (cmd == "rag_load_embeddings" && argc >= 3) {
+        rag.load_embeddings(argv[2]);
+        std::cout << "{\"status\":\"success\",\"embeddings_loaded\":true}" << std::endl;
+    }
+
+    // Phase 14: Advanced Embeddings
+    else if (cmd == "embed_train" && argc >= 3) {
+        std::ifstream file(argv[2]);
+        if (!file) {
+            std::cout << "{\"error\":\"Cannot open file\"}" << std::endl;
+            return 1;
+        }
+        std::string text((std::istreambuf_iterator<char>(file)),
+                         std::istreambuf_iterator<char>());
+
+        // Tokenize into sentences
+        std::vector<std::string> sentences;
+        std::string sent;
+        for (char c : text) {
+            if (c == '.' || c == '!' || c == '?' || c == '\n') {
+                if (sent.size() > 10) sentences.push_back(sent);
+                sent.clear();
+            } else {
+                sent += c;
+            }
+        }
+        if (sent.size() > 10) sentences.push_back(sent);
+
+        int epochs = 3;
+        if (argc >= 5 && std::string(argv[3]) == "--epochs") {
+            epochs = std::stoi(argv[4]);
+        }
+
+        advanced_embeddings.train(sentences, epochs);
+
+        // Save if path provided
+        if (argc >= 4 && std::string(argv[3]) != "--epochs") {
+            advanced_embeddings.save(argv[3]);
+        }
+
+        std::cout << "{\"status\":\"success\",\"vocab_size\":" << advanced_embeddings.vocab_size()
+                  << ",\"epochs\":" << epochs << "}" << std::endl;
+    }
+    else if (cmd == "embed_similar" && argc >= 3) {
+        auto results = advanced_embeddings.most_similar(argv[2], 10);
+        std::cout << "{\"status\":\"success\",\"word\":\"" << argv[2] << "\",\"similar\":[";
+        for (int i = 0; i < (int)results.size(); i++) {
+            if (i) std::cout << ",";
+            std::cout << "{\"word\":\"" << results[i].first << "\",\"similarity\":" << results[i].second << "}";
+        }
+        std::cout << "]}" << std::endl;
+    }
+    else if (cmd == "embed_analogy" && argc >= 6) {
+        auto results = advanced_embeddings.analogy(argv[3], argv[4], argv[5], 5);
+        std::cout << "{\"status\":\"success\",\"analogy\":\"" << argv[3] << " is to "
+                  << argv[4] << " as " << argv[5] << " is to ?\",\"results\":[";
+        for (int i = 0; i < (int)results.size(); i++) {
+            if (i) std::cout << ",";
+            std::cout << "{\"word\":\"" << results[i].first << "\",\"score\":" << results[i].second << "}";
+        }
+        std::cout << "]}" << std::endl;
+    }
+    else if (cmd == "embed_load" && argc >= 3) {
+        advanced_embeddings.load(argv[2]);
+        std::cout << "{\"status\":\"success\",\"vocab_size\":" << advanced_embeddings.vocab_size() << "}" << std::endl;
+    }
+    else if (cmd == "embed_save" && argc >= 3) {
+        advanced_embeddings.save(argv[2]);
+        std::cout << "{\"status\":\"success\",\"saved\":\"" << argv[2] << "\"}" << std::endl;
+    }
+
+    // Phase 13: Word-Level Language Model
+// DISABLED:     else if (cmd == "word_train" && argc >= 3) {
+// DISABLED:         std::ifstream file(argv[2]);
+// DISABLED:         if (!file) {
+// DISABLED:             std::cout << "{\"error\":\"Cannot open file\"}" << std::endl;
+// DISABLED:             return 1;
+// DISABLED:         }
+// DISABLED:         std::string text((std::istreambuf_iterator<char>(file)),
+// DISABLED:                          std::istreambuf_iterator<char>());
+// DISABLED: 
+// DISABLED:         // Train word tokenizer
+// DISABLED:         std::vector<std::string> sentences;
+// DISABLED:         std::string sent;
+// DISABLED:         for (char c : text) {
+// DISABLED:             if (c == '.' || c == '!' || c == '?' || c == '\n') {
+// DISABLED:                 if (sent.size() > 10) sentences.push_back(sent);
+// DISABLED:                 sent.clear();
+// DISABLED:             } else {
+// DISABLED:                 sent += c;
+// DISABLED:             }
+// DISABLED:         }
+// DISABLED:         if (sent.size() > 10) sentences.push_back(sent);
+// DISABLED: 
+// DISABLED:         word_tok.train(sentences, 10000);
+// DISABLED:         word_model.train(sentences, word_tok, 3); // 3 epochs
+// DISABLED: 
+// DISABLED:         std::cout << "{\"status\":\"success\",\"vocab_size\":" << word_tok.get_vocab().size()
+// DISABLED:                   << ",\"model\":\"5-gram PPM\"}" << std::endl;
+// DISABLED:     }
+// DISABLED:     else if (cmd == "word_predict" && argc >= 3) {
+// DISABLED:         std::string context;
+// DISABLED:         for (int i = 2; i < argc; i++) { if (i > 2) context += " "; context += argv[i]; }
+// DISABLED: 
+// DISABLED:         auto preds = word_model.predict(word_tok.tokenize(context), word_tok, 10);
+// DISABLED:         std::cout << "{\"status\":\"success\",\"predictions\":[";
+// DISABLED:         for (int i = 0; i < (int)preds.size(); i++) {
+// DISABLED:             if (i) std::cout << ",";
+// DISABLED:             std::cout << "{\"word\":\"" << preds[i].first << "\",\"prob\":" << preds[i].second << "}";
+// DISABLED:         }
+// DISABLED:         std::cout << "]}" << std::endl;
+// DISABLED:     }
+// DISABLED:     else if (cmd == "word_generate" && argc >= 3) {
+// DISABLED:         std::string prompt;
+// DISABLED:         int n = 30;
+// DISABLED:         for (int i = 2; i < argc; i++) {
+// DISABLED:             std::string arg = argv[i];
+// DISABLED:             if (arg.find_first_not_of("0123456789") == std::string::npos) {
+// DISABLED:                 n = std::stoi(arg);
+// DISABLED:             } else {
+// DISABLED:                 if (i > 2) prompt += " ";
+// DISABLED:                 prompt += arg;
+// DISABLED:             }
+// DISABLED:         }
+// DISABLED: 
+// DISABLED:         std::string generated = word_model.generate(prompt, word_tok, n, 0.8f);
+// DISABLED:         std::cout << "{\"status\":\"success\",\"prompt\":";
+// DISABLED:         print_json_string(prompt);
+// DISABLED:         std::cout << ",\"generated\":";
+// DISABLED:         print_json_string(generated);
+// DISABLED:         std::cout << "}" << std::endl;
+// DISABLED:     }
+// DISABLED: 
+    // Phase 16: Conversation Memory
+    else if (cmd == "memory_record" && argc >= 5) {
+        std::string question = argv[2];
+        std::string answer = argv[3];
+        float confidence = std::stof(argv[4]);
+
+        memory.record_turn(question, answer, confidence);
+        std::cout << "{\"status\":\"success\",\"turns\":" << memory.get_stats().total_turns << "}" << std::endl;
+    }
+    else if (cmd == "memory_feedback" && argc >= 3) {
+        std::string feedback = argv[2];
+        float rating = (feedback == "positive" || feedback == "good") ? 1.0f : 0.0f;
+        int last_turn = memory.get_stats().total_turns - 1;
+        if (last_turn >= 0) {
+            memory.set_user_feedback(last_turn, rating);
+        }
+        std::cout << "{\"status\":\"success\",\"feedback_recorded\":true}" << std::endl;
+    }
+    else if (cmd == "memory_correct" && argc >= 3) {
+        std::string correction;
+        for (int i = 2; i < argc; i++) { if (i > 2) correction += " "; correction += argv[i]; }
+        int last_turn = memory.get_stats().total_turns - 1;
+        if (last_turn >= 0) {
+            memory.record_correction(last_turn, correction);
+        }
+        std::cout << "{\"status\":\"success\",\"correction_recorded\":true}" << std::endl;
+    }
+    else if (cmd == "memory_export" && argc >= 3) {
+        memory.save(argv[2]);
+        std::cout << "{\"status\":\"success\",\"exported\":\"" << argv[2] << "\"}" << std::endl;
+    }
+    else if (cmd == "memory_import" && argc >= 3) {
+        memory.load(argv[2]);
+        std::cout << "{\"status\":\"success\",\"turns\":" << memory.get_stats().total_turns << "}" << std::endl;
+    }
+
+    // Phase 17: Reasoning Engine
+    else if (cmd == "reason" && argc >= 3) {
+        std::string question;
+        for (int i = 2; i < argc; i++) { if (i > 2) question += " "; question += argv[i]; }
+
+        auto reasoning = reasoner.reason_about(question);
+        std::cout << "{\"status\":\"success\",\"question\":";
+        print_json_string(reasoning.question);
+        std::cout << ",\"confidence\":" << reasoning.overall_confidence;
+        std::cout << ",\"verified\":" << (reasoning.self_verified ? "true" : "false");
+        std::cout << ",\"steps\":[";
+        for (int i = 0; i < (int)reasoning.steps.size(); i++) {
+            if (i) std::cout << ",";
+            std::cout << "{\"step\":";
+            print_json_string(reasoning.steps[i].description);
+            std::cout << ",\"confidence\":" << reasoning.steps[i].confidence << "}";
+        }
+        std::cout << "],\"answer\":";
+        print_json_string(reasoning.final_answer);
+        std::cout << "}" << std::endl;
+    }
+    else if (cmd == "verify" && argc >= 3) {
+        std::string claim;
+        for (int i = 2; i < argc; i++) { if (i > 2) claim += " "; claim += argv[i]; }
+
+        // Simple verification: extract facts and check for contradictions
+        auto facts = reasoner.extract_facts(claim);
+        auto reasoning = reasoner.reason_about("Verify: " + claim);
+        std::cout << "{\"status\":\"success\",\"claim\":";
+        print_json_string(claim);
+        std::cout << ",\"is_valid\":" << (reasoning.self_verified ? "true" : "false");
+        std::cout << ",\"confidence\":" << reasoning.overall_confidence;
+        std::cout << ",\"contradictions\":[";
+        for (int i = 0; i < (int)reasoning.contradictions.size(); i++) {
+            if (i) std::cout << ",";
+            print_json_string(reasoning.contradictions[i]);
+        }
+        std::cout << "],\"facts_extracted\":" << facts.size();
+        std::cout << "}" << std::endl;
+    }
+    else if (cmd == "chain_of_thought" && argc >= 3) {
+        std::string problem;
+        for (int i = 2; i < argc; i++) { if (i > 2) problem += " "; problem += argv[i]; }
+
+        auto sub_qs = reasoner.decompose_question(problem);
+        auto reasoning = reasoner.reason_about(problem);
+        std::cout << "{\"status\":\"success\",\"problem\":";
+        print_json_string(problem);
+        std::cout << ",\"decomposition\":[";
+        for (int i = 0; i < (int)sub_qs.size(); i++) {
+            if (i) std::cout << ",";
+            print_json_string(sub_qs[i]);
+        }
+        std::cout << "],\"reasoning_chain\":[";
+        for (int i = 0; i < (int)reasoning.steps.size(); i++) {
+            if (i) std::cout << ",";
+            std::cout << "{\"step\":";
+            print_json_string(reasoning.steps[i].description);
+            std::cout << ",\"confidence\":" << reasoning.steps[i].confidence << "}";
+        }
+        std::cout << "]}" << std::endl;
+    }
+
+    // UNIFIED PIPELINE: Combine reasoning + RAG + memory
+    else if (cmd == "ai_ask" && argc >= 3) {
+        std::string question;
+        for (int i = 2; i < argc; i++) { if (i > 2) question += " "; question += argv[i]; }
+
+        // Step 1: Reason about the question
+        auto reasoning = reasoner.reason_about(question);
+
+        // Step 2: Use RAG to answer
+        auto answer = rag.answer_question(question);
+
+        // Step 3: Record in memory
+        memory.record_turn(question, answer.text, answer.confidence);
+
+        // Step 4: Unified output
+        std::cout << "{\"status\":\"success\"";
+        std::cout << ",\"question\":"; print_json_string(question);
+        std::cout << ",\"answer\":"; print_json_string(answer.text);
+        std::cout << ",\"confidence\":" << answer.confidence;
+        std::cout << ",\"reasoning_verified\":" << (reasoning.self_verified ? "true" : "false");
+        std::cout << ",\"reasoning_steps\":[";
+        for (int i = 0; i < (int)reasoning.steps.size(); i++) {
+            if (i) std::cout << ",";
+            std::cout << "{\"step\":";
+            print_json_string(reasoning.steps[i].description);
+            std::cout << ",\"confidence\":" << reasoning.steps[i].confidence << "}";
+        }
+        std::cout << "],\"sources\":[";
+        for (int i = 0; i < (int)answer.sources.size(); i++) {
+            if (i) std::cout << ",";
+            print_json_string(answer.sources[i]);
+        }
+        std::cout << "],\"overall_confidence\":" << reasoning.overall_confidence;
+        std::cout << "}" << std::endl;
+    }
+    else if (cmd == "train_transformer" && argc >= 3) {
+        // Phase 21C: Train the transformer with backpropagation!
+        std::string corpus_path = argv[2];
+        int epochs = (argc >= 4) ? std::atoi(argv[3]) : 10;
+        float learning_rate = (argc >= 5) ? std::atof(argv[4]) : 0.0001f;
+        int batch_size = (argc >= 6) ? std::atoi(argv[5]) : 8;
+
+        std::cerr << "\n";
+        std::cerr << "╔══════════════════════════════════════════════════════════╗\n";
+        std::cerr << "║     TRANSFORMER TRAINING - Phase 21C Active!             ║\n";
+        std::cerr << "╚══════════════════════════════════════════════════════════╝\n";
+        std::cerr << "\n";
+        std::cerr << "Training Parameters:\n";
+        std::cerr << "  Corpus: " << corpus_path << "\n";
+        std::cerr << "  Epochs: " << epochs << "\n";
+        std::cerr << "  Learning Rate: " << learning_rate << "\n";
+        std::cerr << "  Batch Size: " << batch_size << "\n";
+        std::cerr << "\n";
+
+        // Load corpus
+        std::ifstream corpus_file(corpus_path);
+        if (!corpus_file) {
+            std::cout << "{\"error\":\"Cannot open corpus file: " << corpus_path << "\"}" << std::endl;
+            return 1;
+        }
+
+        std::vector<std::string> texts;
+        std::string line;
+        while (std::getline(corpus_file, line)) {
+            if (!line.empty()) {
+                texts.push_back(line);
+            }
+        }
+
+        std::cerr << "Loaded " << texts.size() << " lines from corpus\n\n";
+
+        // Initialize BPE tokenizer
+        BPETokenizer tokenizer(32000);
+
+        // Check if tokenizer already exists
+        if (std::ifstream("models/tokenizer.bin")) {
+            std::cerr << "[TOKENIZER] Loading existing tokenizer from models/tokenizer.bin\n";
+            tokenizer.load("models/tokenizer.bin");
+        } else {
+            std::cerr << "[TOKENIZER] Training new BPE tokenizer (this may take a while)...\n";
+            tokenizer.train(texts, 30000);
+            std::cerr << "[TOKENIZER] Saving tokenizer to models/tokenizer.bin\n";
+            tokenizer.save("models/tokenizer.bin");
+        }
+
+        // Initialize transformer with smaller config for faster training
+        TransformerConfig config;
+        config.vocab_size = tokenizer.vocab_size();
+        config.embedding_dim = 256;        // Smaller for faster training
+        config.num_layers = 4;             // Fewer layers
+        config.num_heads = 4;              // Fewer heads
+        config.ff_dim = 1024;              // Smaller FF
+        config.max_seq_length = 128;       // Shorter sequences
+
+        std::cerr << "\n[TRANSFORMER] Initializing model...\n";
+        std::cerr << "  Embedding Dim: " << config.embedding_dim << "\n";
+        std::cerr << "  Layers: " << config.num_layers << "\n";
+        std::cerr << "  Heads: " << config.num_heads << "\n";
+        std::cerr << "  FF Dim: " << config.ff_dim << "\n";
+        std::cerr << "  Max Sequence Length: " << config.max_seq_length << "\n\n";
+
+        MiniTransformer transformer(config);
+
+        // Train!
+        auto start_time = std::chrono::high_resolution_clock::now();
+
+        transformer.train(texts, tokenizer, epochs, learning_rate, batch_size);
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(end_time - start_time);
+
+        std::cerr << "\n";
+        std::cerr << "╔══════════════════════════════════════════════════════════╗\n";
+        std::cerr << "║              TRAINING COMPLETE!                          ║\n";
+        std::cerr << "╚══════════════════════════════════════════════════════════╝\n";
+        std::cerr << "\nTraining took: " << duration.count() << " seconds\n";
+        std::cerr << "Model saved to: models/transformer.bin\n\n";
+
+        // Save model
+        transformer.save("models/transformer.bin");
+
+        // Test generation
+        std::cerr << "\n[TEST] Generating sample text...\n";
+        std::string test_prompt = "The future of AI is";
+        std::string generated = transformer.generate(test_prompt, tokenizer, 20, 0.8f, 40);
+        std::cerr << "Prompt: \"" << test_prompt << "\"\n";
+        std::cerr << "Generated: \"" << generated << "\"\n\n";
+
+        std::cout << "{\"status\":\"success\"";
+        std::cout << ",\"epochs\":" << epochs;
+        std::cout << ",\"training_time_seconds\":" << duration.count();
+        std::cout << ",\"model_file\":\"models/transformer.bin\"";
+        std::cout << ",\"tokenizer_file\":\"models/tokenizer.bin\"";
+        std::cout << ",\"vocab_size\":" << config.vocab_size;
+        std::cout << ",\"embedding_dim\":" << config.embedding_dim;
+        std::cout << ",\"num_layers\":" << config.num_layers;
+        std::cout << ",\"test_prompt\":\"" << test_prompt << "\"";
+        std::cout << ",\"test_output\":\"" << generated << "\"";
+        std::cout << "}" << std::endl;
     }
     else {
         std::cout << "{\"error\":\"Unknown command: " << cmd << "\"}" << std::endl;

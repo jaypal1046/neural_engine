@@ -1025,8 +1025,7 @@ export function HelperView() {
             }
         }
 
-        // ═══════ FALLBACK — Old Reasoning Engine (If Smart Brain fails) ═══════
-        // Only used if Smart Brain is not built or has no answer
+        // ═══════ FALLBACK — Conversational responses ═══════
         try {
             const res = await fetch(`${API}/api/brain/think`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1035,12 +1034,7 @@ export function HelperView() {
             const data = await res.json();
 
             if (data.response) {
-                let response = data.response;
-                // Show intent for transparency
-                if (data.intent && data.intent !== 'unknown') {
-                    response += `\n\n*[old brain · ${data.intent} · confidence: ${(data.confidence * 100).toFixed(0)}%]*`;
-                }
-                return { content: response };
+                return { content: data.response };
             }
         } catch { /* reasoning engine not available */ }
 

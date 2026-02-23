@@ -4,6 +4,8 @@
 #include "web_fetcher.h"
 #include "html_parser.h"
 #include "compressor.h"
+#include "bpe_tokenizer.h"
+#include "real_embeddings.h"
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -18,6 +20,11 @@ namespace fs = std::filesystem;
 static VectorIndex g_index;
 static PersistentMixer g_mixer;
 static bool g_initialized = false;
+
+// Real embeddings (loaded from trained models if available)
+static BPETokenizer* g_tokenizer = nullptr;
+static RealEmbeddings* g_embeddings = nullptr;
+static bool g_embeddings_loaded = false;
 
 void init_brain() {
     if (g_initialized) return;
@@ -83,19 +90,103 @@ std::string generate_topic_name(const std::string& source) {
     return clean.empty() ? "unknown" : clean;
 }
 
-std::vector<float> compute_embedding(const std::string& text) {
-    // TODO: Call neural_engine.exe to compute actual embeddings
-    // For now, return a dummy 64-dim vector
-    // In production, this would do:
-    //   subprocess("./bin/neural_engine.exe embed <text>")
-    //   parse JSON output with embedding vector
+void load_embedding_models() {
+    if (g_embeddings_loaded) return;
 
+    // Try to load pre-trained models
+    std::string tokenizer_path = "models/tokenizer.bin";
+    std::string embeddings_path = "models/embeddings.bin";
+
+    if (fs::exists(tokenizer_path) && fs::exists(embeddings_path)) {
+        std::cerr << "[BRAIN] Loading trained embedding models...\n";
+
+        try {
+            g_tokenizer = new BPETokenizer(32000);
+            g_tokenizer->load(tokenizer_path);
+
+            g_embeddings = new RealEmbeddings(128, g_tokenizer->vocab_size());
+            g_embeddings->load(embeddings_path);
+
+            std::cerr << "[BRAIN] ✓ Real semantic embeddings loaded!\n";
+            std::cerr << "[BRAIN] ✓ Vocabulary: " << g_tokenizer->vocab_size() << " tokens\n";
+            g_embeddings_loaded = true;
+        } catch (const std::exception& e) {
+            std::cerr << "[BRAIN] ⚠ Error loading models: " << e.what() << "\n";
+            if (g_tokenizer) { delete g_tokenizer; g_tokenizer = nullptr; }
+            if (g_embeddings) { delete g_embeddings; g_embeddings = nullptr; }
+        }
+    } else {
+        static bool warned = false;
+        if (!warned) {
+            std::cerr << "[BRAIN] ⚠ No trained models found at models/\n";
+            std::cerr << "[BRAIN] → Run: train_language_model.exe corpus.txt models/\n";
+            std::cerr << "[BRAIN] → Using fallback hash embeddings\n";
+            warned = true;
+        }
+    }
+    g_embeddings_loaded = true;
+}
+
+std::vector<float> compute_embedding(const std::string& text) {
+    // Try to use real Word2Vec embeddings first
+    load_embedding_models();
+
+    if (g_embeddings && g_tokenizer) {
+        // Use REAL semantic embeddings! (car ≈ automobile)
+        auto embedding = g_embeddings->encode_text(text, *g_tokenizer);
+
+        // Pad or truncate to 64 dimensions for compatibility with existing index
+        if (embedding.size() > 64) {
+            embedding.resize(64);
+        } else if (embedding.size() < 64) {
+            embedding.resize(64, 0.0f);
+        }
+
+        return embedding;
+    }
+
+    // Fallback: Improved hash-based embeddings
     std::vector<float> embedding(64, 0.0f);
 
-    // Simple hash-based embedding (placeholder)
-    size_t hash = std::hash<std::string>{}(text);
+    // Tokenize into words
+    std::vector<std::string> words;
+    std::string word;
+    for (char c : text) {
+        if (std::isalnum(c)) {
+            word += std::tolower(c);
+        } else if (!word.empty()) {
+            words.push_back(word);
+            word.clear();
+        }
+    }
+    if (!word.empty()) words.push_back(word);
+
+    if (words.empty()) return embedding;
+
+    // For each word, compute a hash-based embedding and average
+    for (const auto& w : words) {
+        size_t hash = std::hash<std::string>{}(w);
+
+        // Use multiplicative hashing for better distribution
+        for (int i = 0; i < 64; i++) {
+            hash = hash * 31 + (unsigned char)w[i % w.length()];
+            float val = (float)((int)(hash % 200) - 100) / 100.0f; // Range [-1, 1]
+            embedding[i] += val;
+        }
+    }
+
+    // Average and normalize
+    float norm = 0.0f;
     for (int i = 0; i < 64; i++) {
-        embedding[i] = ((hash >> i) & 1) ? 1.0f : -1.0f;
+        embedding[i] /= words.size();
+        norm += embedding[i] * embedding[i];
+    }
+    norm = std::sqrt(norm);
+
+    if (norm > 0.0001f) {
+        for (int i = 0; i < 64; i++) {
+            embedding[i] /= norm;
+        }
     }
 
     return embedding;

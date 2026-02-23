@@ -1,0 +1,157 @@
+[MIXER] Loaded 4 pre-trained weight sets
+
+╔══════════════════════════════════════════════════════════╗
+║     TRANSFORMER TRAINING - Phase 21C Active!             ║
+╚══════════════════════════════════════════════════════════╝
+
+Training Parameters:
+  Corpus: test_corpus_small.txt
+  Epochs: 2
+  Learning Rate: 0.001
+  Batch Size: 4
+
+Loaded 129 lines from corpus
+
+[TOKENIZER] Loading existing tokenizer from models/tokenizer.bin
+[BPE] Loaded tokenizer from models/tokenizer.bin (vocab: 282, merges: 22)
+
+[TRANSFORMER] Initializing model...
+  Embedding Dim: 256
+  Layers: 4
+  Heads: 4
+  FF Dim: 1024
+  Max Sequence Length: 128
+
+[TRANSFORMER] Initializing weights...
+[TRANSFORMER] Initialized 4 layers
+[TRANSFORMER] Model size: ~3M parameters
+[TRANSFORMER] 🚀 Starting training with backpropagation!
+[TRANSFORMER] Corpus size: 129 texts
+[TRANSFORMER] Epochs: 2, LR: 0.001, Batch: 4
+
+[DATA] Tokenizing and chunking corpus...
+[DATA] Created 137 training sequences
+
+═══════════════════════════════════════
+  EPOCH 1/2
+═══════════════════════════════════════
+[OPTIMIZER] Clipped gradients: norm=1.83467 -> 1
+[OPTIMIZER] Clipped gradients: norm=2.01247 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.94668 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.85229 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.90625 -> 1
+  [Batch 5] Loss: 5.85303 | Perplexity: 348.288
+[OPTIMIZER] Clipped gradients: norm=1.98276 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.61864 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.72245 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.67287 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.72624 -> 1
+  [Batch 10] Loss: 5.03386 | Perplexity: 153.524
+[OPTIMIZER] Clipped gradients: norm=1.60185 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.68586 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.47758 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.58638 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.42231 -> 1
+  [Batch 15] Loss: 4.76137 | Perplexity: 116.906
+[OPTIMIZER] Clipped gradients: norm=1.48253 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.46103 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.47748 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.38175 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.39558 -> 1
+  [Batch 20] Loss: 4.51945 | Perplexity: 91.785
+[OPTIMIZER] Clipped gradients: norm=1.41063 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.34894 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.37811 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.17659 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.25197 -> 1
+  [Batch 25] Loss: 4.33633 | Perplexity: 76.4267
+[OPTIMIZER] Clipped gradients: norm=1.28003 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.19218 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.11815 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.24114 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.20941 -> 1
+  [Batch 30] Loss: 4.126 | Perplexity: 61.9297
+[OPTIMIZER] Clipped gradients: norm=1.17225 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.09733 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.12064 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.16766 -> 1
+[OPTIMIZER] Clipped gradients: norm=2.00947 -> 1
+  [Batch 35] Loss: 3.9516 | Perplexity: 52.0185
+
+✓ Epoch complete!
+  Average Loss: 4.76594
+  Perplexity: 117.441
+  ★ New best! Checkpoint saved.
+
+═══════════════════════════════════════
+  EPOCH 2/2
+═══════════════════════════════════════
+[OPTIMIZER] Clipped gradients: norm=1.19065 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.33713 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.28258 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.08014 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.21914 -> 1
+  [Batch 5] Loss: 4.09556 | Perplexity: 60.0731
+[OPTIMIZER] Clipped gradients: norm=1.29844 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.37524 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.04526 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.01115 -> 1
+  [Batch 10] Loss: 3.80474 | Perplexity: 44.9137
+[OPTIMIZER] Clipped gradients: norm=1.0659 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.03291 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.08725 -> 1
+  [Batch 15] Loss: 4.09164 | Perplexity: 59.8378
+[OPTIMIZER] Clipped gradients: norm=1.21452 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.1122 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.20798 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.18773 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.11311 -> 1
+  [Batch 20] Loss: 3.96007 | Perplexity: 52.4611
+[OPTIMIZER] Clipped gradients: norm=1.02839 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.06059 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.15853 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.1899 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.06433 -> 1
+  [Batch 25] Loss: 3.90774 | Perplexity: 49.7862
+[OPTIMIZER] Clipped gradients: norm=1.1541 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.02429 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.1137 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.09714 -> 1
+  [Batch 30] Loss: 3.86258 | Perplexity: 47.588
+[OPTIMIZER] Clipped gradients: norm=1.00848 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.09099 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.05484 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.11596 -> 1
+[OPTIMIZER] Clipped gradients: norm=1.89129 -> 1
+  [Batch 35] Loss: 3.6468 | Perplexity: 38.3518
+
+✓ Epoch complete!
+  Average Loss: 3.96662
+  Perplexity: 52.8058
+  ★ New best! Checkpoint saved.
+
+═══════════════════════════════════════
+  🎉 TRAINING COMPLETE!
+═══════════════════════════════════════
+Best Loss: 3.96662
+Best Perplexity: 52.8058
+
+NOTE: This version trains output projection only.
+Full backprop through all layers coming in next update!
+
+╔══════════════════════════════════════════════════════════╗
+║              TRAINING COMPLETE!                          ║
+╚══════════════════════════════════════════════════════════╝
+
+Training took: 96 seconds
+Model saved to: models/transformer.bin
+
+[TRANSFORMER] Saving model to models/transformer.bin...
+[TRANSFORMER] Model saved.
+
+[TEST] Generating sample text...
+[GENERATE] Prompt: "The future of AI is"
+Prompt: "The future of AI is"
+Generated: "The future of AI iste.skart nue trteirerecc"
+
+{"status":"success","epochs":2,"training_time_seconds":96,"model_file":"models/transformer.bin","tokenizer_file":"models/tokenizer.bin","vocab_size":282,"embedding_dim":256,"num_layers":4,"test_prompt":"The future of AI is","test_output":"The future of AI iste.skart nue trteirerecc"}
