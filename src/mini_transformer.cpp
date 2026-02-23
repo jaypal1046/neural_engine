@@ -432,20 +432,91 @@ std::vector<std::vector<float>> MiniTransformer::forward_with_cache(
         auto& layer = weights_.layers[l];
         auto& cache = layer_caches[l];
 
-        cache.input = x;  // Cache input to this layer
+        // Cache attention input
+        cache.attn_input = x;
 
-        // Multi-head attention with residual
-        auto attn_out = multi_head_attention(x, layer, true);
+        // Compute Q, K, V with caching
+        int d_model = config_.embedding_dim;
+        int d_k = d_model / config_.num_heads;
+        cache.Q.resize(seq_len, std::vector<float>(d_model, 0.0f));
+        cache.K.resize(seq_len, std::vector<float>(d_model, 0.0f));
+        cache.V.resize(seq_len, std::vector<float>(d_model, 0.0f));
+
         for (int i = 0; i < seq_len; i++) {
-            for (int j = 0; j < config_.embedding_dim; j++) {
-                attn_out[i][j] += x[i][j];
+            for (int j = 0; j < d_model; j++) {
+                for (int k = 0; k < d_model; k++) {
+                    cache.Q[i][j] += x[i][k] * layer.query_weight[k][j];
+                    cache.K[i][j] += x[i][k] * layer.key_weight[k][j];
+                    cache.V[i][j] += x[i][k] * layer.value_weight[k][j];
+                }
             }
         }
-        attn_out = layer_norm(attn_out, layer.ln1_gamma, layer.ln1_beta);
+
+        // Compute attention scores with caching (before softmax)
+        cache.attn_scores.resize(seq_len, std::vector<float>(seq_len, 0.0f));
+        float scale = 1.0f / std::sqrt(d_k);
+        for (int i = 0; i < seq_len; i++) {
+            for (int j = 0; j < seq_len; j++) {
+                float dot = 0.0f;
+                for (int k = 0; k < d_model; k++) {
+                    dot += cache.Q[i][k] * cache.K[j][k];
+                }
+                cache.attn_scores[i][j] = dot * scale;
+                // Causal mask
+                if (j > i) {
+                    cache.attn_scores[i][j] = -1e9f;
+                }
+            }
+        }
+
+        // Softmax with caching (after softmax)
+        cache.attn_weights.resize(seq_len, std::vector<float>(seq_len, 0.0f));
+        for (int i = 0; i < seq_len; i++) {
+            float max_score = *std::max_element(cache.attn_scores[i].begin(), cache.attn_scores[i].end());
+            float sum = 0.0f;
+            for (int j = 0; j < seq_len; j++) {
+                cache.attn_weights[i][j] = std::exp(cache.attn_scores[i][j] - max_score);
+                sum += cache.attn_weights[i][j];
+            }
+            for (int j = 0; j < seq_len; j++) {
+                cache.attn_weights[i][j] /= sum;
+            }
+        }
+
+        // Apply attention to values with caching
+        cache.attn_output.resize(seq_len, std::vector<float>(d_model, 0.0f));
+        for (int i = 0; i < seq_len; i++) {
+            for (int j = 0; j < seq_len; j++) {
+                for (int k = 0; k < d_model; k++) {
+                    cache.attn_output[i][k] += cache.attn_weights[i][j] * cache.V[j][k];
+                }
+            }
+        }
+
+        // Output projection
+        std::vector<std::vector<float>> attn_proj(seq_len, std::vector<float>(d_model, 0.0f));
+        for (int i = 0; i < seq_len; i++) {
+            for (int j = 0; j < d_model; j++) {
+                for (int k = 0; k < d_model; k++) {
+                    attn_proj[i][j] += cache.attn_output[i][k] * layer.output_weight[k][j];
+                }
+            }
+        }
+
+        // Residual + layer norm
+        for (int i = 0; i < seq_len; i++) {
+            for (int j = 0; j < d_model; j++) {
+                attn_proj[i][j] += x[i][j];
+            }
+        }
+        auto attn_out = layer_norm(attn_proj, layer.ln1_gamma, layer.ln1_beta);
+
+        // Cache the input to FF (after attention)
+        cache.ff_input = attn_out;
 
         // Feed-forward with caching
-        std::vector<std::vector<float>> ff_hidden_pre(seq_len, std::vector<float>(config_.ff_dim, 0.0f));
-        std::vector<std::vector<float>> ff_hidden_post(seq_len, std::vector<float>(config_.ff_dim, 0.0f));
+        cache.ff_hidden.resize(seq_len, std::vector<float>(config_.ff_dim, 0.0f));
+        cache.ff_hidden_gelu.resize(seq_len, std::vector<float>(config_.ff_dim, 0.0f));
 
         // First FF layer
         for (int i = 0; i < seq_len; i++) {
@@ -454,13 +525,10 @@ std::vector<std::vector<float>> MiniTransformer::forward_with_cache(
                 for (int k = 0; k < config_.embedding_dim; k++) {
                     sum += attn_out[i][k] * layer.ff1_weight[k][j];
                 }
-                ff_hidden_pre[i][j] = sum;  // Cache pre-activation
-                ff_hidden_post[i][j] = gelu(sum);  // Apply GELU
+                cache.ff_hidden[i][j] = sum;  // Cache pre-activation
+                cache.ff_hidden_gelu[i][j] = gelu(sum);  // Apply GELU
             }
         }
-
-        cache.ff_hidden = ff_hidden_pre;
-        cache.ff_hidden_gelu = ff_hidden_post;
 
         // Second FF layer
         std::vector<std::vector<float>> ff_out(seq_len, std::vector<float>(config_.embedding_dim, 0.0f));
@@ -468,7 +536,7 @@ std::vector<std::vector<float>> MiniTransformer::forward_with_cache(
             for (int j = 0; j < config_.embedding_dim; j++) {
                 float sum = layer.ff2_bias[j];
                 for (int k = 0; k < config_.ff_dim; k++) {
-                    sum += ff_hidden_post[i][k] * layer.ff2_weight[k][j];
+                    sum += cache.ff_hidden_gelu[i][k] * layer.ff2_weight[k][j];
                 }
                 ff_out[i][j] = sum;
             }
@@ -484,6 +552,121 @@ std::vector<std::vector<float>> MiniTransformer::forward_with_cache(
     }
 
     return x;
+}
+
+void MiniTransformer::backward_attention(
+    const LayerCache& cache,
+    const std::vector<std::vector<float>>& grad_output,
+    const Weights::Layer& layer,
+    AttentionGradients& attn_grads,
+    std::vector<std::vector<float>>& grad_input
+) {
+    int seq_len = cache.Q.size();
+    int d_model = config_.embedding_dim;
+
+    // Step 1: Backward through output projection
+    // grad_attn_output = grad_output @ W_O^T
+    std::vector<std::vector<float>> grad_attn_output(seq_len, std::vector<float>(d_model, 0.0f));
+    for (int i = 0; i < seq_len; i++) {
+        for (int j = 0; j < d_model; j++) {
+            for (int k = 0; k < d_model; k++) {
+                grad_attn_output[i][j] += grad_output[i][k] * layer.output_weight[j][k];
+            }
+        }
+    }
+
+    // grad_W_O = attn_output^T @ grad_output
+    for (int i = 0; i < d_model; i++) {
+        for (int j = 0; j < d_model; j++) {
+            for (int k = 0; k < seq_len; k++) {
+                attn_grads.output_weight_grad[i][j] += cache.attn_output[k][i] * grad_output[k][j];
+            }
+        }
+    }
+
+    // Step 2: Backward through attention @ V
+    // grad_attn_weights = grad_attn_output @ V^T  [seq_len × seq_len]
+    // grad_V = attn_weights^T @ grad_attn_output  [seq_len × d_model]
+    std::vector<std::vector<float>> grad_attn_weights(seq_len, std::vector<float>(seq_len, 0.0f));
+    std::vector<std::vector<float>> grad_V(seq_len, std::vector<float>(d_model, 0.0f));
+
+    for (int i = 0; i < seq_len; i++) {
+        for (int j = 0; j < seq_len; j++) {
+            for (int k = 0; k < d_model; k++) {
+                grad_attn_weights[i][j] += grad_attn_output[i][k] * cache.V[j][k];
+            }
+        }
+    }
+
+    for (int i = 0; i < seq_len; i++) {
+        for (int j = 0; j < d_model; j++) {
+            for (int k = 0; k < seq_len; k++) {
+                grad_V[i][j] += cache.attn_weights[k][i] * grad_attn_output[k][j];
+            }
+        }
+    }
+
+    // Step 3: Backward through softmax (using Jacobian)
+    // For each position i: grad_scores[i][j] = sum_k(attn_weights[i][k] * (δ_jk - attn_weights[i][j]) * grad_attn_weights[i][k])
+    std::vector<std::vector<float>> grad_scores(seq_len, std::vector<float>(seq_len, 0.0f));
+    for (int i = 0; i < seq_len; i++) {
+        for (int j = 0; j < seq_len; j++) {
+            float sum = 0.0f;
+            for (int k = 0; k < seq_len; k++) {
+                float delta = (j == k) ? 1.0f : 0.0f;
+                sum += grad_attn_weights[i][k] * cache.attn_weights[i][k] * (delta - cache.attn_weights[i][j]);
+            }
+            grad_scores[i][j] = sum;
+
+            // Zero out gradients for masked positions
+            if (j > i) {
+                grad_scores[i][j] = 0.0f;
+            }
+        }
+    }
+
+    // Step 4: Backward through scaled dot product
+    // grad_Q = grad_scores @ K / sqrt(d_k)
+    // grad_K = grad_scores^T @ Q / sqrt(d_k)
+    int d_k = d_model / config_.num_heads;
+    float scale = 1.0f / std::sqrt(d_k);
+    std::vector<std::vector<float>> grad_Q(seq_len, std::vector<float>(d_model, 0.0f));
+    std::vector<std::vector<float>> grad_K(seq_len, std::vector<float>(d_model, 0.0f));
+
+    for (int i = 0; i < seq_len; i++) {
+        for (int j = 0; j < d_model; j++) {
+            for (int k = 0; k < seq_len; k++) {
+                grad_Q[i][j] += grad_scores[i][k] * cache.K[k][j] * scale;
+                grad_K[i][j] += grad_scores[k][i] * cache.Q[k][j] * scale;
+            }
+        }
+    }
+
+    // Step 5: Backward through Q, K, V projections
+    // grad_W_Q = input^T @ grad_Q
+    // grad_W_K = input^T @ grad_K
+    // grad_W_V = input^T @ grad_V
+    // grad_input = grad_Q @ W_Q^T + grad_K @ W_K^T + grad_V @ W_V^T
+    for (int i = 0; i < d_model; i++) {
+        for (int j = 0; j < d_model; j++) {
+            for (int k = 0; k < seq_len; k++) {
+                attn_grads.query_weight_grad[i][j] += cache.attn_input[k][i] * grad_Q[k][j];
+                attn_grads.key_weight_grad[i][j] += cache.attn_input[k][i] * grad_K[k][j];
+                attn_grads.value_weight_grad[i][j] += cache.attn_input[k][i] * grad_V[k][j];
+            }
+        }
+    }
+
+    grad_input.resize(seq_len, std::vector<float>(d_model, 0.0f));
+    for (int i = 0; i < seq_len; i++) {
+        for (int j = 0; j < d_model; j++) {
+            for (int k = 0; k < d_model; k++) {
+                grad_input[i][j] += grad_Q[i][k] * layer.query_weight[j][k];
+                grad_input[i][j] += grad_K[i][k] * layer.key_weight[j][k];
+                grad_input[i][j] += grad_V[i][k] * layer.value_weight[j][k];
+            }
+        }
+    }
 }
 
 void MiniTransformer::backward_feedforward_simple(
@@ -649,6 +832,11 @@ void MiniTransformer::train(
                 auto x = forward_with_cache(input, layer_caches);
 
                 // === LOSS COMPUTATION & BACKWARD PASS ===
+                // Initialize gradient accumulator for final hidden states
+                std::vector<std::vector<float>> grad_hidden(seq_len,
+                    std::vector<float>(config_.embedding_dim, 0.0f));
+
+                // Accumulate gradients from all positions
                 for (size_t pos = 0; pos < targets.size(); pos++) {
                     // Project to vocabulary
                     std::vector<float> logits(config_.vocab_size, 0.0f);
@@ -664,49 +852,46 @@ void MiniTransformer::train(
                     batch_loss += loss;
                     batch_tokens++;
 
-                    // === BACKWARD PASS ===
-                    // 1. Output projection gradient
+                    // 1. Output projection gradient (accumulate)
                     for (int h = 0; h < config_.embedding_dim; h++) {
                         for (int v = 0; v < config_.vocab_size; v++) {
                             transformer_grads.output_projection_grad[h][v] += x[pos][h] * grad_logits[v];
                         }
                     }
 
-                    // 2. Gradient w.r.t. final hidden state
-                    std::vector<std::vector<float>> grad_hidden(seq_len,
-                        std::vector<float>(config_.embedding_dim, 0.0f));
+                    // 2. Accumulate gradient w.r.t. this position's hidden state
                     for (int h = 0; h < config_.embedding_dim; h++) {
                         for (int v = 0; v < config_.vocab_size; v++) {
                             grad_hidden[pos][h] += weights_.output_projection[h][v] * grad_logits[v];
                         }
                     }
+                }
 
-                    // 3. Backward through transformer layers (REVERSE ORDER)
-                    for (int l = config_.num_layers - 1; l >= 0; l--) {
-                        auto& cache = layer_caches[l];
-                        auto& layer = weights_.layers[l];
+                // 3. Backward through transformer layers (ATTENTION!)
+                // Phase 21F: Training attention mechanisms
+                for (int l = config_.num_layers - 1; l >= 0; l--) {
+                    auto& cache = layer_caches[l];
+                    auto& layer = weights_.layers[l];
 
-                        // Backward through feed-forward
-                        std::vector<std::vector<float>> grad_ff_input;
-                        backward_feedforward_simple(
-                            cache.input, grad_hidden, cache.ff_hidden,
-                            layer, transformer_grads.layers[l].feed_forward,
-                            grad_ff_input
-                        );
+                    // Backward through attention
+                    std::vector<std::vector<float>> grad_attn_input;
+                    backward_attention(
+                        cache, grad_hidden, layer,
+                        transformer_grads.layers[l].attention,
+                        grad_attn_input
+                    );
 
-                        // For now, treat grad_ff_input as grad to pass to previous layer
-                        // (skipping attention backward, layer norms for simplicity)
-                        grad_hidden = grad_ff_input;
-                    }
+                    // Pass gradients to previous layer (skip FF and layer norms for now)
+                    grad_hidden = grad_attn_input;
+                }
 
-                    // 4. Gradient to embeddings
-                    for (int t = 0; t < seq_len; t++) {
-                        int token_id = input[t];
-                        if (token_id >= config_.vocab_size) token_id = 1;
-                        for (int d = 0; d < config_.embedding_dim; d++) {
-                            transformer_grads.token_embeddings_grad[token_id][d] += grad_hidden[t][d];
-                            transformer_grads.position_embeddings_grad[t][d] += grad_hidden[t][d];
-                        }
+                // 4. Gradient to embeddings
+                for (int t = 0; t < seq_len; t++) {
+                    int token_id = input[t];
+                    if (token_id >= config_.vocab_size) token_id = 1;
+                    for (int d = 0; d < config_.embedding_dim; d++) {
+                        transformer_grads.token_embeddings_grad[token_id][d] += grad_hidden[t][d];
+                        transformer_grads.position_embeddings_grad[t][d] += grad_hidden[t][d];
                     }
                 }
             }

@@ -126,9 +126,17 @@ private:
 
     // Forward/backward with caching for training
     struct LayerCache {
-        std::vector<std::vector<float>> input;
-        std::vector<std::vector<float>> ff_hidden;  // Hidden state after first FF layer (pre-GELU)
-        std::vector<std::vector<float>> ff_hidden_gelu;  // After GELU activation
+        // Attention caching
+        std::vector<std::vector<float>> attn_input;  // Input to attention
+        std::vector<std::vector<float>> Q, K, V;     // Query, Key, Value matrices
+        std::vector<std::vector<float>> attn_scores; // Pre-softmax scores
+        std::vector<std::vector<float>> attn_weights; // Post-softmax attention
+        std::vector<std::vector<float>> attn_output;  // Attention @ V
+
+        // Feed-forward caching
+        std::vector<std::vector<float>> ff_input;     // Input to FF
+        std::vector<std::vector<float>> ff_hidden;    // Pre-GELU
+        std::vector<std::vector<float>> ff_hidden_gelu; // Post-GELU
     };
 
     std::vector<std::vector<float>> forward_with_cache(
@@ -142,6 +150,14 @@ private:
         const std::vector<std::vector<float>>& ff_hidden_pre_gelu,
         const Weights::Layer& layer,
         FeedForwardGradients& ff_grads,
+        std::vector<std::vector<float>>& grad_input
+    );
+
+    void backward_attention(
+        const LayerCache& cache,
+        const std::vector<std::vector<float>>& grad_output,
+        const Weights::Layer& layer,
+        AttentionGradients& attn_grads,
         std::vector<std::vector<float>>& grad_input
     );
 };
