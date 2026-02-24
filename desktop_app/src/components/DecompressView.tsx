@@ -75,14 +75,14 @@ export function DecompressView() {
                 </div>
 
                 <div className="field-row">
-                    <label>Archive (.myzip)</label>
-                    <input type="text" placeholder="Select a .myzip archive..." id="d_input_file" />
+                    <label>Archive (.aiz)</label>
+                    <input type="text" placeholder="Select a .aiz archive..." id="d_input_file" />
 
-                    <input type="file" ref={hiddenFileInput} accept=".myzip" style={{ display: 'none' }} onChange={(e) => {
+                    <input type="file" ref={hiddenFileInput} accept=".aiz" style={{ display: 'none' }} onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
                             (document.getElementById('d_input_file') as HTMLInputElement).value = file.name;
-                            (document.getElementById('d_output_file') as HTMLInputElement).value = file.name.replace('.myzip', '');
+                            (document.getElementById('d_output_file') as HTMLInputElement).value = file.name.replace('.aiz', '');
                             setTimeout(() => alert("Notice: Because you are running Neural Studio inside a standard Web Browser instead of the Desktop App context, JS sandbox security prevents grabbing the absolute file path (e.g. C:/User/Data/...)\n\nWe have pasted the file's name into the box, but if it is not in the same folder as the server, you must manually type/paste the full C:/... path to decompress it!"), 100);
                         }
                     }} />
@@ -93,7 +93,7 @@ export function DecompressView() {
                                 const file = await window.ipcRenderer.selectFile();
                                 if (file) {
                                     (document.getElementById('d_input_file') as HTMLInputElement).value = file;
-                                    (document.getElementById('d_output_file') as HTMLInputElement).value = file.replace('.myzip', '');
+                                    (document.getElementById('d_output_file') as HTMLInputElement).value = file.replace('.aiz', '');
                                 }
                             } else {
                                 hiddenFileInput.current?.click();

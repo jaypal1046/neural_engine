@@ -249,7 +249,7 @@ void learn_and_store(const std::string& source) {
 
     // 4. Write to temp file for compression
     std::string temp_txt = "brain/temp/" + topic + ".txt";
-    std::string myzip_path = "brain/knowledge/" + topic + ".myzip";
+    std::string myzip_path = "brain/knowledge/" + topic + ".aiz";
 
     std::ofstream tmp(temp_txt, std::ios::binary);
     tmp.write(text.data(), text.size());
@@ -391,7 +391,7 @@ void smart_compress(const std::string& file_path) {
     std::cerr << "\n[SMART COMPRESS] " << file_path << "\n";
 
     // Auto-detect file type and use specialized mixer
-    std::string output = file_path + ".myzip";
+    std::string output = file_path + ".aiz";
 
     std::cerr << "[COMPRESS] Using CMIX with persistent neural weights...\n";
 

@@ -94,7 +94,7 @@ def detect_file_type(data: bytes, filename: str) -> dict:
         "text": [".txt", ".md", ".rst", ".csv", ".log", ".json", ".xml", ".html"],
         "code": [".cpp", ".h", ".py", ".js", ".ts", ".tsx", ".c", ".java", ".rs", ".go"],
         "data": [".bin", ".dat", ".db", ".sqlite"],
-        "archive": [".zip", ".tar", ".gz", ".7z", ".rar", ".myzip"],
+        "archive": [".zip", ".tar", ".gz", ".7z", ".rar", ".aiz"],
         "image": [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp", ".svg"],
         "document": [".pdf", ".docx", ".xlsx", ".pptx"]
     }
@@ -342,7 +342,7 @@ def compress_file(payload: CompressRequest):
     if not os.path.exists(payload.file_path):
         return {"error": f"File not found: {payload.file_path}"}
         
-    target_myzip = payload.file_path + ".myzip"
+    target_myzip = payload.file_path + ".aiz"
     
     if not os.path.exists(EXE_PATH):
         return {"error": f"Executable not found: {EXE_PATH}"}
@@ -400,7 +400,7 @@ def compress_stream(payload: CompressRequest):
     if not os.path.exists(payload.file_path):
         return StreamingResponse(iter([b"Error: File not found"]), media_type="text/plain")
         
-    target_myzip = payload.file_path + ".myzip"
+    target_myzip = payload.file_path + ".aiz"
 
     def generator():
         process = subprocess.Popen(
@@ -749,7 +749,7 @@ def vault_store(payload: StoreRequest):
     safe_key = "".join(c if c.isalnum() or c in "-_." else "_" for c in key)
     
     original_size = os.path.getsize(payload.file_path)
-    vault_file = os.path.join(VAULT_DIR, f"{safe_key}.myzip")
+    vault_file = os.path.join(VAULT_DIR, f"{safe_key}.aiz")
     
     # Pre-analyze for optimal algorithm selection
     read_size = min(original_size, 4 * 1024 * 1024)
@@ -1009,7 +1009,7 @@ def neural_handle(payload: NeuralTaskRequest):
                 "file_path": fp,
                 "message": f"Ready to decompress {os.path.basename(fp)}"
             }
-        return {"action": "decompress", "status": "need_file", "message": "Provide a .myzip archive to decompress."}
+        return {"action": "decompress", "status": "need_file", "message": "Provide a .aiz archive to decompress."}
     
     # ─── Status ───
     if any(w in task for w in ["status", "health", "info"]):
@@ -1054,7 +1054,7 @@ def extract_file_path(text: str) -> Optional[str]:
         if '.' in word and not word.startswith('-') and len(word) > 2:
             if any(word.endswith(ext) for ext in ['.txt', '.md', '.py', '.cpp', '.h', '.js', '.ts', '.json', 
                                                     '.xml', '.csv', '.log', '.html', '.css', '.bin', '.dat',
-                                                    '.myzip', '.zip', '.pdf', '.exe']):
+                                                    '.aiz', '.zip', '.pdf', '.exe']):
                 return word
     return None
 

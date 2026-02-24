@@ -56,6 +56,7 @@
 
 // Compression integration
 #include "compressor.h"
+#include "compressed_knowledge.h"
 
 // Advanced AI integration (Phases 13-17)
 #include "word_tokenizer.h"
@@ -1110,7 +1111,8 @@ void print_json_string(const std::string& s) {
     std::cout << "\"";
 }
 
-int main(int argc, char* argv[]) {
+// Main function for neural engine (can be called from unified aiz.exe or standalone)
+int main_neural_engine(int argc, char* argv[]) {
     if (argc < 2) {
         std::cout << "{\"error\": \"Usage: neural_engine <command> [args]\"}" << std::endl;
         return 1;
@@ -1381,7 +1383,7 @@ int main(int argc, char* argv[]) {
     else if (cmd == "compress" && argc >= 3) {
         // neural_engine compress <file> [--best|--ultra|--cmix]
         std::string input_file = argv[2];
-        std::string output_file = input_file + ".myzip";
+        std::string output_file = input_file + ".aiz";
         CompressMode mode = CompressMode::DEFAULT;
 
         // Parse compression mode
@@ -1402,15 +1404,15 @@ int main(int argc, char* argv[]) {
         }
     }
     else if (cmd == "decompress" && argc >= 3) {
-        // neural_engine decompress <file.myzip> [output_file]
+        // neural_engine decompress <file.aiz> [output_file]
         std::string input_file = argv[2];
         std::string output_file;
 
         if (argc >= 4) {
             output_file = argv[3];
         } else {
-            // Remove .myzip extension
-            if (input_file.size() > 6 && input_file.substr(input_file.size() - 6) == ".myzip") {
+            // Remove .aiz extension
+            if (input_file.size() > 6 && input_file.substr(input_file.size() - 6) == ".aiz") {
                 output_file = input_file.substr(0, input_file.size() - 6);
             } else {
                 output_file = input_file + ".decompressed";
@@ -1835,6 +1837,147 @@ int main(int argc, char* argv[]) {
         std::cout << ",\"test_output\":\"" << generated << "\"";
         std::cout << "}" << std::endl;
     }
+    else if (cmd == "transformer_generate" && argc >= 3) {
+        // Use the TRAINED MiniTransformer model!
+        std::string prompt;
+        for (int i = 2; i < argc; i++) {
+            if (i > 2) prompt += " ";
+            prompt += argv[i];
+        }
+
+        // Load tokenizer
+        BPETokenizer tokenizer(282);
+        tokenizer.load("models/tokenizer.bin");
+
+        // Load trained transformer
+        TransformerConfig config;
+        config.vocab_size = 282;
+        config.embedding_dim = 256;
+        config.num_layers = 4;
+        config.num_heads = 4;
+        config.ff_dim = 1024;
+        config.max_seq_length = 128;
+
+        MiniTransformer transformer(config);
+        transformer.load("models/transformer.bin");
+
+        // Generate text!
+        std::string generated = transformer.generate(prompt, tokenizer, 30, 0.8f, 40);
+
+        // Helper: Escape JSON string (remove control chars that break JSON parsing)
+        auto json_escape = [](const std::string& s) -> std::string {
+            std::string escaped;
+            for (char c : s) {
+                // Skip control characters (0x00-0x1F and 0x7F-0x9F)
+                if ((c >= 0 && c <= 31) || (c >= 127 && c <= 159)) {
+                    // Skip these characters entirely
+                    continue;
+                }
+                // Escape backslash and quote
+                if (c == '\\' || c == '"') {
+                    escaped += '\\';
+                }
+                escaped += c;
+            }
+            return escaped;
+        };
+
+        std::string escaped_prompt = json_escape(prompt);
+        std::string escaped_generated = json_escape(generated);
+
+        // Fallback if generation is empty after cleaning
+        if (escaped_generated.empty()) {
+            escaped_generated = "[Model trained on only 129 lines - needs larger corpus]";
+        }
+
+        std::cout << "{\"status\":\"success\"";
+        std::cout << ",\"prompt\":\"" << escaped_prompt << "\"";
+        std::cout << ",\"generated\":\"" << escaped_generated << "\"";
+        std::cout << ",\"model\":\"MiniTransformer (trained)\"";
+        std::cout << "}" << std::endl;
+    }
+
+    // =============================================================================
+    // Compressed Knowledge Module Commands
+    // =============================================================================
+
+    else if (cmd == "knowledge_load" && argc >= 3) {
+        // Load a compressed knowledge module
+        // Usage: neural_engine knowledge_load <module_name>
+        std::string module_name = argv[2];
+
+        // Global knowledge manager (in "knowledge" directory)
+        static KnowledgeModuleManager manager("knowledge");
+
+        bool success = manager.load_module(module_name);
+
+        std::cout << "{\"status\":\"" << (success ? "success" : "error") << "\"";
+        std::cout << ",\"module\":\"" << module_name << "\"";
+        if (!success) {
+            std::cout << ",\"error\":\"" << manager.get_last_error() << "\"";
+        }
+        std::cout << "}" << std::endl;
+    }
+
+    else if (cmd == "knowledge_query" && argc >= 4) {
+        // Query compressed knowledge module
+        // Usage: neural_engine knowledge_query <module_name> <question>
+        std::string module_name = argv[2];
+        std::string question;
+        for (int i = 3; i < argc; ++i) {
+            if (i > 3) question += " ";
+            question += argv[i];
+        }
+
+        // Create manager and load module
+        KnowledgeModuleManager manager("knowledge");
+        if (!manager.load_module(module_name)) {
+            std::cout << "{\"status\":\"error\"";
+            std::cout << ",\"error\":\"Failed to load module: " << manager.get_last_error() << "\"";
+            std::cout << "}" << std::endl;
+            return 1;
+        }
+
+        // Query the loaded module
+        std::string context = manager.query(question, 5000);
+
+        // Escape JSON
+        auto json_escape = [](const std::string& s) -> std::string {
+            std::string escaped;
+            for (char c : s) {
+                if ((c >= 0 && c <= 31) || (c >= 127 && c <= 159)) continue;
+                if (c == '\\' || c == '"') escaped += '\\';
+                escaped += c;
+            }
+            return escaped;
+        };
+
+        std::cout << "{\"status\":\"" << (context.empty() ? "error" : "success") << "\"";
+        std::cout << ",\"question\":\"" << json_escape(question) << "\"";
+        std::cout << ",\"context\":\"" << json_escape(context) << "\"";
+        if (context.empty()) {
+            std::cout << ",\"error\":\"" << json_escape(manager.get_last_error()) << "\"";
+        }
+        std::cout << "}" << std::endl;
+    }
+
+    else if (cmd == "knowledge_list" && argc == 2) {
+        // List loaded knowledge modules
+        // Usage: neural_engine knowledge_list
+        static KnowledgeModuleManager manager("knowledge");
+
+        auto modules = manager.list_loaded_modules();
+
+        std::cout << "{\"status\":\"success\"";
+        std::cout << ",\"count\":" << modules.size();
+        std::cout << ",\"modules\":[";
+        for (size_t i = 0; i < modules.size(); ++i) {
+            if (i > 0) std::cout << ",";
+            std::cout << "\"" << modules[i] << "\"";
+        }
+        std::cout << "]}" << std::endl;
+    }
+
     else {
         std::cout << "{\"error\":\"Unknown command: " << cmd << "\"}" << std::endl;
         return 1;
@@ -1842,3 +1985,10 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+
+#ifndef UNIFIED_BUILD
+// Standalone main for neural_engine.exe
+int main(int argc, char* argv[]) {
+    return main_neural_engine(argc, argv);
+}
+#endif

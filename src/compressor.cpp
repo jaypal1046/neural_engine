@@ -7,6 +7,10 @@
 #include "ppm.h"
 #include "cmix.h"
 
+#include <thread>
+#include <mutex>
+#include <atomic>
+
 #ifdef _WIN32
 #  define WIN32_LEAN_AND_MEAN
 #  include <windows.h>
@@ -482,11 +486,11 @@ static std::vector<uint8_t> compress_block_bwt(
     std::vector<uint8_t> bwt_buf(len);
     uint32_t primary_index = bwt_encode(data, len, bwt_buf.data());
 
-    // MTF
-    auto mtf_buf = mtf_encode(bwt_buf.data(), len);
+    // MTF (SIMD-optimized in Phase 16)
+    auto mtf_buf = mtf_encode_optimized(bwt_buf.data(), len);
 
-    // RLE zeros
-    auto rle_buf = rle_zeros_encode(mtf_buf.data(), mtf_buf.size());
+    // RLE zeros (SIMD-optimized in Phase 16)
+    auto rle_buf = rle_zeros_encode_optimized(mtf_buf.data(), mtf_buf.size());
 
     const size_t sym_count = rle_buf.size();
     const size_t raw_size  = 1 + 4 + len;  // STORED_RAW overhead
@@ -739,22 +743,66 @@ int compress_file(const std::string& input_path,
     fwrite_all(zero_index.data(), zero_index.size());
 
     // --- 5. Compress blocks ---
+    // Multi-threaded: compress all blocks in parallel, then write sequentially
     size_t total_comp = 54 + (size_t)block_count * 8;
-    size_t offset     = 0;
 
+    // Store compressed blocks (indexed by block number)
+    std::vector<std::vector<uint8_t>> compressed_blocks(block_count);
+    std::vector<size_t> block_lengths(block_count);
+
+    // Prepare block offsets and lengths
     for (uint32_t b = 0; b < block_count; ++b) {
-        size_t blen = std::min((size_t)bsz, file_size - offset);
-        const uint8_t* bdata = (file_size > 0) ? (mf.data + offset) : nullptr;
+        size_t offset = (size_t)b * bsz;
+        block_lengths[b] = std::min((size_t)bsz, file_size - offset);
+    }
 
-        std::vector<uint8_t> cblock;
-        if (cmix_mode)
-            cblock = compress_block_cmix(bdata, blen, progress, offset, file_size);
-        else if (ultra_mode)
-            cblock = compress_block_ppm(bdata, blen, progress, offset, file_size);
-        else if (best_mode)
-            cblock = compress_block_bwt(bdata, blen, progress, offset, file_size);
-        else
-            cblock = compress_block(bdata, blen, progress, offset, file_size);
+    // Determine number of threads (use hardware concurrency or fall back to 4)
+    unsigned int num_threads = std::thread::hardware_concurrency();
+    if (num_threads == 0) num_threads = 4;
+
+    // Only use multiple threads if we have multiple blocks
+    if (block_count == 1) num_threads = 1;
+
+    // Parallel compression using std::thread
+    std::atomic<uint32_t> next_block(0);
+    std::vector<std::thread> workers;
+
+    auto worker_func = [&]() {
+        while (true) {
+            uint32_t b = next_block.fetch_add(1);
+            if (b >= block_count) break;
+
+            size_t offset = (size_t)b * bsz;
+            size_t blen = block_lengths[b];
+            const uint8_t* bdata = (file_size > 0) ? (mf.data + offset) : nullptr;
+
+            std::vector<uint8_t> cblock;
+            if (cmix_mode)
+                cblock = compress_block_cmix(bdata, blen, progress, offset, file_size);
+            else if (ultra_mode)
+                cblock = compress_block_ppm(bdata, blen, progress, offset, file_size);
+            else if (best_mode)
+                cblock = compress_block_bwt(bdata, blen, progress, offset, file_size);
+            else
+                cblock = compress_block(bdata, blen, progress, offset, file_size);
+
+            compressed_blocks[b] = std::move(cblock);
+        }
+    };
+
+    // Launch worker threads
+    for (unsigned int t = 0; t < num_threads; ++t) {
+        workers.emplace_back(worker_func);
+    }
+
+    // Wait for all threads to complete
+    for (auto& worker : workers) {
+        worker.join();
+    }
+
+    // Sequential write phase (must be in order for proper file layout)
+    for (uint32_t b = 0; b < block_count; ++b) {
+        const auto& cblock = compressed_blocks[b];
 
         fwrite_all(cblock.data(), cblock.size());
         total_comp += cblock.size();
@@ -763,14 +811,12 @@ int compress_file(const std::string& input_path,
         long entry_off = index_start + (long)(b * 8);
         fseek(fout, entry_off, SEEK_SET);
         uint32_t cs = (uint32_t)cblock.size();
-        uint32_t os = (uint32_t)blen;
+        uint32_t os = (uint32_t)block_lengths[b];
         uint8_t entry[8];
         entry[0]=cs; entry[1]=cs>>8; entry[2]=cs>>16; entry[3]=cs>>24;
         entry[4]=os; entry[5]=os>>8; entry[6]=os>>16; entry[7]=os>>24;
         fwrite_all(entry, 8);
         fseek(fout, 0, SEEK_END);
-
-        offset += blen;
     }
 
     // --- 6. STORED fallback ---
@@ -828,7 +874,7 @@ int decompress_file(const std::string& input_path,
     uint8_t hdr[54];
     if (fread(hdr, 1, 54, fin) != 54) {
         fclose(fin);
-        fprintf(stderr, "File too small to be a valid .myzip\n");
+        fprintf(stderr, "File too small to be a valid .aiz\n");
         return 1;
     }
     if (hdr[0]!='M'||hdr[1]!='Z'||hdr[2]!='I'||hdr[3]!='P') {

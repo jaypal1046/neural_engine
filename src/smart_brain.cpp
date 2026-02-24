@@ -19,13 +19,13 @@ Commands:
   learn <url|file>          Learn from web URL or local file
                             - Downloads and extracts clean text
                             - Compresses with CMIX neural engine
-                            - Stores in brain/knowledge/*.myzip
+                            - Stores in brain/knowledge/*.aiz
                             - Updates vector index for search
 
   ask <question>            Query knowledge base
                             - Searches indexed knowledge
                             - Returns confidence score
-                            - Decompresses relevant .myzip files
+                            - Decompresses relevant .aiz files
                             - Recommends web search if low confidence
 
   compress <file>           Smart compression using persistent neural weights
@@ -46,7 +46,7 @@ Examples:
   smart_brain status
 
 Brain Storage:
-  brain/knowledge/*.myzip   - Compressed knowledge files
+  brain/knowledge/*.aiz   - Compressed knowledge files
   brain/index.bin           - Vector index (SIMD-optimized search)
   brain/mixer_*.weights     - Persistent neural network weights
 )";

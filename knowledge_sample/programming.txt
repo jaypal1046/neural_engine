@@ -1,0 +1,208 @@
+# Programming Knowledge Base
+
+## Python Programming
+
+Python is a high-level, interpreted programming language known for its simplicity and readability. Created by Guido van Rossum in 1991, Python emphasizes code readability with its notable use of significant indentation.
+
+### Key Features of Python:
+- Dynamic typing: Variables don't need explicit type declarations
+- Automatic memory management with garbage collection
+- Extensive standard library ("batteries included")
+- Support for multiple programming paradigms (procedural, object-oriented, functional)
+- Cross-platform compatibility
+
+### Common Python Data Structures:
+**Lists**: Ordered, mutable collections. Example: `numbers = [1, 2, 3, 4, 5]`
+**Dictionaries**: Key-value pairs. Example: `person = {"name": "John", "age": 30}`
+**Tuples**: Ordered, immutable collections. Example: `coordinates = (10, 20)`
+**Sets**: Unordered collections of unique elements. Example: `unique_nums = {1, 2, 3}`
+
+### Popular Python Libraries:
+- NumPy: Numerical computing with arrays
+- Pandas: Data analysis and manipulation
+- TensorFlow/PyTorch: Machine learning frameworks
+- Django/Flask: Web development frameworks
+- Matplotlib: Data visualization
+
+## JavaScript Programming
+
+JavaScript is a versatile programming language primarily used for web development. It enables interactive web pages and is an essential part of web applications.
+
+### JavaScript Fundamentals:
+- Event-driven, functional, and imperative programming styles
+- Prototype-based object-oriented programming
+- First-class functions and closures
+- Asynchronous programming with Promises and async/await
+
+### JavaScript Frameworks:
+**React**: Component-based UI library by Facebook
+**Vue.js**: Progressive framework for building user interfaces
+**Angular**: Full-featured framework by Google
+**Node.js**: JavaScript runtime for server-side development
+
+### ES6+ Modern Features:
+- Arrow functions: `const add = (a, b) => a + b`
+- Destructuring: `const {name, age} = person`
+- Spread operator: `const newArray = [...oldArray, 4, 5]`
+- Template literals: ``const message = `Hello, ${name}!` ``
+- Modules: `import { func } from './module'`
+
+## C++ Programming
+
+C++ is a powerful, high-performance programming language that extends C with object-oriented features. It's widely used in system software, game development, and performance-critical applications.
+
+### C++ Features:
+- Static typing with compile-time type checking
+- Manual memory management (new/delete)
+- Multiple inheritance and polymorphism
+- Templates for generic programming
+- Standard Template Library (STL)
+
+### Memory Management:
+**Stack allocation**: Automatic, fast, limited size
+**Heap allocation**: Manual, flexible, larger capacity
+**Smart pointers**: RAII-based automatic memory management
+  - `std::unique_ptr`: Exclusive ownership
+  - `std::shared_ptr`: Shared ownership with reference counting
+  - `std::weak_ptr`: Non-owning reference
+
+### Modern C++ (C++11/14/17/20):
+- `auto` keyword for type inference
+- Range-based for loops
+- Lambda expressions
+- Move semantics and rvalue references
+- `constexpr` for compile-time evaluation
+
+## Data Structures and Algorithms
+
+### Common Data Structures:
+**Arrays**: Contiguous memory, O(1) access, O(n) insertion/deletion
+**Linked Lists**: Dynamic size, O(n) access, O(1) insertion at head
+**Hash Tables**: O(1) average lookup, insertion, and deletion
+**Binary Search Trees**: O(log n) operations when balanced
+**Heaps**: Priority queue, O(log n) insert/delete, O(1) find min/max
+**Graphs**: Vertices and edges, various representations (adjacency list/matrix)
+
+### Algorithm Complexity:
+- **O(1)**: Constant time - array access, hash table lookup
+- **O(log n)**: Logarithmic - binary search, balanced tree operations
+- **O(n)**: Linear - array traversal, linear search
+- **O(n log n)**: Linearithmic - efficient sorting (merge sort, quick sort)
+- **O(n²)**: Quadratic - nested loops, bubble sort
+- **O(2ⁿ)**: Exponential - recursive fibonacci, subset generation
+
+### Sorting Algorithms:
+**Quick Sort**: Average O(n log n), divide-and-conquer, in-place
+**Merge Sort**: Guaranteed O(n log n), stable, requires extra space
+**Heap Sort**: O(n log n), in-place, not stable
+**Bubble Sort**: O(n²), simple but inefficient
+**Insertion Sort**: O(n²), efficient for small/nearly sorted arrays
+
+## Database Concepts
+
+### Relational Databases:
+- **SQL**: Structured Query Language for data manipulation
+- **ACID Properties**: Atomicity, Consistency, Isolation, Durability
+- **Normalization**: Organizing data to reduce redundancy
+- **Indexes**: Speed up query performance
+- **Joins**: Combine data from multiple tables
+
+### Common SQL Operations:
+```sql
+SELECT name, age FROM users WHERE age > 18;
+INSERT INTO users (name, age) VALUES ('Alice', 25);
+UPDATE users SET age = 26 WHERE name = 'Alice';
+DELETE FROM users WHERE age < 18;
+```
+
+### NoSQL Databases:
+**Document Stores**: MongoDB, CouchDB (JSON-like documents)
+**Key-Value Stores**: Redis, DynamoDB (simple key-value pairs)
+**Column Stores**: Cassandra, HBase (wide column storage)
+**Graph Databases**: Neo4j, Neptune (nodes and relationships)
+
+## Web Development
+
+### HTTP Methods:
+- **GET**: Retrieve data from server
+- **POST**: Submit data to server
+- **PUT**: Update existing resource
+- **DELETE**: Remove resource
+- **PATCH**: Partial update of resource
+
+### REST API Principles:
+1. Stateless communication
+2. Client-server architecture
+3. Cacheable responses
+4. Uniform interface
+5. Layered system
+
+### Authentication Methods:
+**Basic Auth**: Username/password in headers (base64 encoded)
+**Token-based**: JWT (JSON Web Tokens), OAuth 2.0
+**API Keys**: Simple key sent in headers or query params
+**Session-based**: Server-side session with cookie
+
+## Version Control with Git
+
+### Basic Git Commands:
+```bash
+git init                 # Initialize repository
+git clone <url>         # Clone remote repository
+git add <file>          # Stage changes
+git commit -m "message" # Commit changes
+git push               # Push to remote
+git pull               # Pull from remote
+git branch <name>      # Create branch
+git checkout <branch>  # Switch branch
+git merge <branch>     # Merge branch
+```
+
+### Git Workflow:
+1. Create feature branch
+2. Make changes and commit
+3. Push to remote
+4. Create pull request
+5. Code review
+6. Merge to main branch
+
+## Software Design Patterns
+
+### Creational Patterns:
+**Singleton**: Ensure only one instance exists
+**Factory**: Create objects without specifying exact class
+**Builder**: Construct complex objects step by step
+**Prototype**: Clone existing objects
+
+### Structural Patterns:
+**Adapter**: Make incompatible interfaces work together
+**Decorator**: Add new functionality to objects dynamically
+**Facade**: Provide simplified interface to complex system
+**Proxy**: Control access to another object
+
+### Behavioral Patterns:
+**Observer**: Subscribe to and receive notifications
+**Strategy**: Define family of algorithms, make them interchangeable
+**Command**: Encapsulate requests as objects
+**Iterator**: Access elements sequentially without exposing structure
+
+## Testing
+
+### Types of Testing:
+**Unit Testing**: Test individual components in isolation
+**Integration Testing**: Test component interactions
+**End-to-End Testing**: Test complete user workflows
+**Performance Testing**: Measure speed and scalability
+**Security Testing**: Identify vulnerabilities
+
+### Test-Driven Development (TDD):
+1. Write failing test
+2. Write minimal code to pass test
+3. Refactor code
+4. Repeat
+
+### Testing Frameworks:
+- **Python**: pytest, unittest
+- **JavaScript**: Jest, Mocha, Jasmine
+- **C++**: Google Test, Catch2
+- **Java**: JUnit, TestNG

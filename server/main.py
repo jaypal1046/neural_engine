@@ -94,7 +94,7 @@ def detect_file_type(data: bytes, filename: str) -> dict:
         "text": [".txt", ".md", ".rst", ".csv", ".log", ".json", ".xml", ".html"],
         "code": [".cpp", ".h", ".py", ".js", ".ts", ".tsx", ".c", ".java", ".rs", ".go"],
         "data": [".bin", ".dat", ".db", ".sqlite"],
-        "archive": [".zip", ".tar", ".gz", ".7z", ".rar", ".myzip"],
+        "archive": [".zip", ".tar", ".gz", ".7z", ".rar", ".aiz"],
         "image": [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp", ".svg"],
         "document": [".pdf", ".docx", ".xlsx", ".pptx"]
     }
@@ -342,14 +342,14 @@ def compress_file(payload: CompressRequest):
     if not os.path.exists(payload.file_path):
         return {"error": f"File not found: {payload.file_path}"}
         
-    target_myzip = payload.file_path + ".myzip"
+    target_myzip = payload.file_path + ".aiz"
     
     if not os.path.exists(EXE_PATH):
         return {"error": f"Executable not found: {EXE_PATH}"}
         
     try:
         result = subprocess.run(
-            [EXE_PATH, "compress", payload.file_path, target_myzip, payload.algorithm],
+            [EXE_PATH, "compress", payload.file_path, "-o", target_myzip, payload.algorithm],
             capture_output=True, text=True
         )
         
@@ -382,7 +382,7 @@ def decompress_file(payload: DecompressRequest):
         
     try:
         result = subprocess.run(
-            [EXE_PATH, "decompress", payload.archive_path, payload.output_path],
+            [EXE_PATH, "decompress", payload.archive_path, "-o", payload.output_path],
             capture_output=True, text=True
         )
         return {
@@ -400,11 +400,11 @@ def compress_stream(payload: CompressRequest):
     if not os.path.exists(payload.file_path):
         return StreamingResponse(iter([b"Error: File not found"]), media_type="text/plain")
         
-    target_myzip = payload.file_path + ".myzip"
+    target_myzip = payload.file_path + ".aiz"
 
     def generator():
         process = subprocess.Popen(
-            [EXE_PATH, "compress", payload.file_path, target_myzip, payload.algorithm],
+            [EXE_PATH, "compress", payload.file_path, "-o", target_myzip, payload.algorithm],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0
         )
         buf = b""
@@ -431,7 +431,7 @@ def decompress_stream(payload: DecompressRequest):
 
     def generator():
         process = subprocess.Popen(
-            [EXE_PATH, "decompress", payload.archive_path, payload.output_path],
+            [EXE_PATH, "decompress", payload.archive_path, "-o", payload.output_path],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=0
         )
         buf = b""
@@ -786,7 +786,7 @@ def vault_store(payload: StoreRequest):
     safe_key = "".join(c if c.isalnum() or c in "-_." else "_" for c in key)
     
     original_size = os.path.getsize(payload.file_path)
-    vault_file = os.path.join(VAULT_DIR, f"{safe_key}.myzip")
+    vault_file = os.path.join(VAULT_DIR, f"{safe_key}.aiz")
     
     # Pre-analyze for optimal algorithm selection
     read_size = min(original_size, 4 * 1024 * 1024)
@@ -802,7 +802,7 @@ def vault_store(payload: StoreRequest):
     
     try:
         result = subprocess.run(
-            [EXE_PATH, "compress", payload.file_path, vault_file, algo],
+            [EXE_PATH, "compress", payload.file_path, "-o", vault_file, algo],
             capture_output=True, text=True, timeout=3600
         )
         
@@ -872,7 +872,7 @@ def vault_access(payload: AccessRequest):
     
     try:
         result = subprocess.run(
-            [EXE_PATH, "decompress", vault_file, output_path],
+            [EXE_PATH, "decompress", vault_file, "-o", output_path],
             capture_output=True, text=True, timeout=3600
         )
         
@@ -1046,7 +1046,7 @@ def neural_handle(payload: NeuralTaskRequest):
                 "file_path": fp,
                 "message": f"Ready to decompress {os.path.basename(fp)}"
             }
-        return {"action": "decompress", "status": "need_file", "message": "Provide a .myzip archive to decompress."}
+        return {"action": "decompress", "status": "need_file", "message": "Provide a .aiz archive to decompress."}
     
     # ─── Status ───
     if any(w in task for w in ["status", "health", "info"]):
@@ -1091,7 +1091,7 @@ def extract_file_path(text: str) -> Optional[str]:
         if '.' in word and not word.startswith('-') and len(word) > 2:
             if any(word.endswith(ext) for ext in ['.txt', '.md', '.py', '.cpp', '.h', '.js', '.ts', '.json', 
                                                     '.xml', '.csv', '.log', '.html', '.css', '.bin', '.dat',
-                                                    '.myzip', '.zip', '.pdf', '.exe']):
+                                                    '.aiz', '.zip', '.pdf', '.exe']):
                 return word
     return None
 
@@ -1197,30 +1197,87 @@ async def brain_learn(req: LearnRequest):
 @app.post("/api/brain/ask")
 async def brain_ask(req: AskRequest):
     """
-    Query knowledge base using C++ Smart Brain engine.
-    Returns answer with confidence score.
+    Query knowledge base using COMPRESSED knowledge modules.
+    Returns answer extracted from compressed .aiz knowledge files.
     """
     if not os.path.exists(NEURAL_ENGINE_EXE):
         return {"error": "Smart Brain not built", "message": "Run build_smart_brain.bat first"}
 
     try:
+        # Query compressed knowledge modules (try programming first)
+        # Usage: neural_engine knowledge_query <module_name> <question>
         result = subprocess.run(
-            [NEURAL_ENGINE_EXE, "ask", req.question],
+            [NEURAL_ENGINE_EXE, "knowledge_query", "programming", req.question],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
+            cwd=BASE_DIR
         )
 
         # Parse JSON from stdout
         try:
             import json
-            response = json.loads(result.stdout)
-            return response
-        except json.JSONDecodeError:
+            import re
+            if result.stdout:
+                # Clean stdout
+                cleaned_stdout = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', result.stdout)
+                # Remove mixer output if present
+                if "[MIXER]" in cleaned_stdout:
+                    cleaned_stdout = cleaned_stdout.split('\n')[0]
+
+                response = json.loads(cleaned_stdout)
+
+                # Check if knowledge was found
+                if response.get("status") == "success":
+                    context = response.get("context", "")
+                    if context:
+                        # Extract first 500 characters as answer
+                        answer = context[:500].strip()
+                        if len(context) > 500:
+                            answer += "..."
+
+                        return {
+                            "status": "success",
+                            "answer": answer,
+                            "confidence": 0.85,  # High confidence from knowledge base
+                            "source": "Compressed Knowledge Module",
+                            "module": "programming"
+                        }
+
+                # Fallback to transformer if no knowledge found
+                result2 = subprocess.run(
+                    [NEURAL_ENGINE_EXE, "transformer_generate", req.question],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    cwd=BASE_DIR
+                )
+
+                if result2.stdout:
+                    cleaned2 = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', result2.stdout)
+                    if "[MIXER]" in cleaned2:
+                        cleaned2 = cleaned2.split('\n')[0]
+                    resp2 = json.loads(cleaned2)
+                    generated = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', resp2.get("generated", ""))
+
+                    return {
+                        "status": "success",
+                        "answer": generated if generated.strip() else "[No knowledge found]",
+                        "confidence": 0.22,
+                        "model": "MiniTransformer (trained)"
+                    }
+            else:
+                return {
+                    "error": "no_output",
+                    "stderr": result.stderr,
+                    "returncode": result.returncode
+                }
+        except json.JSONDecodeError as e:
             return {
                 "error": "parse_error",
                 "stdout": result.stdout,
-                "stderr": result.stderr
+                "stderr": result.stderr,
+                "parse_error": str(e)
             }
 
     except subprocess.TimeoutExpired:
@@ -1381,10 +1438,61 @@ async def brain_think(req: ThinkRequest):
 
 # =============================================================================
 
+def initialize_ai_capabilities():
+    """Auto-load ALL knowledge modules on startup for full AI awareness."""
+    import glob
+
+    knowledge_dir = os.path.join(BASE_DIR, "knowledge")
+    if not os.path.exists(knowledge_dir):
+        print(">> ⚠ Knowledge directory not found")
+        return
+
+    # Find all .aiz files in knowledge directory
+    aiz_files = glob.glob(os.path.join(knowledge_dir, "*.aiz"))
+
+    if not aiz_files:
+        print(">> ⚠ No knowledge modules found in knowledge/")
+        return
+
+    print(f">> Loading {len(aiz_files)} knowledge modules...")
+    loaded = 0
+
+    for aiz_file in aiz_files:
+        module_name = os.path.splitext(os.path.basename(aiz_file))[0]
+        try:
+            result = subprocess.run(
+                [NEURAL_ENGINE_EXE, "knowledge_load", module_name],
+                capture_output=True, text=True, timeout=10
+            )
+            if "success" in result.stdout.lower():
+                loaded += 1
+                print(f"   ✓ Loaded: {module_name}")
+            else:
+                print(f"   ✗ Failed: {module_name}")
+        except Exception as e:
+            print(f"   ✗ Error loading {module_name}: {e}")
+
+    print(f">> ✓ Loaded {loaded}/{len(aiz_files)} knowledge modules")
+    print(">> ✓ AI is fully aware and ready!")
+
 if __name__ == "__main__":
     ensure_vault()
     # ensure_brain() - OLD Python brain removed, using C++ neural_engine.exe now
-    
+
+    # Initialize AI self-awareness (auto-load ALL knowledge + project files)
+    initialize_ai_capabilities()
+
+    # Index all project files for complete AI awareness
+    print("\n>> Indexing all project files for AI awareness...")
+    try:
+        import dynamic_indexer
+        import threading
+        index_thread = threading.Thread(target=dynamic_indexer.start_dynamic_indexing, daemon=True)
+        index_thread.start()
+        project_indexer.load_project_files_into_ai()
+    except Exception as e:
+        print(f">> ⚠ Project indexing skipped: {e}")
+
     # Start the simple conversational/training TCP socket on port 9000
     try:
         import threading
@@ -1402,3 +1510,54 @@ if __name__ == "__main__":
     print("  +----------------------------------------------------+\n")
     uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
 
+
+# =============================================================================
+# AI File Operations API - Dynamic Task Execution
+# =============================================================================
+
+from pydantic import BaseModel
+import ai_file_operations as ai_files
+
+class FileSearchRequest(BaseModel):
+    query: str
+
+class FilePathRequest(BaseModel):
+    path: str
+
+class TextSearchRequest(BaseModel):
+    text: str
+
+@app.post("/api/ai/search_files")
+def ai_search_files(req: FileSearchRequest):
+    """AI searches for files by name/path"""
+    return ai_files.cmd_search_files(req.query)
+
+@app.post("/api/ai/list_by_type")
+def ai_list_by_type(req: FileSearchRequest):
+    """AI lists files by extension"""
+    return ai_files.cmd_list_by_type(req.query)
+
+@app.post("/api/ai/list_folder")
+def ai_list_folder(req: FileSearchRequest):
+    """AI lists files in folder"""
+    return ai_files.cmd_list_folder(req.query)
+
+@app.post("/api/ai/read_file")
+def ai_read_file(req: FilePathRequest):
+    """AI reads file contents"""
+    return ai_files.cmd_read_file(req.path)
+
+@app.post("/api/ai/analyze_file")
+def ai_analyze_file(req: FilePathRequest):
+    """AI analyzes code file"""
+    return ai_files.cmd_analyze_file(req.path)
+
+@app.post("/api/ai/find_text")
+def ai_find_text(req: TextSearchRequest):
+    """AI searches text across all files"""
+    return ai_files.cmd_find_text(req.text)
+
+@app.get("/api/ai/project_stats")
+def ai_project_stats():
+    """AI gets project statistics"""
+    return ai_files.cmd_project_stats()

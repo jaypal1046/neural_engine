@@ -5,6 +5,7 @@
 #include <chrono>
 #include <cstring>
 #include <cstdio>
+#include <thread>
 
 // =============================================================================
 // Progress bar
@@ -91,7 +92,15 @@ static void cmd_compress(const std::string& input, const std::string& output,
     printf("\n  Input   : %s\n",   input.c_str());
     printf("  Output  : %s\n",     output.c_str());
     printf("  Mode    : %s\n",     mode_label);
-    printf("  Original: %.2f MB (%lld bytes)\n\n", in_size / (1024.0*1024.0), in_size);
+    printf("  Original: %.2f MB (%lld bytes)\n", in_size / (1024.0*1024.0), in_size);
+
+    // Show thread count for multi-threaded modes
+    if (mode == CompressMode::BEST || mode == CompressMode::ULTRA || mode == CompressMode::CMIX) {
+        unsigned int num_threads = std::thread::hardware_concurrency();
+        if (num_threads == 0) num_threads = 4;
+        printf("  Threads : %u (multi-threaded compression)\n", num_threads);
+    }
+    printf("\n");
 
     g_start = std::chrono::steady_clock::now();
 
@@ -159,7 +168,7 @@ static void cmd_benchmark(const std::string& input) {
         exit(1);
     }
 
-    std::string tmp_c  = input + ".bench.myzip";
+    std::string tmp_c  = input + ".bench.aiz";
     std::string tmp_d  = input + ".bench.recovered";
 
     printf("\n  Benchmarking: %s  (%.2f MB)\n\n", input.c_str(), in_size/(1024.0*1024.0));
@@ -220,9 +229,9 @@ static void usage() {
         "  myzip compress   data.txt --best\n"
         "  myzip compress   data.txt --ultra\n"
         "  myzip compress   data.txt --cmix\n"
-        "  myzip compress   video.yuv -o video.myzip\n"
-        "  myzip decompress video.myzip\n"
-        "  myzip decompress video.myzip -o video_out.yuv\n"
+        "  myzip compress   video.yuv -o video.aiz\n"
+        "  myzip decompress video.aiz\n"
+        "  myzip decompress video.aiz -o video_out.yuv\n"
         "  myzip benchmark  large_file.bin\n"
         "\n"
     );
@@ -232,7 +241,8 @@ static void usage() {
 // main
 // =============================================================================
 
-int main(int argc, char* argv[]) {
+// Main function for compression (can be called from unified aiz.exe or standalone)
+int main_compress(int argc, char* argv[]) {
     if (argc < 2) { usage(); return 1; }
 
     std::string cmd = argv[1];
@@ -264,13 +274,13 @@ int main(int argc, char* argv[]) {
 
     if (cmd == "compress") {
         if (input.empty()) { fprintf(stderr, "Error: missing input file\n"); return 1; }
-        if (output.empty()) output = input + ".myzip";
+        if (output.empty()) output = input + ".aiz";
         cmd_compress(input, output, verbose, mode);
 
     } else if (cmd == "decompress") {
         if (input.empty()) { fprintf(stderr, "Error: missing input file\n"); return 1; }
         if (output.empty()) {
-            output = ends_with(input, ".myzip")
+            output = ends_with(input, ".aiz")
                      ? input.substr(0, input.size() - 6) + ".recovered"
                      : input + ".recovered";
         }
@@ -288,3 +298,10 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+
+#ifndef UNIFIED_BUILD
+// Standalone main for myzip.exe
+int main(int argc, char* argv[]) {
+    return main_compress(argc, argv);
+}
+#endif

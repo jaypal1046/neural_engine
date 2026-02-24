@@ -475,9 +475,9 @@ export function HelperView() {
         if (lower.startsWith('decompress') || lower.startsWith('restore') || lower.startsWith('extract')) {
             let fp = cmd.replace(/^(decompress|restore|extract)\s*/i, '').trim();
             const file = atts.find(a => a.type === 'file')?.name || fp;
-            if (!file) return { content: `Please provide a \`.myzip\` archive path to decompress.`, tool: 'compress' };
+            if (!file) return { content: `Please provide a \`.aiz\` archive path to decompress.`, tool: 'compress' };
 
-            let op = file.replace('.myzip', '');
+            let op = file.replace('.aiz', '');
             if (op === file) op = file + '_out';
 
             try {

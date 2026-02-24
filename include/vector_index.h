@@ -9,7 +9,7 @@
 
 struct KnowledgeEntry {
     std::string topic;                // e.g., "quantum_entanglement"
-    std::string file_path;            // e.g., "brain/knowledge/quantum.myzip"
+    std::string file_path;            // e.g., "brain/knowledge/quantum.aiz"
     std::vector<float> embedding;     // 64-dim vector
     uint64_t original_size;           // Size before compression
     uint64_t compressed_size;         // Size after compression

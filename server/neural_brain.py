@@ -182,7 +182,7 @@ def store_knowledge(topic: str, content: str, source: str = "user",
         f.write(content)
     
     raw_size = os.path.getsize(raw_file)
-    compressed_file = os.path.join(KNOWLEDGE_DIR, f"{entry_id}.txt.myzip")
+    compressed_file = os.path.join(KNOWLEDGE_DIR, f"{entry_id}.txt.aiz")
     compressed_size = raw_size  # Default if compression fails
     
     # Compress with our neural engine

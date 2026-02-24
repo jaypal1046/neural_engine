@@ -31,7 +31,7 @@ void RAGEngine::load_knowledge_dir(const std::string& knowledge_dir) {
                 std::string path = entry.path().string();
                 std::string ext = entry.path().extension().string();
 
-                // Only load .txt files (skip .myzip for now)
+                // Only load .txt files (skip .aiz for now)
                 if (ext == ".txt") {
                     std::ifstream file(path);
                     if (file) {

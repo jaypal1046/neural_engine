@@ -166,7 +166,7 @@ async def compress(req: CompressRequest):
         return {
             "status": "ok" if success else "error",
             "file_path": req.file_path,
-            "output_path": req.file_path + ".myzip",
+            "output_path": req.file_path + ".aiz",
             "log": log
         }
 

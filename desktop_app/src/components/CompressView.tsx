@@ -94,7 +94,7 @@ export function CompressView() {
                         const file = e.target.files?.[0];
                         if (file) {
                             (document.getElementById('input_file') as HTMLInputElement).value = file.name;
-                            (document.getElementById('output_file') as HTMLInputElement).value = file.name + '.myzip';
+                            (document.getElementById('output_file') as HTMLInputElement).value = file.name + '.aiz';
                             analyzeFile(file.name);
                             setTimeout(() => alert("Notice: Because you are running Neural Studio inside a standard Web Browser instead of the Desktop App, Javascript sandbox security prevents grabbing the absolute file path (e.g. C:/User/Data/...) \n\nWe have pasted the file's name into the box, but if it is not in the same folder as the server, you must manually type/paste the full C:/... path to compress it!"), 100);
                         }
@@ -106,7 +106,7 @@ export function CompressView() {
                                 const file = await window.ipcRenderer.selectFile();
                                 if (file) {
                                     (document.getElementById('input_file') as HTMLInputElement).value = file;
-                                    (document.getElementById('output_file') as HTMLInputElement).value = file + '.myzip';
+                                    (document.getElementById('output_file') as HTMLInputElement).value = file + '.aiz';
                                     analyzeFile(file);
                                 }
                             } else {
@@ -131,7 +131,7 @@ export function CompressView() {
                 </div>
                 <div className="field-row">
                     <label>Save Archive As</label>
-                    <input type="text" placeholder="Destination .myzip path..." id="output_file" />
+                    <input type="text" placeholder="Destination .aiz path..." id="output_file" />
                     <button className="ghost-btn" onClick={async () => {
                         try {
                             if (window.ipcRenderer) {

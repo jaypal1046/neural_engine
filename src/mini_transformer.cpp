@@ -400,14 +400,164 @@ std::string MiniTransformer::generate(
 
 void MiniTransformer::save(const std::string& path) const {
     std::cerr << "[TRANSFORMER] Saving model to " << path << "...\n";
-    // TODO: Implement binary serialization
-    std::cerr << "[TRANSFORMER] Model saved.\n";
+
+    std::ofstream out(path, std::ios::binary);
+    if (!out) {
+        std::cerr << "[ERROR] Failed to open file for writing: " << path << "\n";
+        return;
+    }
+
+    // Write config
+    out.write(reinterpret_cast<const char*>(&config_.vocab_size), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&config_.embedding_dim), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&config_.num_layers), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&config_.num_heads), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&config_.ff_dim), sizeof(int));
+    out.write(reinterpret_cast<const char*>(&config_.max_seq_length), sizeof(int));
+
+    // Write token embeddings
+    for (int i = 0; i < config_.vocab_size; i++) {
+        out.write(reinterpret_cast<const char*>(weights_.token_embeddings[i].data()),
+                  config_.embedding_dim * sizeof(float));
+    }
+
+    // Write position embeddings
+    for (int i = 0; i < config_.max_seq_length; i++) {
+        out.write(reinterpret_cast<const char*>(weights_.position_embeddings[i].data()),
+                  config_.embedding_dim * sizeof(float));
+    }
+
+    // Write output projection
+    for (int i = 0; i < config_.embedding_dim; i++) {
+        out.write(reinterpret_cast<const char*>(weights_.output_projection[i].data()),
+                  config_.vocab_size * sizeof(float));
+    }
+
+    // Write layer weights (simplified - just the main weights)
+    for (int l = 0; l < config_.num_layers; l++) {
+        const auto& layer = weights_.layers[l];
+
+        // Write all weight matrices for this layer
+        for (int i = 0; i < config_.embedding_dim; i++) {
+            out.write(reinterpret_cast<const char*>(layer.query_weight[i].data()),
+                      config_.embedding_dim * sizeof(float));
+        }
+        for (int i = 0; i < config_.embedding_dim; i++) {
+            out.write(reinterpret_cast<const char*>(layer.key_weight[i].data()),
+                      config_.embedding_dim * sizeof(float));
+        }
+        for (int i = 0; i < config_.embedding_dim; i++) {
+            out.write(reinterpret_cast<const char*>(layer.value_weight[i].data()),
+                      config_.embedding_dim * sizeof(float));
+        }
+        for (int i = 0; i < config_.embedding_dim; i++) {
+            out.write(reinterpret_cast<const char*>(layer.output_weight[i].data()),
+                      config_.embedding_dim * sizeof(float));
+        }
+        for (int i = 0; i < config_.embedding_dim; i++) {
+            out.write(reinterpret_cast<const char*>(layer.ff1_weight[i].data()),
+                      config_.ff_dim * sizeof(float));
+        }
+        for (int i = 0; i < config_.ff_dim; i++) {
+            out.write(reinterpret_cast<const char*>(layer.ff2_weight[i].data()),
+                      config_.embedding_dim * sizeof(float));
+        }
+        out.write(reinterpret_cast<const char*>(layer.ln1_gamma.data()),
+                  config_.embedding_dim * sizeof(float));
+        out.write(reinterpret_cast<const char*>(layer.ln1_beta.data()),
+                  config_.embedding_dim * sizeof(float));
+        out.write(reinterpret_cast<const char*>(layer.ln2_gamma.data()),
+                  config_.embedding_dim * sizeof(float));
+        out.write(reinterpret_cast<const char*>(layer.ln2_beta.data()),
+                  config_.embedding_dim * sizeof(float));
+    }
+
+    out.close();
+    std::cerr << "[TRANSFORMER] Model saved successfully (" << path << ").\n";
 }
 
 void MiniTransformer::load(const std::string& path) {
     std::cerr << "[TRANSFORMER] Loading model from " << path << "...\n";
-    // TODO: Implement binary deserialization
-    std::cerr << "[TRANSFORMER] Model loaded.\n";
+
+    std::ifstream in(path, std::ios::binary);
+    if (!in) {
+        std::cerr << "[WARNING] Model file not found, using initialized weights.\n";
+        return;
+    }
+
+    // Read and verify config
+    int vocab_size, embedding_dim, num_layers, num_heads, ff_dim, max_seq_length;
+    in.read(reinterpret_cast<char*>(&vocab_size), sizeof(int));
+    in.read(reinterpret_cast<char*>(&embedding_dim), sizeof(int));
+    in.read(reinterpret_cast<char*>(&num_layers), sizeof(int));
+    in.read(reinterpret_cast<char*>(&num_heads), sizeof(int));
+    in.read(reinterpret_cast<char*>(&ff_dim), sizeof(int));
+    in.read(reinterpret_cast<char*>(&max_seq_length), sizeof(int));
+
+    if (vocab_size != config_.vocab_size || embedding_dim != config_.embedding_dim) {
+        std::cerr << "[ERROR] Model config mismatch!\n";
+        in.close();
+        return;
+    }
+
+    // Read token embeddings
+    for (int i = 0; i < config_.vocab_size; i++) {
+        in.read(reinterpret_cast<char*>(weights_.token_embeddings[i].data()),
+                config_.embedding_dim * sizeof(float));
+    }
+
+    // Read position embeddings
+    for (int i = 0; i < config_.max_seq_length; i++) {
+        in.read(reinterpret_cast<char*>(weights_.position_embeddings[i].data()),
+                config_.embedding_dim * sizeof(float));
+    }
+
+    // Read output projection
+    for (int i = 0; i < config_.embedding_dim; i++) {
+        in.read(reinterpret_cast<char*>(weights_.output_projection[i].data()),
+                config_.vocab_size * sizeof(float));
+    }
+
+    // Read layer weights
+    for (int l = 0; l < config_.num_layers; l++) {
+        auto& layer = weights_.layers[l];
+
+        for (int i = 0; i < config_.embedding_dim; i++) {
+            in.read(reinterpret_cast<char*>(layer.query_weight[i].data()),
+                    config_.embedding_dim * sizeof(float));
+        }
+        for (int i = 0; i < config_.embedding_dim; i++) {
+            in.read(reinterpret_cast<char*>(layer.key_weight[i].data()),
+                    config_.embedding_dim * sizeof(float));
+        }
+        for (int i = 0; i < config_.embedding_dim; i++) {
+            in.read(reinterpret_cast<char*>(layer.value_weight[i].data()),
+                    config_.embedding_dim * sizeof(float));
+        }
+        for (int i = 0; i < config_.embedding_dim; i++) {
+            in.read(reinterpret_cast<char*>(layer.output_weight[i].data()),
+                    config_.embedding_dim * sizeof(float));
+        }
+        for (int i = 0; i < config_.embedding_dim; i++) {
+            in.read(reinterpret_cast<char*>(layer.ff1_weight[i].data()),
+                    config_.ff_dim * sizeof(float));
+        }
+        for (int i = 0; i < config_.ff_dim; i++) {
+            in.read(reinterpret_cast<char*>(layer.ff2_weight[i].data()),
+                    config_.embedding_dim * sizeof(float));
+        }
+        in.read(reinterpret_cast<char*>(layer.ln1_gamma.data()),
+                config_.embedding_dim * sizeof(float));
+        in.read(reinterpret_cast<char*>(layer.ln1_beta.data()),
+                config_.embedding_dim * sizeof(float));
+        in.read(reinterpret_cast<char*>(layer.ln2_gamma.data()),
+                config_.embedding_dim * sizeof(float));
+        in.read(reinterpret_cast<char*>(layer.ln2_beta.data()),
+                config_.embedding_dim * sizeof(float));
+    }
+
+    in.close();
+    std::cerr << "[TRANSFORMER] Model loaded successfully.\n";
 }
 
 std::vector<std::vector<float>> MiniTransformer::forward_with_cache(
@@ -867,23 +1017,20 @@ void MiniTransformer::train(
                     }
                 }
 
-                // 3. Backward through transformer layers (ATTENTION!)
-                // Phase 21F: Training attention mechanisms
-                for (int l = config_.num_layers - 1; l >= 0; l--) {
-                    auto& cache = layer_caches[l];
-                    auto& layer = weights_.layers[l];
-
-                    // Backward through attention
-                    std::vector<std::vector<float>> grad_attn_input;
-                    backward_attention(
-                        cache, grad_hidden, layer,
-                        transformer_grads.layers[l].attention,
-                        grad_attn_input
-                    );
-
-                    // Pass gradients to previous layer (skip FF and layer norms for now)
-                    grad_hidden = grad_attn_input;
-                }
+                // 3. Backward through transformer layers
+                // DISABLED: Attention/FF training makes quality worse on small corpus
+                // Current best: Just train embeddings + output (fast & good quality)
+                // for (int l = config_.num_layers - 1; l >= 0; l--) {
+                //     auto& cache = layer_caches[l];
+                //     auto& layer = weights_.layers[l];
+                //     std::vector<std::vector<float>> grad_attn_input;
+                //     backward_attention(
+                //         cache, grad_hidden, layer,
+                //         transformer_grads.layers[l].attention,
+                //         grad_attn_input
+                //     );
+                //     grad_hidden = grad_attn_input;
+                // }
 
                 // 4. Gradient to embeddings
                 for (int t = 0; t < seq_len; t++) {
@@ -902,7 +1049,7 @@ void MiniTransformer::train(
             float norm_factor = 1.0f / batch_tokens;
             scale_gradients(transformer_grads, norm_factor);
 
-            // Update ALL parameters
+            // Update ALL parameters (currently: embeddings + output only)
             update_all_weights(optimizer, transformer_grads);
 
             epoch_loss += batch_loss;

@@ -46,7 +46,7 @@ def generate_test_file(path, size_mb, type='text'):
 def test_round_trip(input_path, mode_flag=None, mode_name="Default"):
     """Compress -> Decompress -> Verify SHA-256."""
     input_base = os.path.basename(input_path)
-    output_path = input_path + ".myzip"
+    output_path = input_path + ".aiz"
     recovered_path = input_path + ".recovered"
 
     # Cleanup previous run
@@ -66,8 +66,8 @@ def test_round_trip(input_path, mode_flag=None, mode_name="Default"):
         return False
 
     if not os.path.exists(output_path):
-        # Maybe output wasn't named .myzip? Attempt to guess or rely on default
-        # But our tool defaults to .myzip
+        # Maybe output wasn't named .aiz? Attempt to guess or rely on default
+        # But our tool defaults to .aiz
         print(f"  [FAIL] {mode_name} Output file not created.")
         return False
         

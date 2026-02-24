@@ -39,7 +39,7 @@ public:
     void load_embeddings(const std::string& embeddings_file);
 
     /**
-     * Load knowledge base (directory of .txt or .myzip files)
+     * Load knowledge base (directory of .txt or .aiz files)
      */
     void load_knowledge_dir(const std::string& knowledge_dir);
 

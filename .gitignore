@@ -1,13 +1,11 @@
 # Binaries
-*.exe
-*.o
+
 *.obj
 *.dll
 *.so
 *.dylib
 
 # Compression output
-*.myzip
 *.recovered
 
 # Python
@@ -19,7 +17,7 @@ test_*.txt
 test_*.bin
 server_log_*.txt
 synthetic_*.txt
-*.bench.myzip
+*.bench.aiz
 *.bench.recovered
 
 # VS Code
@@ -29,7 +27,3 @@ synthetic_*.txt
 Thumbs.db
 .DS_Store
 
-# Samples checkouts (if any)
-samples/text/
-samples/binary/
-samples/image/

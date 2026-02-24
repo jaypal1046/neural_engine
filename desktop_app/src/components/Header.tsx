@@ -38,7 +38,7 @@ export function Header({ activeTab }: { activeTab: string }) {
                     {(activeTab === 'compress' || activeTab === 'decompress') && (
                         <div style={{ color: "var(--text-faint)", marginTop: 5, fontSize: 13 }}>
                             {activeTab === 'compress' && 'Shrink any file using 1,046 neural advisors and entropy-based algorithms.'}
-                            {activeTab === 'decompress' && 'Restore a .myzip archive back to its original file.'}
+                            {activeTab === 'decompress' && 'Restore a .aiz archive back to its original file.'}
                         </div>
                     )}
                     {activeTab === 'helper' && (

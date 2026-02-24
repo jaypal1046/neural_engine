@@ -3,9 +3,10 @@
 #include <cstddef>
 #include <string>
 #include <functional>
+#include <vector>
 
 // -----------------------------------------------------------------------------
-// .myzip file format  (C++ multi-version, streaming block-based)
+// .aiz file format  (C++ multi-version, streaming block-based)
 // -----------------------------------------------------------------------------
 //
 // HEADER (54 bytes, fixed):
@@ -81,10 +82,10 @@ using ProgressCb = std::function<void(const char*, size_t, size_t, int)>;
 // use ULTRA only when ratio matters more than speed.
 // -----------------------------------------------------------------------------
 enum class CompressMode : int {
-  DEFAULT = 0, // LZ77+delta+rANS, compare-and-pick (.myzip v7)
-  BEST = 1,    // BWT+MTF+RLE+rANS                  (.myzip v8)
-  ULTRA = 2,   // PPM order-4 + arithmetic coding    (.myzip v9)
-  CMIX = 3,    // Neural Net Context Mixing          (.myzip v10)
+  DEFAULT = 0, // LZ77+delta+rANS, compare-and-pick (.aiz v7)
+  BEST = 1,    // BWT+MTF+RLE+rANS                  (.aiz v8)
+  ULTRA = 2,   // PPM order-4 + arithmetic coding    (.aiz v9)
+  CMIX = 3,    // Neural Net Context Mixing          (.aiz v10)
 };
 
 // Compress input_path -> output_path.
@@ -100,3 +101,40 @@ int compress_file(const std::string& input_path,
 int decompress_file(const std::string& input_path,
                     const std::string& output_path,
                     ProgressCb progress = nullptr);
+
+// -----------------------------------------------------------------------------
+// Block-Based Random Access API (for knowledge modules)
+// -----------------------------------------------------------------------------
+
+// Block file info (read from compressed file header)
+struct BlockFileInfo {
+    uint8_t  version;        // Format version (5-10)
+    uint8_t  mode;           // 0x00=compressed, 0x01=stored
+    uint64_t orig_size;      // Original file size
+    uint32_t block_count;    // Number of blocks
+    uint32_t block_size;     // Nominal block size (uncompressed)
+    uint8_t  sha256[32];     // SHA-256 checksum
+};
+
+// Block metadata (from block index)
+struct BlockInfo {
+    uint32_t compressed_size;   // Compressed block size in bytes
+    uint32_t original_size;     // Original block size in bytes
+    uint64_t file_offset;       // Byte offset in file where block data starts
+};
+
+// Open compressed file for random access.
+// Returns opaque handle (FILE*) or nullptr on failure.
+// Caller must call block_close() when done.
+void* block_open(const std::string& file_path, BlockFileInfo& info);
+
+// Get information about a specific block.
+// Returns true on success, false on error.
+bool block_get_info(void* handle, uint32_t block_index, BlockInfo& info);
+
+// Decompress a specific block to memory.
+// Returns decompressed bytes, or empty vector on error.
+std::vector<uint8_t> block_decompress(void* handle, uint32_t block_index);
+
+// Close block file handle.
+void block_close(void* handle);
