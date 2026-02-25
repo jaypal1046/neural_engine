@@ -1,0 +1,15 @@
+Question: What is the difference between a virus and a bacterium?
+
+Ideal Answer: Both cause infections, but they are fundamentally different:
+
+| Feature | Bacteria | Virus |
+|---------|---------|-------|
+| Size | 1–10 μm | 0.01–0.3 μm (10-100x smaller) |
+| Structure | Single cell with cell wall | Protein coat + genetic material (DNA or RNA) |
+| Living? | Yes — can reproduce alone | No — needs host cell to replicate |
+| Treatment | **Antibiotics** (kill bacteria) | **Antivirals** / **Vaccines** |
+| Examples | Strep throat, TB, E. coli | Flu, COVID, HIV, common cold |
+
+**Key insight:** Antibiotics CANNOT treat viral infections. Overusing antibiotics for viruses is a major cause of antibiotic resistance — one of the biggest public health threats.
+
+Skills demonstrated: comparison table, treatment difference, antibiotic resistance

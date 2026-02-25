@@ -1,0 +1,16 @@
+Question: What is photosynthesis?
+
+Ideal Answer: Photosynthesis is the process by which plants, algae, and some bacteria convert light energy into chemical energy (glucose).
+
+**Equation:**
+`6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ (glucose) + 6O₂`
+
+**Where it happens:** Chloroplasts, specifically the green pigment chlorophyll.
+
+**Two stages:**
+1. **Light reactions** (thylakoid membrane) — light splits water, produces ATP and NADPH, releases O₂
+2. **Calvin cycle** (stroma) — uses ATP/NADPH to fix CO₂ into glucose
+
+**Why it matters:** Nearly all life on Earth depends on photosynthesis — it produces the oxygen we breathe and forms the base of almost all food chains.
+
+Skills demonstrated: equation, location, two-stage process, global significance

@@ -1,0 +1,16 @@
+Question: What is the periodic table?
+
+Ideal Answer: The periodic table is a tabular arrangement of all 118 known chemical elements, organized by atomic number (protons in nucleus), electron configuration, and recurring chemical properties.
+
+**Structure:**
+- **Rows (periods):** elements with same number of electron shells
+- **Columns (groups):** elements with same valence electrons and similar chemical behavior
+  - Group 1 (alkali metals): Li, Na, K — highly reactive, form +1 ions
+  - Group 17 (halogens): F, Cl, Br — form -1 ions, very reactive
+  - Group 18 (noble gases): He, Ne, Ar — almost completely inert
+
+**Why it's powerful:** You can predict how an unknown element behaves based on its position.
+
+Mendeleev created the first version in 1869 and left gaps for undiscovered elements — which were later found exactly as he predicted.
+
+Skills demonstrated: structure explained, group examples, predictive power, history

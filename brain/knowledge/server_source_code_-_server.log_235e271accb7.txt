@@ -1,0 +1,16 @@
+INFO:     Will watch for changes in these directories: ['C:\\Jay\\_Plugin\\compress\\server']
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [18964] using StatReload
+INFO:     Started server process [22240]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'main.py'. Reloading...
+>> Background AI Chat Port started securely on TCP :9000 <<
+
+  +----------------------------------------------------+
+  |   Neural Studio V10 -- AI Compression API          |
+  |   C++ Neural Engine + Smart Brain + Vault          |
+  +----------------------------------------------------+
+
+AI Training and Chat Port listening on TCP port 9000...
+ 

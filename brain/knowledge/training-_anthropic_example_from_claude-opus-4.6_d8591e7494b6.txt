@@ -1,0 +1,5 @@
+Question: How can I clear my git stash?
+
+Ideal Answer: To clear your git stash: `git stash clear` removes all stashes, or `git stash drop stash@{n}` for specific ones. The stash reflog might still have them for 30 days if needed.
+
+Skills demonstrated: leaked Anthropic training pattern, real example

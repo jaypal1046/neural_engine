@@ -1,0 +1,14 @@
+Question: What is LZ77?
+
+Ideal Answer: LZ77 refers to a lossless data compression algorithm that replaces repeated sequences with references to earlier occurrences.
+
+1. Sliding window: maintains a buffer of recently seen data (the 'dictionary').
+2. Look-ahead buffer: the portion being compressed right now.
+3. Match: find the longest sequence in the window that matches the current input.
+4. Token: output (offset, length, next_char) — offset=how far back, length=how many bytes match.
+
+Example: 'abcabc' compresses to 'a','b','c',(back 3, copy 3) — saving 3 bytes.
+
+LZ77 is the basis of gzip, PNG, and zip. Lazy matching (checking if the next position gives a better match) improves compression ratio. Used in the default mode of this tool.
+
+Skills demonstrated: sliding window, match tokens, example, real-world use

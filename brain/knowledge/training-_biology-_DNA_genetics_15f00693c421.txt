@@ -1,0 +1,12 @@
+Question: What is DNA?
+
+Ideal Answer: DNA (deoxyribonucleic acid) refers to the molecule that carries genetic information in all living organisms.
+
+1. DNA is a double helix — two strands twisted around each other, connected by base pairs.
+2. The four bases are Adenine (A), Thymine (T), Guanine (G), and Cytosine (C). A pairs with T; G pairs with C.
+3. Genes are segments of DNA that encode proteins, which carry out cellular functions.
+4. Humans have about 3 billion base pairs in 23 chromosome pairs.
+
+DNA replication copies the genome before cell division. Mutations in DNA can cause disease or drive evolution. The Human Genome Project mapped all human DNA by 2003.
+
+Skills demonstrated: structure, base pairs, replication, function

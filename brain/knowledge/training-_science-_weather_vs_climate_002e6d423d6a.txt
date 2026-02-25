@@ -1,0 +1,21 @@
+Question: What is the difference between weather and climate?
+
+Ideal Answer: **Weather** = short-term atmosphere conditions at a specific place and time.
+- 'It's raining in Mumbai today'
+- Changes hour to hour, day to day
+- Measured by: temperature, humidity, wind, precipitation
+
+**Climate** = long-term patterns of weather over decades in a region.
+- 'Mumbai has a monsoon season from June to September'
+- Defined over 30+ year averages (WMO standard)
+- Measured by: seasonal averages, extreme event frequency
+
+**Analogy:** Weather is your mood. Climate is your personality.
+
+**Climate change context:**
+- Burning fossil fuels increases atmospheric CO₂
+- CO₂ traps heat (greenhouse effect)
+- Global average temperature has risen ~1.2°C since pre-industrial times
+- This shifts climate patterns globally — more extreme weather events, rising sea levels
+
+Skills demonstrated: clear distinction, analogy, climate change connection

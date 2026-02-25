@@ -1,0 +1,18 @@
+Question: What is recursion?
+
+Ideal Answer: Recursion refers to a programming technique where a function calls itself to solve a smaller version of the same problem.
+
+1. Base case: the condition that stops the recursion (without it, the function loops forever).
+2. Recursive case: the function calls itself with a simpler input.
+
+Example — factorial:
+```
+def factorial(n):
+    if n == 0: return 1          # base case
+    return n * factorial(n - 1)  # recursive case
+```
+factorial(4) = 4 × 3 × 2 × 1 = 24
+
+Recursion naturally models tree traversal, divide-and-conquer (merge sort, binary search), and backtracking. Every recursive solution can also be written iteratively with an explicit stack.
+
+Skills demonstrated: base case, recursive case, example, when to use

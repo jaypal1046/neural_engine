@@ -25,18 +25,30 @@ COMPRESSION COMMANDS:
   benchmark <input>                  Benchmark compression
 
 AI COMMANDS:
-  knowledge_load <module>            Load knowledge module
-  knowledge_query <module> <q>       Query knowledge
-  ai_ask <question>                  Ask AI a question
-  train_transformer <file> <e> <lr> <batch>   Train model
+  ai_ask <question>                  Ask AI (RAG + reasoning + memory)
+  learn <url_or_file>                Learn from URL or local file (CMIX compress + index)
+  ask <question>                     Direct knowledge query
+  score_response <file>              Score response quality (RewardModel in C++)
+  cai_critique <file>                Constitutional AI critique (C++)
+  train_transformer <file> <e> <lr> <batch>  Train transformer model
+  reason <problem>                   Chain-of-thought reasoning
+  verify <claim>                     Verify a claim against knowledge
+
+KNOWLEDGE COMMANDS:
+  knowledge_load <module>            Load .aiz knowledge module
+  knowledge_query <module> <q>       Query specific knowledge module
+  knowledge_list                     List loaded modules
 
 TESTING:
   test_block <file>                  Test block access
 
 EXAMPLES:
+  neural_engine ai_ask "How does CMIX work?"
+  neural_engine learn https://en.wikipedia.org/wiki/BWT
+  neural_engine score_response qa_pair.txt
+  neural_engine cai_critique qa_pair.txt
+  neural_engine train_transformer corpus.txt 7 0.002 16
   neural_engine compress file.txt --best
-  neural_engine knowledge_query capabilities "What can you do?"
-  neural_engine ai_ask "Explain BWT compression"
 
 For detailed help on a command, use: neural_engine <command> --help
 )" << std::endl;

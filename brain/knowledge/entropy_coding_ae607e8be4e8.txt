@@ -1,0 +1,605 @@
+Entropy coding - Wikipedia 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+ Jump to content 
+
+ Search 
+
+ Search 
+
+- Donate 
+
+- Create account 
+
+- Log in 
+
+ Personal tools 
+
+- Donate 
+- Create account 
+- Log in 
+
+ Entropy coding 
+
+ 13 languages 
+
+- العربية 
+- Català 
+- Deutsch 
+- Español 
+- فارسی 
+- Suomi 
+- Français 
+- Italiano 
+- 日本語 
+- 한국어 
+- Русский 
+- Українська 
+- 中文 
+
+ Edit links 
+
+ From Wikipedia, the free encyclopedia 
+
+ Lossless data compression scheme 
+
+In information theory , an entropy coding (or entropy encoding ) is any lossless data compression method that attempts to approach the lower bound declared by Shannon's source coding theorem , which states that any lossless data compression method must have an expected code length greater than or equal to the entropy of the source. &#91; 1 &#93; &#91; 2 &#93; 
+
+More precisely, the source coding theorem states that for any source distribution, the expected code length satisfies 
+
+ E 
+
+ x 
+ &#x223C; 
+ P 
+
+ &#x2061; 
+ [ 
+ &#x2113; 
+ ( 
+ d 
+ ( 
+ x 
+ ) 
+ ) 
+ ] 
+ &#x2265; 
+
+ E 
+
+ x 
+ &#x223C; 
+ P 
+
+ &#x2061; 
+ [ 
+ &#x2212; 
+
+ log 
+
+ b 
+
+ &#x2061; 
+ ( 
+ P 
+ ( 
+ x 
+ ) 
+ ) 
+ ] 
+
+ {\displaystyle \operatorname {E} _{x\sim P}[\ell (d(x))]\geq \operatorname {E} _{x\sim P}[-\log _{b}(P(x))]} 
+
+ , where 
+
+ &#x2113; 
+
+ {\displaystyle \ell } 
+
+ is the function specifying the number of symbols in a code word, 
+
+ d 
+
+ {\displaystyle d} 
+
+ is the coding function, 
+
+ b 
+
+ {\displaystyle b} 
+
+ is the number of symbols used to make output codes and 
+
+ P 
+
+ {\displaystyle P} 
+
+ is the probability of the source symbol. An entropy coding attempts to approach this lower bound. &#91; 2 &#93; &#91; 3 &#93; 
+
+Two of the most common entropy coding techniques are Huffman coding and arithmetic coding . &#91; 4 &#93; &#91; 5 &#93; If the approximate entropy characteristics of a data stream are known in advance (especially for signal compression ), a simpler static code may be useful. These static codes include universal codes (such as Elias gamma coding or Fibonacci coding ) and Golomb codes (such as unary coding or Rice coding ). &#91; 5 &#93; 
+
+Since 2014, data compressors have started using the asymmetric numeral systems (ANS) family of entropy coding techniques, which allows combination of the compression ratio of arithmetic coding with a processing cost similar to Huffman coding . &#91; 6 &#93; &#91; 1 &#93; ANS has been adopted by compressors developed by Facebook ( Zstandard ), Apple ( LZFSE ), and Google (Draco), among others. &#91; 6 &#93; 
+
+Intuitive explanation [ edit ] 
+
+Entropy coding exploits the fact that some symbols occur more frequently than others. When symbol probabilities are unequal, some outcomes are more predictable, and this predictability can be used to represent the data in fewer bits. Conversely, when all symbols are equally likely, each symbol carries the maximum possible amount of information and no compression is possible. &#91; 3 &#93; &#91; 2 &#93; 
+
+ When compression is not possible: A stream of independent fair coin flips, where heads and tails each occur with probability 0.5, has an entropy of 1 bit per symbol, exactly the cost of storing one binary digit. Since every symbol already takes the minimum possible space, there is no redundancy to exploit, and no entropy coding method can make the data any smaller on average. The same principle applies to larger alphabets: independent ternary symbols (0, 1, 2) each with probability 1/3 have an entropy of about 1.585 bits per symbol, the maximum for a three-symbol alphabet, and are likewise incompressible. &#91; 3 &#93; &#91; 2 &#93; 
+
+ When compression is possible: If the same binary source instead produces 1s with probability 0.9 and 0s with probability 0.1, the entropy drops to about 0.469 bits per symbol. This is well below the 1-bit storage cost, because the predominance of 1s makes each symbol partially predictable. An entropy coder such as arithmetic coding can exploit this predictability to achieve a compression ratio of roughly 2.1:1 by assigning shorter codes to the more common symbol. &#91; 3 &#93; &#91; 5 &#93; 
+
+ Practical example: English text has an alphabet of roughly 27 characters (26 letters plus a space). If all characters occurred equally often, each would require about 4.75 bits. However, because letter frequencies are highly unequal ('e' occurs far more often than 'z') and letters are not independent ('u' almost always follows 'q'), the true entropy of English has been estimated at roughly 1.0 to 1.5 bits per character. This large gap is what makes English text highly compressible. &#91; 7 &#93; &#91; 3 &#93; 
+
+Entropy as a measure of similarity [ edit ] 
+
+Besides using entropy coding as a way to compress digital data, an entropy encoder can also be used to measure the amount of similarity between streams of data and already existing classes of data. This is done by generating an entropy coder/compressor for each class of data; unknown data is then classified by feeding the uncompressed data to each compressor and seeing which compressor yields the highest compression. The coder with the best compression is probably the coder trained on the data that was most similar to the unknown data. &#91; 8 &#93; This approach is grounded in the concept of normalized compression distance , a parameter-free, universal similarity metric based on compression that approximates the uncomputable normalized information distance . &#91; 8 &#93; &#91; 9 &#93; 
+
+See also [ edit ] 
+
+- Arithmetic coding 
+
+- Asymmetric numeral systems (ANS) 
+
+- Context-adaptive binary arithmetic coding (CABAC) 
+
+- Huffman coding 
+
+- Normalized compression distance 
+
+- Range coding 
+
+- Source coding theorem 
+
+References [ edit ] 
+
+- ^ a b Duda, Jarek; Tahboub, Khalid; Gadgil, Neeraj J.; Delp, Edward J. (May 2015). "The use of asymmetric numeral systems as an accurate replacement for Huffman coding" . 2015 Picture Coding Symposium (PCS) . pp.&#160; 65– 69. doi : 10.1109/PCS.2015.7170048 . ISBN &#160; 978-1-4799-7783-3 . S2CID &#160; 20260346 . 
+
+- ^ a b c d 
+- Shannon, Claude E. (1948). "A Mathematical Theory of Communication". Bell System Technical Journal . 27 (3): 379– 423. doi : 10.1002/j.1538-7305.1948.tb01338.x . 
+
+- ^ a b c d e 
+- Cover, Thomas M.; Thomas, Joy A. (2006). Elements of Information Theory (2nd&#160;ed.). John Wiley & Sons. ISBN &#160; 978-0-471-24195-9 . 
+
+- ^ 
+- Huffman, David (1952). "A Method for the Construction of Minimum-Redundancy Codes". Proceedings of the IRE . 40 (9). Institute of Electrical and Electronics Engineers (IEEE): 1098– 1101. doi : 10.1109/jrproc.1952.273898 . ISSN &#160; 0096-8390 . 
+
+- ^ a b c 
+- Sayood, Khalid (2017). Introduction to Data Compression (5th&#160;ed.). Morgan Kaufmann. ISBN &#160; 978-0-12-809474-7 . 
+
+- ^ a b 
+- Duda, Jarek (2013). "Asymmetric numeral systems: entropy coding combining speed of Huffman coding with compression rate of arithmetic coding". arXiv preprint . arXiv : 1311.2540 . Bibcode : 2013arXiv1311.2540D . 
+
+- ^ 
+- Shannon, Claude E. (1951). "Prediction and Entropy of Printed English". Bell System Technical Journal . 30 (1): 50– 64. doi : 10.1002/j.1538-7305.1951.tb01366.x . 
+
+- ^ a b 
+- Cilibrasi, Rudi; Vitányi, Paul M. B. (2005). "Clustering by Compression". IEEE Transactions on Information Theory . 51 (4): 1523– 1545. doi : 10.1109/TIT.2005.844059 . S2CID &#160; 911 . 
+
+- ^ 
+- Vitányi, Paul M. B.; Balbach, Frank J.; Cilibrasi, Rudi L.; Li, Ming (2009). "Normalized Information Distance". Information Theory and Statistical Learning . Springer. doi : 10.1007/978-0-387-84816-7_3 . ISBN &#160; 978-0-387-84816-7 . 
+
+External links [ edit ] 
+
+- Information Theory, Inference, and Learning Algorithms , by David MacKay (2003), gives an introduction to Shannon theory and data compression, including the Huffman coding and arithmetic coding . 
+
+- Source Coding , by T. Wiegand and H. Schwarz (2011). 
+
+- 
+- v 
+- t 
+- e Data compression methods Lossless 
+type Entropy 
+
+- Adaptive coding 
+
+- Arithmetic 
+
+- Asymmetric numeral systems 
+
+- Golomb 
+
+- Huffman 
+
+- Adaptive 
+
+- Canonical 
+
+- Modified 
+
+- Range 
+
+- Shannon 
+
+- Shannon–Fano 
+
+- Shannon–Fano–Elias 
+
+- Tunstall 
+
+- Unary 
+
+- Universal 
+
+- Exp-Golomb 
+
+- Fibonacci 
+
+- Gamma 
+
+- Levenshtein 
+ Dictionary 
+
+- Byte-pair encoding 
+
+- Lempel–Ziv 
+
+- 842 
+
+- LZ4 
+
+- LZJB 
+
+- LZO 
+
+- LZRW 
+
+- LZSS 
+
+- LZW 
+
+- LZWL 
+
+- Snappy 
+ Other 
+
+- BWT 
+
+- CTW 
+
+- CM 
+
+- Delta 
+
+- Incremental 
+
+- DMC 
+
+- DPCM 
+
+- Grammar 
+
+- Re-Pair 
+
+- Sequitur 
+
+- LDCT 
+
+- MTF 
+
+- PAQ 
+
+- PPM 
+
+- RLE 
+ Hybrid 
+
+- LZ77 + Huffman
+
+- Deflate 
+
+- LZX 
+
+- LZS 
+
+- LZ77 + ANS
+
+- LZFSE 
+
+- LZ77 + Huffman + ANS
+
+- Zstandard 
+
+- LZ77 + Huffman + context
+
+- Brotli 
+
+- LZSS + Huffman
+
+- LHA/LZH 
+
+- LZ77 + Range
+
+- LZMA 
+
+- LZHAM 
+
+- RLE + BWT + MTF + Huffman
+
+- bzip2 
+ Lossy 
+type Transform 
+
+- Discrete cosine transform 
+
+- DCT 
+
+- MDCT 
+
+- DST 
+
+- FFT 
+
+- Wavelet 
+
+- Daubechies 
+
+- DWT 
+
+- SPIHT 
+ Predictive 
+
+- DPCM 
+
+- ADPCM 
+
+- LPC 
+
+- ACELP 
+
+- CELP 
+
+- LAR 
+
+- LSP 
+
+- WLPC 
+
+- Motion
+
+- Compensation 
+
+- Estimation 
+
+- Vector 
+
+- Psychoacoustic 
+ Audio Concepts 
+
+- Bit rate 
+
+- ABR 
+
+- CBR 
+
+- VBR 
+
+- Companding 
+
+- Convolution 
+
+- Dynamic range 
+
+- Latency 
+
+- Nyquist–Shannon theorem 
+
+- Sampling 
+
+- Silence compression 
+
+- Sound quality 
+
+- Speech coding 
+
+- Sub-band coding 
+ Codec 
+parts 
+
+- A-law 
+
+- μ-law 
+
+- DPCM 
+
+- ADPCM 
+
+- DM 
+
+- FT 
+
+- FFT 
+
+- LPC 
+
+- ACELP 
+
+- CELP 
+
+- LAR 
+
+- LSP 
+
+- WLPC 
+
+- MDCT 
+
+- Psychoacoustic model 
+ Image Concepts 
+
+- Chroma subsampling 
+
+- Coding tree unit 
+
+- Color space 
+
+- Compression artifact 
+
+- Image resolution 
+
+- Macroblock 
+
+- Pixel 
+
+- PSNR 
+
+- Quantization 
+
+- Standard test image 
+
+- Texture compression 
+ Methods 
+
+- Chain code 
+
+- DCT 
+
+- Deflate 
+
+- Fractal 
+
+- KLT 
+
+- LP 
+
+- RLE 
+
+- Wavelet 
+
+- Daubechies 
+
+- DWT 
+
+- EZW 
+
+- SPIHT 
+ Video Concepts 
+
+- Bit rate 
+
+- ABR 
+
+- CBR 
+
+- VBR 
+
+- Display resolution 
+
+- Frame 
+
+- Frame rate 
+
+- Frame types 
+
+- Interlace 
+
+- Video characteristics 
+
+- Video quality 
+ Codec 
+parts 
+
+- DCT 
+
+- DPCM 
+
+- Deblocking filter 
+
+- Lapped transform 
+
+- Motion
+
+- Compensation 
+
+- Estimation 
+
+- Vector 
+
+- Wavelet 
+
+- Daubechies 
+
+- DWT 
+ Theory 
+
+- Compressed data structures 
+
+- Compressed suffix array 
+
+- FM-index 
+
+- Entropy 
+
+- Information theory 
+
+- Timeline 
+
+- Kolmogorov complexity 
+
+- Prefix code 
+
+- Quantization 
+
+- Rate–distortion 
+
+- Redundancy 
+
+- Symmetry 
+
+- Smallest grammar problem 
+ Community 
+
+- Hutter Prize 
+ People 
+
+- Mark Adler 
+
+- David A. Huffman 
+
+- Phil Katz 
+
+- 
+- Authority control databases 
+- GND 
+
+ Retrieved from " https://en.wikipedia.org/w/index.php?title=Entropy_coding&oldid=1337905039 " 
+ Categories : 
+- Entropy coding 
+- Entropy and information 
+- Data compression Hidden categories: 
+- Articles with short description 
+- Short description is different from Wikidata 
+
+ Search 
+
+ Search 
+
+ Entropy coding 
+
+ 13 languages 
+
+ Add topic

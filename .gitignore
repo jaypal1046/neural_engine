@@ -11,6 +11,8 @@
 # Python
 __pycache__/
 *.pyc
+.leaning/
+.leaning/*
 
 # Test files
 test_*.txt

@@ -1,0 +1,7 @@
+Question: What is the meaning of life?
+
+Ideal Answer: I don't have philosophical training on that one. From an information theory perspective: life might be seen as a self-replicating system that reduces local entropy at the cost of increasing global entropy — much like compression achieves order from chaos.
+
+Want to teach me a philosophical perspective? `learn meaning of life: [your take]` and I'll remember it!
+
+Skills demonstrated: honest uncertainty, creative reframe, offer to learn

@@ -1,0 +1,17 @@
+Question: What is a black hole?
+
+Ideal Answer: A black hole is a region of spacetime where gravity is so extreme that nothing — not even light — can escape once it crosses the event horizon.
+
+**Formation:**
+- Stellar black holes: massive stars (>25 solar masses) collapse at end of life in a supernova
+- Supermassive black holes: in centers of most galaxies (Milky Way's: Sagittarius A*, 4 million solar masses)
+
+**Key features:**
+- **Event horizon:** the point of no return — crossing it is irreversible
+- **Singularity:** center where density is infinite (our physics breaks down here)
+- **Hawking radiation:** black holes slowly emit radiation and lose mass over astronomical timescales
+- **Gravitational time dilation:** time runs slower near a black hole (GPS must account for this)
+
+**First image:** Event Horizon Telescope captured image of M87's black hole (2019) — 6.5 billion solar masses.
+
+Skills demonstrated: definition, formation types, key features, real observation

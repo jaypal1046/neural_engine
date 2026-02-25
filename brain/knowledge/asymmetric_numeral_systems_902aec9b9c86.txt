@@ -1,0 +1,2529 @@
+Asymmetric numeral systems - Wikipedia 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+ Jump to content 
+
+ Search 
+
+ Search 
+
+- Donate 
+
+- Create account 
+
+- Log in 
+
+ Personal tools 
+
+- Donate 
+- Create account 
+- Log in 
+
+ Asymmetric numeral systems 
+
+ 6 languages 
+
+- العربية 
+- Deutsch 
+- فارسی 
+- Polski 
+- Русский 
+- Українська 
+
+ Edit links 
+
+ From Wikipedia, the free encyclopedia 
+
+ Entropy coding methods 
+
+- 
+- 
+- 
+- Part of a series on Numeral systems 
+ Place-value notation 
+ Hindu–Arabic numerals 
+
+- Western Arabic 
+
+- Eastern Arabic 
+
+- Bengali 
+
+- Devanagari 
+
+- Gujarati 
+
+- Gurmukhi 
+
+- Odia 
+
+- Sinhala 
+
+- Tamil 
+
+- Malayalam 
+
+- Telugu 
+
+- Kannada 
+
+- Dzongkha 
+
+- Tibetan 
+
+- Balinese 
+
+- Burmese 
+
+- Javanese 
+
+- Khmer 
+
+- Lao 
+
+- Mongolian 
+
+- Sundanese 
+
+- Thai 
+
+ Other systems 
+
+- History 
+
+ Ancient 
+
+- Babylonian 
+
+ Post-classical 
+
+- Cistercian 
+
+- Mayan 
+
+- Muisca 
+
+- Pentadic 
+
+- Quipu 
+
+- Rumi 
+
+ Contemporary 
+
+- Cherokee 
+
+- Kaktovik (Iñupiaq) 
+
+ By radix/base 
+ Common radices/bases 
+
+- 2 
+
+- 3 
+
+- 4 
+
+- 5 
+
+- 6 
+
+- 8 
+
+- 10 
+
+- 11 
+
+- 12 
+
+- 16 
+
+- 20 
+
+- 60 
+
+ Non-standard radices/bases 
+
+- Bijective &#160; ( 1 ) 
+
+- Signed-digit &#160; ( balanced ternary ) 
+
+- Mixed &#160; ( factorial ) 
+
+- Negative 
+
+- Complex &#160; ( 2 i ) 
+
+- Non-integer &#160; ( φ ) 
+
+- Asymmetric 
+
+ Sign-value notation 
+ Non-alphabetic 
+ Contemporary East Asian 
+
+- Chinese 
+
+- Hokkien 
+
+- Suzhou 
+
+- Japanese 
+
+- Korean 
+
+- Vietnamese 
+ Historic East Asian 
+
+- Counting rods 
+
+- Tangut 
+
+ Other non-alphabetic 
+
+- Aegean 
+
+- Attic 
+
+- Aztec 
+
+- Brahmi 
+
+- Chuvash 
+
+- Egyptian 
+
+- Etruscan 
+
+- Kharosthi 
+
+- Prehistoric counting 
+
+- Proto-cuneiform 
+
+- Roman 
+
+- Tally marks 
+
+ Alphabetic 
+
+- Abjad 
+
+- Armenian 
+
+- Alphasyllabic 
+
+- Akṣarapallī 
+
+- Āryabhaṭa 
+
+- Kaṭapayādi 
+
+- Coptic 
+
+- Cyrillic 
+
+- Geʽez 
+
+- Georgian 
+
+- Glagolitic 
+
+- Greek 
+
+- Hebrew 
+
+ List of numeral systems 
+- 
+- v 
+- t 
+- e 
+
+ Asymmetric numeral systems ( ANS ) &#91; 1 &#93; &#91; 2 &#93; is a family of entropy encoding methods introduced by Jarosław (Jarek) Duda &#91; 3 &#93; from Jagiellonian University , used in data compression since 2014 &#91; 4 &#93; due to improved performance compared to previous methods. &#91; 5 &#93; ANS combines the compression ratio of arithmetic coding (which uses a nearly accurate probability distribution ), with a processing cost similar to that of Huffman coding . &#91; 1 &#93; In the tabled ANS (tANS) variant, this is achieved by constructing a finite-state machine to operate on a large alphabet without using multiplication. &#91; 2 &#93; 
+
+Among others, ANS is used in the Facebook Zstandard compressor &#91; 6 &#93; &#91; 7 &#93; (also used e.g. in Linux kernel, &#91; 8 &#93; Google Chrome browser, &#91; 9 &#93; Android &#91; 10 &#93; operating system, was published as RFC&#160;8478 for MIME &#91; 11 &#93; and HTTP &#91; 12 &#93; ), Apple LZFSE compressor, &#91; 13 &#93; Google Draco 3D compressor &#91; 14 &#93; (used e.g. in Pixar Universal Scene Description format &#91; 15 &#93; ) and PIK image compressor, &#91; 16 &#93; CRAM DNA compressor &#91; 17 &#93; from SAMtools utilities, &#91; 18 &#93; 
+ NVIDIA nvCOMP high speed compression library, &#91; 19 &#93; 
+ Dropbox DivANS compressor, &#91; 20 &#93; Microsoft DirectStorage BCPack texture compressor, &#91; 21 &#93; long-term JPEG XL &#91; 22 &#93; and learning-based JPEG AI &#91; 23 &#93; image compressors.
+
+The basic idea is to encode information into a single natural number 
+
+ x 
+
+ {\displaystyle x} 
+
+ . &#91; 2 &#93; In the standard binary number system, we can add a bit 
+
+ s 
+ &#x2208; 
+ { 
+ 0 
+ , 
+ 1 
+ } 
+
+ {\displaystyle s\in \{0,1\}} 
+
+ of information to 
+
+ x 
+
+ {\displaystyle x} 
+
+ by appending 
+
+ s 
+
+ {\displaystyle s} 
+
+ at the end of 
+
+ x 
+
+ {\displaystyle x} 
+
+ , which gives us 
+
+ x 
+ &#x2032; 
+
+ = 
+ 2 
+ x 
+ + 
+ s 
+
+ {\displaystyle x'=2x+s} 
+
+ . For an entropy coder, this is optimal if 
+
+ Pr 
+ ( 
+ 0 
+ ) 
+ = 
+ Pr 
+ ( 
+ 1 
+ ) 
+ = 
+ 1 
+
+ / 
+
+ 2 
+
+ {\displaystyle \Pr(0)=\Pr(1)=1/2} 
+
+ . ANS generalizes this process for arbitrary sets of symbols 
+
+ s 
+ &#x2208; 
+ S 
+
+ {\displaystyle s\in S} 
+
+ with an accompanying probability distribution 
+
+ ( 
+
+ p 
+
+ s 
+
+ ) 
+
+ s 
+ &#x2208; 
+ S 
+
+ {\displaystyle (p_{s})_{s\in S}} 
+
+ . In ANS, if the information from 
+
+ s 
+
+ {\displaystyle s} 
+
+ is appended to 
+
+ x 
+
+ {\displaystyle x} 
+
+ to result in 
+
+ x 
+ &#x2032; 
+
+ {\displaystyle x'} 
+
+ , then 
+
+ x 
+ &#x2032; 
+
+ &#x2248; 
+ x 
+ &#x22C5; 
+
+ p 
+
+ s 
+
+ &#x2212; 
+ 1 
+
+ {\displaystyle x'\approx x\cdot p_{s}^{-1}} 
+
+ . Equivalently, 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+
+ x 
+ &#x2032; 
+
+ ) 
+ &#x2248; 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ x 
+ ) 
+ + 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ 1 
+
+ / 
+
+ p 
+
+ s 
+
+ ) 
+
+ {\displaystyle \log _{2}(x')\approx \log _{2}(x)+\log _{2}(1/p_{s})} 
+
+ , where 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle \log _{2}(x)} 
+
+ is the number of bits of information stored in the number 
+
+ x 
+
+ {\displaystyle x} 
+
+ , and 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ 1 
+
+ / 
+
+ p 
+
+ s 
+
+ ) 
+
+ {\displaystyle \log _{2}(1/p_{s})} 
+
+ is the number of bits contained in the symbol 
+
+ s 
+
+ {\displaystyle s} 
+
+ . &#91; 2 &#93; 
+
+For the encoding rule, the set of natural numbers is split into disjoint subsets corresponding to different symbols&#160;&#8211;&#32; like into even and odd numbers, but with densities corresponding to the probability distribution of the symbols to encode. Then to add information from symbol 
+
+ s 
+
+ {\displaystyle s} 
+
+ into the information already stored in the current number 
+
+ x 
+
+ {\displaystyle x} 
+
+ , we go to number 
+
+ x 
+ &#x2032; 
+
+ = 
+ C 
+ ( 
+ x 
+ , 
+ s 
+ ) 
+ &#x2248; 
+ x 
+
+ / 
+
+ p 
+
+ {\displaystyle x'=C(x,s)\approx x/p} 
+
+ being the position of the 
+
+ x 
+
+ {\displaystyle x} 
+
+ -th appearance from the 
+
+ s 
+
+ {\displaystyle s} 
+
+ -th subset. &#91; 2 &#93; 
+
+There are alternative ways to apply it in practice&#160;&#8211;&#32; direct mathematical formulas for encoding and decoding steps (uABS and rANS variants), or one can put the entire behavior into a table (tANS variant). &#91; 1 &#93; Renormalization is used to prevent 
+
+ x 
+
+ {\displaystyle x} 
+
+ going to infinity&#160;&#8211;&#32; transferring accumulated bits to or from the bitstream. &#91; 2 &#93; 
+
+Entropy coding [ edit ] 
+
+Suppose a sequence of 1,000 zeros and ones would be encoded, which would take 1000 bits to store directly. However, if it is somehow known that it only contains 1 zero and 999 ones, it would be sufficient to encode the zero's position, which requires only 
+
+ &#x2308; 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ 1000 
+ ) 
+ &#x2309; 
+ &#x2248; 
+ 10 
+
+ {\displaystyle \lceil \log _{2}(1000)\rceil \approx 10} 
+
+ bits here instead of the original 1000 bits.
+
+Generally, such sequences of length 
+
+ n 
+
+ {\displaystyle n} 
+
+ containing 
+
+ p 
+ n 
+
+ {\displaystyle pn} 
+
+ zeros and 
+
+ ( 
+ 1 
+ &#x2212; 
+ p 
+ ) 
+ n 
+
+ {\displaystyle (1-p)n} 
+
+ ones, for some probability 
+
+ p 
+ &#x2208; 
+ ( 
+ 0 
+ , 
+ 1 
+ ) 
+
+ {\displaystyle p\in (0,1)} 
+
+ , are called combinations . Using Stirling's approximation we get their asymptotic number being
+
+ ( 
+
+ n 
+
+ p 
+ n 
+
+ ) 
+
+ &#x2248; 
+
+ 2 
+
+ n 
+ h 
+ ( 
+ p 
+ ) 
+
+ &#xA0;for large&#xA0; 
+
+ n 
+
+ &#xA0;and&#xA0; 
+
+ h 
+ ( 
+ p 
+ ) 
+ = 
+ &#x2212; 
+ p 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ p 
+ ) 
+ &#x2212; 
+ ( 
+ 1 
+ &#x2212; 
+ p 
+ ) 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ 1 
+ &#x2212; 
+ p 
+ ) 
+ , 
+
+ {\displaystyle {n \choose pn}\approx 2^{nh(p)}{\text{ for large }}n{\text{ and }}h(p)=-p\log _{2}(p)-(1-p)\log _{2}(1-p),} 
+
+called Shannon entropy . &#91; 24 &#93; 
+
+Hence, to choose one such sequence we need approximately 
+
+ n 
+ h 
+ ( 
+ p 
+ ) 
+
+ {\displaystyle nh(p)} 
+
+ bits. It is still 
+
+ n 
+
+ {\displaystyle n} 
+
+ bits if 
+
+ p 
+ = 
+ 1 
+
+ / 
+
+ 2 
+
+ {\displaystyle p=1/2} 
+
+ , however, it can also be much smaller. For example, we need only 
+
+ &#x2248; 
+ n 
+
+ / 
+
+ 2 
+
+ {\displaystyle \approx n/2} 
+
+ bits for 
+
+ p 
+ = 
+ 0.11 
+
+ {\displaystyle p=0.11} 
+
+ .
+
+An entropy coder allows the encoding of a sequence of symbols using approximately the Shannon entropy bits per symbol. For example, ANS could be directly used to enumerate combinations: assign a different natural number to every sequence of symbols having fixed proportions in a nearly optimal way. &#91; 2 &#93; 
+
+In contrast to encoding combinations, this probability distribution usually varies in data compressors. For this purpose, Shannon entropy can be seen as a weighted average: a symbol of probability 
+
+ p 
+
+ {\displaystyle p} 
+
+ contains 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ 1 
+
+ / 
+
+ p 
+ ) 
+
+ {\displaystyle \log _{2}(1/p)} 
+
+ bits of information. ANS encodes information into a single natural number 
+
+ x 
+
+ {\displaystyle x} 
+
+ , interpreted as containing 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle \log _{2}(x)} 
+
+ bits of information. Adding information from a symbol of probability 
+
+ p 
+
+ {\displaystyle p} 
+
+ increases this informational content to 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ x 
+ ) 
+ + 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ 1 
+
+ / 
+
+ p 
+ ) 
+ = 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ x 
+
+ / 
+
+ p 
+ ) 
+
+ {\displaystyle \log _{2}(x)+\log _{2}(1/p)=\log _{2}(x/p)} 
+
+ . Hence, the new number containing both information should be 
+
+ x 
+ &#x2032; 
+
+ &#x2248; 
+ x 
+
+ / 
+
+ p 
+
+ {\displaystyle x'\approx x/p} 
+
+ . &#91; 2 &#93; 
+
+Motivating examples [ edit ] 
+
+Consider a source with 3 letters A, B, C, with probability 1/2, 1/4, 1/4. It is simple to construct the optimal prefix code in binary: A = 0, B = 10, C = 11. Then, a message is encoded as ABC -> 01011.
+
+We see that an equivalent method for performing the encoding is as follows:
+
+- Start with number 1, and perform an operation on the number for each input letter. 
+
+- A = multiply by 2; B = multiply by 4, add 2; C = multiply by 4, add 3. 
+
+- Express the number in binary, then remove the first digit 1. 
+
+Consider a more general source with k letters, with rational probabilities 
+
+ n 
+
+ 1 
+
+ / 
+
+ N 
+ , 
+ . 
+ . 
+ . 
+ , 
+
+ n 
+
+ k 
+
+ / 
+
+ N 
+
+ {\displaystyle n_{1}/N,...,n_{k}/N} 
+
+ . Then performing arithmetic coding on the source requires only exact arithmetic with integers. &#91; 1 &#93; 
+
+In general, ANS is an approximation of arithmetic coding that approximates the real probabilities 
+
+ r 
+
+ 1 
+
+ , 
+ . 
+ . 
+ . 
+ , 
+
+ r 
+
+ k 
+
+ {\displaystyle r_{1},...,r_{k}} 
+
+ by rational numbers 
+
+ n 
+
+ 1 
+
+ / 
+
+ N 
+ , 
+ . 
+ . 
+ . 
+ , 
+
+ n 
+
+ k 
+
+ / 
+
+ N 
+
+ {\displaystyle n_{1}/N,...,n_{k}/N} 
+
+ with a small denominator 
+
+ N 
+
+ {\displaystyle N} 
+
+ . &#91; 2 &#93; 
+
+Basic concepts of ANS [ edit ] 
+ Comparison of the concept of arithmetic coding (left) and ANS (right). Both can be seen as generalizations of standard numeral systems, optimal for uniform probability distribution of digits, into optimized for some chosen probability distribution. Arithmetic or range coding corresponds to adding new information in the most significant position, while ANS generalizes adding information in the least significant position. Its coding rule is " x goes to x -th appearance of subset of natural numbers corresponding to currently encoded symbol". In the presented example, sequence (01111) is encoded into a natural number 18, which is smaller than 47 obtained by using standard binary system, due to better agreement with frequencies of sequence to encode. The advantage of ANS is storing information in a single natural number, in contrast to two defining a range. 
+
+Imagine there is some information stored in a natural number 
+
+ x 
+
+ {\displaystyle x} 
+
+ , for example as the bit sequence of its binary expansion. To add information from a binary variable 
+
+ s 
+
+ {\displaystyle s} 
+
+ , we can use the coding function 
+
+ x 
+ &#x2032; 
+
+ = 
+ C 
+ ( 
+ x 
+ , 
+ s 
+ ) 
+ = 
+ 2 
+ x 
+ + 
+ s 
+
+ {\displaystyle x'=C(x,s)=2x+s} 
+
+ , which shifts all bits one position up, and places the new bit in the least significant position. Now the decoding function 
+
+ D 
+ ( 
+
+ x 
+ &#x2032; 
+
+ ) 
+ = 
+ ( 
+ &#x230A; 
+
+ x 
+ &#x2032; 
+
+ / 
+
+ 2 
+ &#x230B; 
+ , 
+
+ m 
+ o 
+ d 
+
+ ( 
+
+ x 
+ &#x2032; 
+
+ , 
+ 2 
+ ) 
+ ) 
+
+ {\displaystyle D(x')=(\lfloor x'/2\rfloor ,\mathrm {mod} (x',2))} 
+
+ allows one to retrieve the previous 
+
+ x 
+
+ {\displaystyle x} 
+
+ and this added bit: 
+
+ D 
+ ( 
+ C 
+ ( 
+ x 
+ , 
+ s 
+ ) 
+ ) 
+ = 
+ ( 
+ x 
+ , 
+ s 
+ ) 
+ , 
+ &#xA0; 
+ C 
+ ( 
+ D 
+ ( 
+
+ x 
+ &#x2032; 
+
+ ) 
+ ) 
+ = 
+
+ x 
+ &#x2032; 
+
+ {\displaystyle D(C(x,s))=(x,s),\ C(D(x'))=x'} 
+
+ . We can start with 
+
+ x 
+ = 
+ 1 
+
+ {\displaystyle x=1} 
+
+ initial state, then use the 
+
+ C 
+
+ {\displaystyle C} 
+
+ function on the successive bits of a finite bit sequence to obtain a final 
+
+ x 
+
+ {\displaystyle x} 
+
+ number storing this entire sequence. Then using the 
+
+ D 
+
+ {\displaystyle D} 
+
+ function multiple times until 
+
+ x 
+ = 
+ 1 
+
+ {\displaystyle x=1} 
+
+ allows one to retrieve the bit sequence in reversed order. &#91; 2 &#93; 
+
+The above procedure is optimal for the uniform (symmetric) probability distribution of symbols 
+
+ Pr 
+ ( 
+ 0 
+ ) 
+ = 
+ Pr 
+ ( 
+ 1 
+ ) 
+ = 
+ 1 
+
+ / 
+
+ 2 
+
+ {\displaystyle \Pr(0)=\Pr(1)=1/2} 
+
+ . ANS generalizes it to make it optimal for any chosen (asymmetric) probability distribution of symbols: 
+
+ Pr 
+ ( 
+ s 
+ ) 
+ = 
+
+ p 
+
+ s 
+
+ {\displaystyle \Pr(s)=p_{s}} 
+
+ . While 
+
+ s 
+
+ {\displaystyle s} 
+
+ in the above example was choosing between even and odd 
+
+ C 
+ ( 
+ x 
+ , 
+ s 
+ ) 
+
+ {\displaystyle C(x,s)} 
+
+ , in ANS this even/odd division of natural numbers is replaced with division into subsets having densities corresponding to the assumed probability distribution 
+
+ { 
+
+ p 
+
+ s 
+
+ } 
+
+ s 
+
+ {\displaystyle \{p_{s}\}_{s}} 
+
+ : up to position 
+
+ x 
+
+ {\displaystyle x} 
+
+ , there are approximately 
+
+ x 
+
+ p 
+
+ s 
+
+ {\displaystyle xp_{s}} 
+
+ occurrences of symbol 
+
+ s 
+
+ {\displaystyle s} 
+
+ . &#91; 2 &#93; 
+
+The coding function 
+
+ C 
+ ( 
+ x 
+ , 
+ s 
+ ) 
+
+ {\displaystyle C(x,s)} 
+
+ returns the 
+
+ x 
+
+ {\displaystyle x} 
+
+ -th appearance from such subset corresponding to symbol 
+
+ s 
+
+ {\displaystyle s} 
+
+ . The density assumption is equivalent to the condition 
+
+ x 
+ &#x2032; 
+
+ = 
+ C 
+ ( 
+ x 
+ , 
+ s 
+ ) 
+ &#x2248; 
+ x 
+
+ / 
+
+ p 
+
+ s 
+
+ {\displaystyle x'=C(x,s)\approx x/p_{s}} 
+
+ . Assuming that a natural number 
+
+ x 
+
+ {\displaystyle x} 
+
+ contains 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle \log _{2}(x)} 
+
+ bits of information, 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ C 
+ ( 
+ x 
+ , 
+ s 
+ ) 
+ ) 
+ &#x2248; 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ x 
+ ) 
+ + 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ 1 
+
+ / 
+
+ p 
+
+ s 
+
+ ) 
+
+ {\displaystyle \log _{2}(C(x,s))\approx \log _{2}(x)+\log _{2}(1/p_{s})} 
+
+ . Hence the symbol of probability 
+
+ p 
+
+ s 
+
+ {\displaystyle p_{s}} 
+
+ is encoded as containing 
+
+ &#x2248; 
+
+ log 
+
+ 2 
+
+ &#x2061; 
+ ( 
+ 1 
+
+ / 
+
+ p 
+
+ s 
+
+ ) 
+
+ {\displaystyle \approx \log _{2}(1/p_{s})} 
+
+ bits of information as is required from entropy coders . &#91; 2 &#93; 
+
+Variants [ edit ] 
+
+ Uniform binary variant (uABS) [ edit ] 
+
+Let us start with the binary alphabet and a probability distribution 
+
+ Pr 
+ ( 
+ 1 
+ ) 
+ = 
+ p 
+
+ {\displaystyle \Pr(1)=p} 
+
+ , 
+
+ Pr 
+ ( 
+ 0 
+ ) 
+ = 
+ 1 
+ &#x2212; 
+ p 
+
+ {\displaystyle \Pr(0)=1-p} 
+
+ . Up to position 
+
+ x 
+
+ {\displaystyle x} 
+
+ we want approximately 
+
+ p 
+ &#x22C5; 
+ x 
+
+ {\displaystyle p\cdot x} 
+
+ analogues of odd numbers (for 
+
+ s 
+ = 
+ 1 
+
+ {\displaystyle s=1} 
+
+ ). We can choose this number of appearances as 
+
+ &#x2308; 
+ x 
+ &#x22C5; 
+ p 
+ &#x2309; 
+
+ {\displaystyle \lceil x\cdot p\rceil } 
+
+ , getting 
+
+ s 
+ = 
+ &#x2308; 
+ ( 
+ x 
+ + 
+ 1 
+ ) 
+ &#x22C5; 
+ p 
+ &#x2309; 
+ &#x2212; 
+ &#x2308; 
+ x 
+ &#x22C5; 
+ p 
+ &#x2309; 
+
+ {\displaystyle s=\lceil (x+1)\cdot p\rceil -\lceil x\cdot p\rceil } 
+
+ . This variant is called uABS and leads to the following decoding and encoding functions: &#91; 25 &#93; 
+
+Decoding:
+
+ s = ceil (( x + 1 ) * p ) - ceil ( x * p ) // 0 if fract(x*p) < 1-p, else 1 
+ if s = 0 then new_x = x - ceil ( x * p ) // D(x) = (new_x, 0), this is the same as new_x = floor(x*(1-p)) 
+ if s = 1 then new_x = ceil ( x * p ) // D(x) = (new_x, 1) 
+
+Encoding:
+
+ if s = 0 then new_x = ceil (( x + 1 ) / ( 1 - p )) - 1 // C(x,0) = new_x 
+ if s = 1 then new_x = floor ( x / p ) // C(x,1) = new_x 
+
+For 
+
+ p 
+ = 
+ 1 
+
+ / 
+
+ 2 
+
+ {\displaystyle p=1/2} 
+
+ it amounts to the standard binary system (with 0 and 1 inverted), for a different 
+
+ p 
+
+ {\displaystyle p} 
+
+ it becomes optimal for this given probability distribution. &#91; 25 &#93; For example, for 
+
+ p 
+ = 
+ 0.3 
+
+ {\displaystyle p=0.3} 
+
+ these formulas lead to a table for small values of 
+
+ x 
+
+ {\displaystyle x} 
+
+ :
+
+ C 
+ ( 
+ x 
+ , 
+ s 
+ ) 
+
+ {\displaystyle C(x,s)} 
+
+ 0
+
+ 1
+
+ 2
+
+ 3
+
+ 4
+
+ 5
+
+ 6
+
+ 7
+
+ 8
+
+ 9
+
+ 10
+
+ 11
+
+ 12
+
+ 13
+
+ 14
+
+ 15
+
+ 16
+
+ 17
+
+ 18
+
+ 19
+
+ 20
+
+ s 
+ = 
+ 0 
+
+ {\displaystyle s=0} 
+
+ 0
+
+ 1
+
+ 2
+
+ 3
+
+ 4
+
+ 5
+
+ 6
+
+ 7
+
+ 8
+
+ 9
+
+ 10
+
+ 11
+
+ 12
+
+ 13
+
+ s 
+ = 
+ 1 
+
+ {\displaystyle s=1} 
+
+ 0
+
+ 1
+
+ 2
+
+ 3
+
+ 4
+
+ 5
+
+ 6
+
+The symbol 
+
+ s 
+ = 
+ 1 
+
+ {\displaystyle s=1} 
+
+ corresponds to a subset of natural numbers with density 
+
+ p 
+ = 
+ 0.3 
+
+ {\displaystyle p=0.3} 
+
+ , which in this case are positions 
+
+ { 
+ 0 
+ , 
+ 3 
+ , 
+ 6 
+ , 
+ 10 
+ , 
+ 13 
+ , 
+ 16 
+ , 
+ 20 
+ , 
+ 23 
+ , 
+ 26 
+ , 
+ &#x2026; 
+ } 
+
+ {\displaystyle \{0,3,6,10,13,16,20,23,26,\ldots \}} 
+
+ . As 
+
+ 1 
+
+ / 
+
+ 4 
+ < 
+ 0.3 
+ < 
+ 1 
+
+ / 
+
+ 3 
+
+ {\displaystyle 1/4<0.3<1/3} 
+
+ , these positions increase by 3 or 4. Because 
+
+ p 
+ = 
+ 3 
+
+ / 
+
+ 10 
+
+ {\displaystyle p=3/10} 
+
+ here, the pattern of symbols repeats every 10 positions.
+
+The coding 
+
+ C 
+ ( 
+ x 
+ , 
+ s 
+ ) 
+
+ {\displaystyle C(x,s)} 
+
+ can be found by taking the row corresponding to a given symbol 
+
+ s 
+
+ {\displaystyle s} 
+
+ , and choosing the given 
+
+ x 
+
+ {\displaystyle x} 
+
+ in this row. Then the top row provides 
+
+ C 
+ ( 
+ x 
+ , 
+ s 
+ ) 
+
+ {\displaystyle C(x,s)} 
+
+ . For example, 
+
+ C 
+ ( 
+ 7 
+ , 
+ 0 
+ ) 
+ = 
+ 11 
+
+ {\displaystyle C(7,0)=11} 
+
+ from the middle to the top row.
+
+Imagine we would like to encode the sequence '0100' starting from 
+
+ x 
+ = 
+ 1 
+
+ {\displaystyle x=1} 
+
+ . First 
+
+ s 
+ = 
+ 0 
+
+ {\displaystyle s=0} 
+
+ takes us to 
+
+ x 
+ = 
+ 2 
+
+ {\displaystyle x=2} 
+
+ , then 
+
+ s 
+ = 
+ 1 
+
+ {\displaystyle s=1} 
+
+ to 
+
+ x 
+ = 
+ 6 
+
+ {\displaystyle x=6} 
+
+ , then 
+
+ s 
+ = 
+ 0 
+
+ {\displaystyle s=0} 
+
+ to 
+
+ x 
+ = 
+ 9 
+
+ {\displaystyle x=9} 
+
+ , then 
+
+ s 
+ = 
+ 0 
+
+ {\displaystyle s=0} 
+
+ to 
+
+ x 
+ = 
+ 14 
+
+ {\displaystyle x=14} 
+
+ . By using the decoding function 
+
+ D 
+ ( 
+
+ x 
+ &#x2032; 
+
+ ) 
+
+ {\displaystyle D(x')} 
+
+ on this final 
+
+ x 
+
+ {\displaystyle x} 
+
+ , we can retrieve the symbol sequence. Using the table for this purpose, 
+
+ x 
+
+ {\displaystyle x} 
+
+ in the first row determines the column, then the non-empty row and the written value determine the corresponding 
+
+ s 
+
+ {\displaystyle s} 
+
+ and 
+
+ x 
+
+ {\displaystyle x} 
+
+ .
+
+ Range variants (rANS) and streaming [ edit ] 
+
+The range variant also uses arithmetic formulas, but allows operation on a large alphabet. &#91; 2 &#93; Intuitively, it divides the set of natural numbers into size 
+
+ 2 
+
+ n 
+
+ {\displaystyle 2^{n}} 
+
+ ranges, and splits each of them in identical way into subranges of proportions given by the assumed probability distribution.
+
+We start with quantization of probability distribution to 
+
+ 2 
+
+ n 
+
+ {\displaystyle 2^{n}} 
+
+ denominator, where n is chosen (usually 8-12 bits): 
+
+ p 
+
+ s 
+
+ &#x2248; 
+ f 
+ [ 
+ s 
+ ] 
+
+ / 
+
+ 2 
+
+ n 
+
+ {\displaystyle p_{s}\approx f[s]/2^{n}} 
+
+ for some natural 
+
+ f 
+ [ 
+ s 
+ ] 
+
+ {\displaystyle f[s]} 
+
+ numbers (sizes of subranges).
+
+Denote 
+
+ mask 
+
+ = 
+
+ 2 
+
+ n 
+
+ &#x2212; 
+ 1 
+
+ {\displaystyle {\text{mask}}=2^{n}-1} 
+
+ , and a cumulative distribution function:
+
+ CDF 
+ &#x2061; 
+ [ 
+ s 
+ ] 
+ = 
+
+ &#x2211; 
+
+ i 
+ < 
+ s 
+
+ f 
+ [ 
+ i 
+ ] 
+ = 
+ f 
+ [ 
+ 0 
+ ] 
+ + 
+ &#x22EF; 
+ + 
+ f 
+ [ 
+ s 
+ &#x2212; 
+ 1 
+ ] 
+ . 
+
+ {\displaystyle \operatorname {CDF} [s]=\sum _{i<s}f[i]=f[0]+\cdots +f[s-1].} 
+
+Note here that the 
+ CDF [ s ] function is not a true CDF in that the current symbol's probability is not included in the expression's value. Instead, the CDF [ s ] represents the total probability of all previous symbols. Example: Instead of the normal definition of CDF [ 0 ] = f [ 0 ] , it is evaluated as CDF [ 0 ] = 0 , since there are no previous symbols.
+
+For 
+
+ y 
+ &#x2208; 
+ [ 
+ 0 
+ , 
+
+ 2 
+
+ n 
+
+ &#x2212; 
+ 1 
+ ] 
+
+ {\displaystyle y\in [0,2^{n}-1]} 
+
+ denote function (usually tabled)
+
+ symbol ( y ) = s such that CDF [ s ] <= y < CDF [ s + 1 ] 
+
+Now coding function is:
+
+ C ( x , s ) = ( floor ( x / f [ s ]) << n ) + ( x % f [ s ]) + CDF [ s ] 
+
+Decoding: s = symbol ( x & mask ) 
+
+ D ( x ) = ( f [ s ] * ( x >> n ) + ( x & mask ) - CDF [ s ], s ) 
+
+This way we can encode a sequence of symbols into a large natural number x . To avoid using large number arithmetic, in practice stream variants are used: which enforce 
+
+ x 
+ &#x2208; 
+ [ 
+ L 
+ , 
+ b 
+ &#x22C5; 
+ L 
+ &#x2212; 
+ 1 
+ ] 
+
+ {\displaystyle x\in [L,b\cdot L-1]} 
+
+ by renormalization: sending the least significant bits of x to or from the bitstream (usually L and b are powers of 2). &#91; 2 &#93; 
+
+In rANS variant x is for example 32 bit. For 16 bit renormalization, 
+
+ x 
+ &#x2208; 
+ [ 
+
+ 2 
+
+ 16 
+
+ , 
+
+ 2 
+
+ 32 
+
+ &#x2212; 
+ 1 
+ ] 
+
+ {\displaystyle x\in [2^{16},2^{32}-1]} 
+
+ , decoder refills the least significant bits from the bitstream when needed:
+
+ if ( x < ( 1 << 16 )) x = ( x << 16 ) + read16bits () 
+
+ Tabled variant (tANS) [ edit ] 
+ Simple example of 4 state ANS automaton for Pr( a )&#160;=&#160;3/4, Pr( b )&#160;=&#160;1/4 probability distribution. Symbol b contains −lg(1/4)&#160;=&#160;2 bits of information and so it always produces two bits. In contrast, symbol a contains −lg(3/4)&#160;~&#160;0.415 bits of information, hence sometimes it produces one bit (from state 6 and 7), sometimes 0 bits (from state 4 and 5), only increasing the state, which acts as buffer containing fractional number of bits: lg( x ). The number of states in practice is for example 2048, for 256 size alphabet (to directly encode bytes). 
+
+tANS variant puts the entire behavior (including renormalization) for 
+
+ x 
+ &#x2208; 
+ [ 
+ L 
+ , 
+ 2 
+ L 
+ &#x2212; 
+ 1 
+ ] 
+
+ {\displaystyle x\in [L,2L-1]} 
+
+ into a table which yields a finite-state machine avoiding the need of multiplication. &#91; 2 &#93; 
+
+Finally, the step of the decoding loop can be written as:
+
+ t = decodingTable ( x ); 
+ x = t . newX + readBits ( t . nbBits ); //state transition 
+ writeSymbol ( t . symbol ); //decoded symbol 
+
+The step of the encoding loop:
+
+ s = ReadSymbol (); 
+ nbBits = ( x + ns [ s ]) >> r ; // # of bits for renormalization 
+ writeBits ( x , nbBits ); // send the least significant bits to bitstream 
+ x = encodingTable [ start [ s ] + ( x >> nbBits )]; 
+
+A specific tANS coding is determined by assigning a symbol to every 
+
+ [ 
+ L 
+ , 
+ 2 
+ L 
+ &#x2212; 
+ 1 
+ ] 
+
+ {\displaystyle [L,2L-1]} 
+
+ position, their number of appearances should be proportional to the assumed probabilities. For example, one could choose "abdacdac" assignment for Pr(a)=3/8, Pr(b)=1/8, Pr(c)=2/8, Pr(d)=2/8 probability distribution. If symbols are assigned in ranges of lengths being powers of 2, we would get Huffman coding . For example, a->0, b->100, c->101, d->11 prefix code would be obtained for tANS with "aaaabcdd" symbol assignment. &#91; 1 &#93; 
+
+ Example of generation of tANS tables for m = 3 size alphabet and L = 16 states, then applying them for stream decoding. First we approximate probabilities using fraction with denominator being the number of states. Then we spread these symbols in nearly uniform way, optionally the details may depend on cryptographic key for simultaneous encryption. Then we enumerate the appearances starting with value being their amount for a given symbol. Then we refill the youngests bits from the stream to return to the assumed range for x (renormalization). 
+
+Remarks [ edit ] 
+
+As for Huffman coding, modifying the probability distribution of tANS is relatively costly, hence it is mainly used in static situations, usually with some Lempel–Ziv scheme (e.g. ZSTD, &#91; 6 &#93; LZFSE &#91; 13 &#93; ). In this case, the file is divided into blocks&#160;&#8211;&#32; for each of them symbol frequencies are independently counted, then after approximation (quantization) written in the block header and used as static probability distribution for tANS. &#91; 1 &#93; 
+
+In contrast, rANS is usually used as a faster replacement for range coding (e.g. CRAM , &#91; 17 &#93; LZNA, Draco &#91; 14 &#93; ). It requires multiplication, but is more memory efficient and is appropriate for dynamically adapting probability distributions. &#91; 2 &#93; 
+
+Encoding and decoding of ANS are performed in opposite directions, making it a stack for symbols. This inconvenience is usually resolved by encoding in backward direction, after which decoding can be done forward. &#91; 2 &#93; For context-dependence, like Markov model , the encoder needs to use context from the perspective of later decoding. For adaptivity, the encoder should first go forward to find probabilities which will be used (predicted) by decoder and store them in a buffer, then encode in backward direction using the buffered probabilities. &#91; 2 &#93; 
+
+The final state of encoding is required to start decoding, hence it needs to be stored in the compressed file. This cost can be compensated by storing some information in the initial state of encoder. For example, instead of starting with "10000" state, start with "1****" state, where "*" are some additional stored bits, which can be retrieved at the end of the decoding. Alternatively, this state can be used as a checksum by starting encoding with a fixed state, and testing if the final state of decoding is the expected one. &#91; 2 &#93; 
+
+Patent controversy [ edit ] 
+
+The author of the novel ANS algorithm and its variants tANS and rANS specifically intended his work to be available freely in the public domain, for altruistic reasons. He has not sought to profit from them and took steps to ensure they would not become a "legal minefield", or restricted by, or profited from by others. &#91; 5 &#93; In 2015, Google published a US and then worldwide patent for "Mixed boolean-token ans coefficient coding". &#91; 26 &#93; At the time, Professor Duda had been asked by Google to help it with video compression, so was intimately aware of this domain, having the original author assisting them.
+
+Duda was not pleased by (accidentally) discovering Google's patent intentions, given he had been clear he wanted it as public domain, and had assisted Google specifically on that basis. &#91; 5 &#93; Duda subsequently filed a third-party application &#91; 27 &#93; to the US Patent office seeking a rejection. The USPTO rejected its application in 2018, and Google subsequently abandoned the patent. &#91; 28 &#93; 
+
+In June 2019 Microsoft lodged a patent application called "Features of range asymmetric number system encoding and decoding". &#91; 29 &#93; The USPTO issued a final rejection of the application on October 27, 2020. &#91; 29 &#93; Yet on March 2, 2021, Microsoft gave a USPTO explanatory filing stating "The Applicant respectfully disagrees with the rejections.", &#91; 30 &#93; seeking to overturn the final rejection under the "After Final Consideration Pilot 2.0" program. &#91; 31 &#93; After reconsideration, the USPTO granted the application on January 25, 2022. &#91; 29 &#93; 
+
+See also [ edit ] 
+
+- Entropy encoding 
+
+- Huffman coding 
+
+- Arithmetic coding 
+
+- Range encoding 
+
+- Zstandard Facebook compressor 
+
+- LZFSE Apple compressor 
+
+References [ edit ] 
+
+- ^ a b c d e f J. Duda, K. Tahboub, N. J. Gadil, E. J. Delp, The use of asymmetric numeral systems as an accurate replacement for Huffman coding , Picture Coding Symposium, 2015. 
+
+- ^ a b c d e f g h i j k l m n o p q r s J. Duda, Asymmetric numeral systems: entropy coding combining speed of Huffman coding with compression rate of arithmetic coding , arXiv:1311.2540, 2013. 
+
+- ^ "Dr Jarosław Duda (Jarek Duda)" . Institute of Theoretical Physics . Jagiellonian University in Krakow . Retrieved 2021-08-02 . 
+
+- ^ 
+- Duda, Jarek (October 6, 2019). "List of compressors using ANS, implementations and other materials" . Retrieved October 6, 2019 . 
+
+- ^ a b c 
+- "Google Accused of Trying to Patent Public Domain Technology" . Bleeping Computer . September 11, 2017. 
+
+- ^ a b Smaller and faster data compression with Zstandard , Facebook, August 2016. 
+
+- ^ 5 ways Facebook improved compression at scale with Zstandard , Facebook, December 2018. 
+
+- ^ Zstd Compression For Btrfs & Squashfs Set For Linux 4.14, Already Used Within Facebook , Phoronix, September 2017. 
+
+- ^ New in Chrome 123 (Content-Encoding) , Google, March 2024. 
+
+- ^ 
+- "Zstd in Android P release" . Archived from the original on 2020-08-26 . Retrieved 2019-05-29 . 
+
+- ^ Zstandard Compression and The application/zstd Media Type (email standard) . 
+
+- ^ Hypertext Transfer Protocol (HTTP) Parameters , IANA . 
+
+- ^ a b Apple Open-Sources its New Compression Algorithm LZFSE , InfoQ, July 2016. 
+
+- ^ a b Google Draco 3D compression library . 
+
+- ^ Google and Pixar add Draco Compression to Universal Scene Description (USD) Format . 
+
+- ^ Google PIK: new lossy image format for the internet . 
+
+- ^ a b CRAM format specification (version 3.0) . 
+
+- ^ 
+- Chen W, Elliott LT (2021). "Compression for population genetic data through finite-state entropy" . J Bioinform Comput Biol . 19 (5) 2150026. doi : 10.1142/S0219720021500268 . PMID &#160; 34590992 . 
+
+- ^ High Speed Data Compression Using NVIDIA GPUs . 
+
+- ^ Building better compression together with DivANS . 
+
+- ^ Microsoft DirectStorage overview . 
+
+- ^ 
+- Rhatushnyak, Alexander; Wassenberg, Jan; Sneyers, Jon; Alakuijala, Jyrki; Vandevenne, Lode; Versari, Luca; Obryk, Robert; Szabadka, Zoltan; Kliuchnikov, Evgenii; Comsa, Iulia-Maria; Potempa, Krzysztof; Bruse, Martin; Firsching, Moritz; Khasanova, Renata; Ruud van Asseldonk; Boukortt, Sami; Gomez, Sebastian; Fischbacher, Thomas (2019). "Committee Draft of JPEG XL Image Coding System". arXiv : 1908.03565 [ eess.IV ]. 
+
+- ^ 
+- Esenlik, Semih; Zhang, Kai; Ascenso, João (2025). "An Overview of the JPEG AI Learning-Based Image Coding Standard". arXiv : 2510.13867 [ eess.IV ]. 
+
+- ^ 
+- Cover, Thomas M.; Thomas, Joy A. (2006). Elements of Information Theory (2nd&#160;ed.). Wiley. pp.&#160; 13– 14. ISBN &#160; 978-0-471-24195-9 . 
+
+- ^ a b Data Compression Explained , Matt Mahoney 
+
+- ^ 
+- "Mixed boolean-token ans coefficient coding" . Retrieved 14 June 2021 . 
+
+- ^ 
+- "Protest to Google" (PDF) . Institute of Theoretical Physics. Jagiellonian University in Krakow Poland . Professor Jarosław Duda. 
+
+- ^ 
+- "After Patent Office Rejection, It is Time For Google To Abandon Its Attempt to Patent Use of Public Domain Algorithm" . EFF. 30 August 2018. 
+
+- ^ a b c 
+- "Features of range asymmetric number system encoding and decoding" . Retrieved 14 June 2021 . 
+
+- ^ 
+- "Third time's a harm? Microsoft tries to get twice-rejected compression patent past skeptical examiners" . The Register . Retrieved 14 June 2021 . 
+
+- ^ 
+- "After Final Consideration Pilot 2.0" . United States Patent and Trademark Office . Retrieved 14 June 2021 . 
+
+External links [ edit ] 
+
+- High throughput hardware architectures for asymmetric numeral systems entropy coding S. M. Najmabadi, Z. Wang, Y. Baroud, S. Simon, ISPA 2015 
+
+- New Generation Entropy coders Finite state entropy (FSE) implementation of tANS by Yann Collet 
+
+- rygorous/ryg_rans Implementation of rANS by Fabian Giesen 
+
+- jkbonfield/rans_static Fast implementation of rANS and arithmetic coding by James K. Bonfield 
+
+- facebook/zstd Facebook Zstandard compressor by Yann Collet (author of LZ4 ) 
+
+- LZFSE LZFSE compressor (LZ+FSE) of Apple Inc. 
+
+- CRAM 3.0 DNA compressor (order 1 rANS) (part of SAMtools ) by European Bioinformatics Institute 
+
+- [1] implementation for Google VP10 
+
+- [2] implementation for Google WebP 
+
+- [3] Google Draco 3D compression library 
+
+- aom_dsp - aom - Git at Google implementation of Alliance for Open Media 
+
+- Data Compression Using Asymmetric Numeral Systems - Wolfram Demonstrations Project Wolfram Demonstrations Project 
+
+- GST: GPU-decodable Supercompressed Textures GST: GPU-decodable Supercompressed Textures 
+
+- Understanding compression book by A. Haecky, C. McAnlis 
+
+- 
+- 
+- 
+- v 
+- t 
+- e Data compression methods Lossless 
+type Entropy 
+
+- Adaptive coding 
+
+- Arithmetic 
+
+- Asymmetric numeral systems 
+
+- Golomb 
+
+- Huffman 
+
+- Adaptive 
+
+- Canonical 
+
+- Modified 
+
+- Range 
+
+- Shannon 
+
+- Shannon–Fano 
+
+- Shannon–Fano–Elias 
+
+- Tunstall 
+
+- Unary 
+
+- Universal 
+
+- Exp-Golomb 
+
+- Fibonacci 
+
+- Gamma 
+
+- Levenshtein 
+ Dictionary 
+
+- Byte-pair encoding 
+
+- Lempel–Ziv 
+
+- 842 
+
+- LZ4 
+
+- LZJB 
+
+- LZO 
+
+- LZRW 
+
+- LZSS 
+
+- LZW 
+
+- LZWL 
+
+- Snappy 
+ Other 
+
+- BWT 
+
+- CTW 
+
+- CM 
+
+- Delta 
+
+- Incremental 
+
+- DMC 
+
+- DPCM 
+
+- Grammar 
+
+- Re-Pair 
+
+- Sequitur 
+
+- LDCT 
+
+- MTF 
+
+- PAQ 
+
+- PPM 
+
+- RLE 
+ Hybrid 
+
+- LZ77 + Huffman
+
+- Deflate 
+
+- LZX 
+
+- LZS 
+
+- LZ77 + ANS
+
+- LZFSE 
+
+- LZ77 + Huffman + ANS
+
+- Zstandard 
+
+- LZ77 + Huffman + context
+
+- Brotli 
+
+- LZSS + Huffman
+
+- LHA/LZH 
+
+- LZ77 + Range
+
+- LZMA 
+
+- LZHAM 
+
+- RLE + BWT + MTF + Huffman
+
+- bzip2 
+ Lossy 
+type Transform 
+
+- Discrete cosine transform 
+
+- DCT 
+
+- MDCT 
+
+- DST 
+
+- FFT 
+
+- Wavelet 
+
+- Daubechies 
+
+- DWT 
+
+- SPIHT 
+ Predictive 
+
+- DPCM 
+
+- ADPCM 
+
+- LPC 
+
+- ACELP 
+
+- CELP 
+
+- LAR 
+
+- LSP 
+
+- WLPC 
+
+- Motion
+
+- Compensation 
+
+- Estimation 
+
+- Vector 
+
+- Psychoacoustic 
+ Audio Concepts 
+
+- Bit rate 
+
+- ABR 
+
+- CBR 
+
+- VBR 
+
+- Companding 
+
+- Convolution 
+
+- Dynamic range 
+
+- Latency 
+
+- Nyquist–Shannon theorem 
+
+- Sampling 
+
+- Silence compression 
+
+- Sound quality 
+
+- Speech coding 
+
+- Sub-band coding 
+ Codec 
+parts 
+
+- A-law 
+
+- μ-law 
+
+- DPCM 
+
+- ADPCM 
+
+- DM 
+
+- FT 
+
+- FFT 
+
+- LPC 
+
+- ACELP 
+
+- CELP 
+
+- LAR 
+
+- LSP 
+
+- WLPC 
+
+- MDCT 
+
+- Psychoacoustic model 
+ Image Concepts 
+
+- Chroma subsampling 
+
+- Coding tree unit 
+
+- Color space 
+
+- Compression artifact 
+
+- Image resolution 
+
+- Macroblock 
+
+- Pixel 
+
+- PSNR 
+
+- Quantization 
+
+- Standard test image 
+
+- Texture compression 
+ Methods 
+
+- Chain code 
+
+- DCT 
+
+- Deflate 
+
+- Fractal 
+
+- KLT 
+
+- LP 
+
+- RLE 
+
+- Wavelet 
+
+- Daubechies 
+
+- DWT 
+
+- EZW 
+
+- SPIHT 
+ Video Concepts 
+
+- Bit rate 
+
+- ABR 
+
+- CBR 
+
+- VBR 
+
+- Display resolution 
+
+- Frame 
+
+- Frame rate 
+
+- Frame types 
+
+- Interlace 
+
+- Video characteristics 
+
+- Video quality 
+ Codec 
+parts 
+
+- DCT 
+
+- DPCM 
+
+- Deblocking filter 
+
+- Lapped transform 
+
+- Motion
+
+- Compensation 
+
+- Estimation 
+
+- Vector 
+
+- Wavelet 
+
+- Daubechies 
+
+- DWT 
+ Theory 
+
+- Compressed data structures 
+
+- Compressed suffix array 
+
+- FM-index 
+
+- Entropy 
+
+- Information theory 
+
+- Timeline 
+
+- Kolmogorov complexity 
+
+- Prefix code 
+
+- Quantization 
+
+- Rate–distortion 
+
+- Redundancy 
+
+- Symmetry 
+
+- Smallest grammar problem 
+ Community 
+
+- Hutter Prize 
+ People 
+
+- Mark Adler 
+
+- David A. Huffman 
+
+- Phil Katz 
+
+ Retrieved from " https://en.wikipedia.org/w/index.php?title=Asymmetric_numeral_systems&oldid=1339865542 " 
+ Categories : 
+- Lossless compression algorithms 
+- Finite-state machines 
+- Non-standard positional numeral systems 
+- Data compression Hidden categories: 
+- Articles with short description 
+- Short description is different from Wikidata 
+- Pages using sidebar with the child parameter 
+
+ Search 
+
+ Search 
+
+ Asymmetric numeral systems 
+
+ 6 languages 
+
+ Add topic

@@ -1,0 +1,16 @@
+Question: What makes a good question?
+
+Ideal Answer: A good question has these qualities:
+
+1. **Specific** — 'How do I fix ModuleNotFoundError in Python?' beats 'Python doesn't work'
+2. **Context included** — what you've tried, what error you see, what you expected
+3. **One thing asked** — don't bundle 5 questions; ask one clearly
+4. **Answerable** — not too broad ('explain all of AI') or too narrow (internal system state)
+5. **Shows effort** — mention what you already know or tried
+
+**The XY problem (classic mistake):** Asking about your attempted solution X when your actual goal is Y. Instead, explain Y (the goal).
+
+**Good:** 'My Flask server returns 500 when I POST to /api/user. Here's the traceback...'
+**Bad:** 'Flask not working help'
+
+Skills demonstrated: 5 qualities, XY problem, good vs bad example

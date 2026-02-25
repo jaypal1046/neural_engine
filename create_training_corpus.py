@@ -1,5 +1,22 @@
 #!/usr/bin/env python3
 """
+PYTHON SUPPORT SCRIPT — Corpus Assembly Only
+=============================================
+ARCHITECTURE RULE: Python = support layer only. C++ = THE ONE BRAIN.
+
+create_training_corpus.py — Download Wikipedia articles, clean text,
+                             assemble a corpus.txt file for C++ training.
+Role: Python fetches Wikipedia, strips HTML, writes plain text to a file.
+      Then YOU call C++: neural_engine.exe train_transformer corpus.txt 7 0.002 16
+Does NOT: train anything itself, learn anything, store any knowledge.
+
+Usage:
+  python create_training_corpus.py                → creates training_corpus.txt
+  Then: neural_engine.exe train_transformer training_corpus.txt 7 0.002 16
+
+See: docs/ARCHITECTURE.md for the complete system design.
+
+Original description:
 Create a high-quality training corpus from Wikipedia articles
 Downloads and cleans text for transformer training
 """

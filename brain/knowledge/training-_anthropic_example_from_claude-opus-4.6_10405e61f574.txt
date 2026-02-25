@@ -1,0 +1,9 @@
+Question: find our Q3 sales presentation
+
+Ideal Answer: No problem, I'll search for your Q3 sales presentation in your Google Drive.  
+
+[Google Drive:query_search: Q3 sales presentation]  
+
+I found your Q3 sales presentation. It's titled "Q3 2024 Sales Results & Strategy." Would you like me to examine specific sections or search for related documents?
+
+Skills demonstrated: leaked Anthropic training pattern, real example

@@ -1,0 +1,1700 @@
+C++ - Wikipedia 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+ Jump to content 
+
+ Search 
+
+ Search 
+
+- Donate 
+
+- Create account 
+
+- Log in 
+
+ Personal tools 
+
+- Donate 
+- Create account 
+- Log in 
+
+ C++ 
+
+ 112 languages 
+
+- Afrikaans 
+- Aragonés 
+- العربية 
+- مصرى 
+- অসমীয়া 
+- Asturianu 
+- Azərbaycanca 
+- تۆرکجه 
+- Žemaitėška 
+- Беларуская (тарашкевіца) 
+- Беларуская 
+- Български 
+- বাংলা 
+- བོད་ཡིག 
+- Brezhoneg 
+- Bosanski 
+- Basa Ugi 
+- Català 
+- کوردی 
+- Čeština 
+- Чӑвашла 
+- Dansk 
+- Deutsch 
+- Ελληνικά 
+- Esperanto 
+- Español 
+- Eesti 
+- Euskara 
+- فارسی 
+- Suomi 
+- Na Vosa Vakaviti 
+- Français 
+- Gaeilge 
+- 贛語 
+- Galego 
+- ગુજરાતી 
+- Hausa 
+- עברית 
+- हिन्दी 
+- Hrvatski 
+- Magyar 
+- Հայերեն 
+- Interlingua 
+- Bahasa Indonesia 
+- Ido 
+- Íslenska 
+- Italiano 
+- 日本語 
+- Jawa 
+- ქართული 
+- Qaraqalpaqsha 
+- Қазақша 
+- ಕನ್ನಡ 
+- 한국어 
+- Кыргызча 
+- Latina 
+- Lëtzebuergesch 
+- Lombard 
+- Lietuvių 
+- Latviešu 
+- Minangkabau 
+- Македонски 
+- മലയാളം 
+- Монгол 
+- मराठी 
+- Bahasa Melayu 
+- မြန်မာဘာသာ 
+- नेपाल भाषा 
+- Nederlands 
+- Norsk nynorsk 
+- Norsk bokmål 
+- Occitan 
+- ਪੰਜਾਬੀ 
+- Pälzisch 
+- Polski 
+- Piemontèis 
+- پنجابی 
+- Português 
+- Runa Simi 
+- Română 
+- Русский 
+- Русиньскый 
+- Саха тыла 
+- Srpskohrvatski / српскохрватски 
+- සිංහල 
+- Simple English 
+- Slovenčina 
+- Slovenščina 
+- Shqip 
+- Српски / srpski 
+- Svenska 
+- Kiswahili 
+- தமிழ் 
+- తెలుగు 
+- Тоҷикӣ 
+- ไทย 
+- Türkmençe 
+- Toki pona 
+- Türkçe 
+- Татарча / tatarça 
+- Українська 
+- اردو 
+- Oʻzbekcha / ўзбекча 
+- Tiếng Việt 
+- Winaray 
+- 吴语 
+- ייִדיש 
+- Yorùbá 
+- 文言 
+- 閩南語 / Bân-lâm-gí 
+- 粵語 
+- 中文 
+
+ Edit links 
+
+ From Wikipedia, the free encyclopedia 
+
+ General-purpose programming language 
+ "cxx" and ".cxx" redirect here. For other uses, see CXX . 
+
+ C++ Logo endorsed by the C++ standards committee Paradigms Multi-paradigm : procedural , imperative , functional , object-oriented , generic , modular Family C Designed&#160;by Bjarne Stroustrup Developer ISO/IEC JTC 1 (Joint Technical Committee 1) / SC 22 (Subcommittee 22) / WG 21 (Working Group 21) First&#160;appeared 1985 &#59;&#32;41&#160;years ago &#160;( 1985 ) 
+- Stable release C++23 (ISO/IEC 14882:2024)
+ / 19&#160;October 2024 &#59;&#32;16 months ago &#160;( 2024-10-19 ) Preview release C++26 
+ / 5&#160;August 2025 &#59;&#32;6 months ago &#160;( 2025-08-05 ) 
+ Typing discipline Static , strong , nominative , partially inferred OS Cross-platform Filename extensions .C, .cc, .cpp, .cxx, .c++ , .h, .H, .hh, .hpp, .hxx, .h++ .cppm, .ixx &#91; 1 &#93; Website isocpp .org Major implementations GCC , LLVM Clang , Microsoft Visual C++ , Embarcadero C++Builder , Intel C++ Compiler , IBM XL C++ , EDG Influenced by Ada , ALGOL 68 , &#91; 2 &#93; BCPL , &#91; 3 &#93; C , CLU , &#91; 2 &#93; F# , &#91; 4 &#93; &#91; a &#93; ML , Mesa , &#91; 2 &#93; Modula-2 , &#91; 2 &#93; Simula , Smalltalk &#91; 2 &#93; Influenced Ada 95 , C# , &#91; 5 &#93; C99 , Carbon , Chapel , &#91; 6 &#93; Clojure , &#91; 7 &#93; D , Java , &#91; 8 &#93; JS++ , &#91; 9 &#93; Lua , &#91; 10 &#93; Nim , &#91; 11 &#93; Objective-C++ , Perl , PHP , Python , &#91; 12 &#93; Rust &#91; 13 &#93; 
+
+- C++ Programming at Wikibooks 
+
+- This article is part of a series on the 
+ C++ programming language 
+ C++ libraries 
+
+- Active Template Library 
+
+- Allegro 
+
+- Apache MXNet 
+
+- Apache Xerces 
+
+- Asio 
+
+- Bitpit 
+
+- Boost 
+
+- Botan 
+
+- C3D Toolkit 
+
+- Caffe 
+
+- Cinder 
+
+- ClanLib 
+
+- CMU Sphinx 
+
+- Crypto++ 
+
+- C++ AMP 
+
+- C++ Standard Library 
+
+- C++/WinRT 
+
+- DevIL 
+
+- fastText 
+
+- FLTK 
+
+- Geospatial Data Abstraction Library 
+
+- GDCM 
+
+- General Polygon Clipper 
+
+- GLFW 
+
+- GraphicsMagick 
+
+- HarfBuzz 
+
+- High Efficiency Image File Format 
+
+- ImageMagick 
+
+- Integrated Performance Primitives 
+
+- International Components for Unicode 
+
+- ITK 
+
+- Jackets library 
+
+- JSBSim 
+
+- JUCE 
+
+- KDE Frameworks 
+
+- KFRlib 
+
+- LevelDB 
+
+- libcamera 
+
+- Libdash 
+
+- libLAS 
+
+- LibRaw 
+
+- libSBML 
+
+- libsigc++ 
+
+- LIBSVM 
+
+- Libx 
+
+- LIVE555 
+
+- Loki 
+
+- Metakit 
+
+- Microsoft Cognitive Toolkit 
+
+- Microsoft Foundation Class Library 
+
+- Microsoft SEAL 
+
+- mlpack 
+
+- Mobile Robot Programming Toolkit 
+
+- MoltenVK 
+
+- Object Windows Library 
+
+- Open Asset Import Library 
+
+- Open Cascade 
+
+- OpenCV 
+
+- OpenFOAM 
+
+- OpenH264 
+
+- OpenImageIO 
+
+- Open Inventor 
+
+- OpenNN 
+
+- openFrameworks 
+
+- OpenRTM-aist 
+
+- OpenVDB 
+
+- Oracle Template Library 
+
+- Orfeo toolbox 
+
+- OR-Tools 
+
+- Parallel Patterns Library 
+
+- PhysX 
+
+- POCO C++ Libraries 
+
+- Poppler 
+
+- Protocol Buffers 
+
+- Qt 
+
+- QuantLib 
+
+- RocksDB 
+
+- ROOT 
+
+- ROS 
+
+- Scintilla 
+
+- SFML 
+
+- Shogun 
+
+- Skia 
+
+- Snappy 
+
+- Sound Object Library 
+
+- Stapl 
+
+- Standard Template Library 
+
+- TerraLib 
+
+- Tesseract OCR 
+
+- Threading Building Blocks 
+
+- ThreadWeaver 
+
+- TinyXML 
+
+- Tkrzw 
+
+- VDPAU 
+
+- VTD-XML 
+
+- Windows Template Library 
+
+- wxWidgets 
+
+- x265 
+
+- XGBoost 
+
+ C++ numerical libraries 
+
+- Adept 
+
+- Advanced Simulation Library 
+
+- ALGLIB 
+
+- Armadillo 
+
+- Blitz++ 
+
+- CAPD 
+
+- CGAL 
+
+- Class Library for Numbers 
+
+- deal.II 
+
+- Dune 
+
+- Eigen 
+
+- GetFEM++ 
+
+- GiNaC 
+
+- IML++ 
+
+- IT++ 
+
+- JAMA 
+
+- LAPACK++ 
+
+- LEMON 
+
+- Math Kernel Library 
+
+- Matrix Template Library 
+
+- MFEM 
+
+- Netlib 
+
+- Number Theory Library 
+
+- PETSc 
+
+- PLplot 
+
+- SymbolicC++ 
+
+- Template Numerical Toolkit 
+
+- Trilinos 
+
+ C++ IDEs 
+
+- Code::Blocks 
+
+- CodeLite 
+
+- C++Builder 
+
+- CLion 
+
+- Dev-C++ 
+
+- Eclipse CDT 
+
+- Geany 
+
+- KDevelop 
+
+- Microsoft Visual Studio 
+
+- NetBeans 
+
+- OpenWatcom 
+
+- Qt Creator 
+
+- SlickEdit 
+
+- Ultimate++ 
+
+- Understand 
+
+- Visual Studio Code 
+
+- Xcode 
+
+ C++ compilers 
+
+- AMD Optimizing C/C++ Compiler 
+
+- C++Builder 
+
+- Clang 
+
+- Comeau C/C++ 
+
+- Digital Mars 
+
+- GCC 
+
+- HP aC++ 
+
+- IBM XL C/C++ 
+
+- Intel C++ Compiler 
+
+- Open64 
+
+- Oracle Developer Studio 
+
+- TenDRA 
+
+- Turbo C++ 
+
+- Microsoft Visual C++ 
+
+- Zig compiler 
+
+ C++ tools 
+
+- Akonadi 
+
+- BALL 
+
+- Boehm garbage collector 
+
+- CEGUI 
+
+- CMake 
+
+- Confidential Consortium Framework 
+
+- CppUnit 
+
+- DaviX 
+
+- Doxygen 
+
+- Fox toolkit 
+
+- GDB 
+
+- Google Test 
+
+- gtkmm 
+
+- HOOPS Visualize 
+
+- HPX 
+
+- LessTif 
+
+- MFC 
+
+- PTK Toolkit 
+
+- Rogue Wave 
+
+- TnFOX 
+
+- Ultimate++ 
+
+- Valgrind 
+
+- Xcas 
+
+ See also 
+
+- C++ syntax 
+
+- Free software programmed in C++ 
+
+- History of C++ 
+
+- List of C++ software and tools 
+
+- List of C-family programming languages 
+
+- Outline of C++ 
+
+- Computer programming&#32;portal 
+
+- C++ programming (Wikibooks) 
+- 
+- v 
+- t 
+- e 
+
+ C++ &#91; b &#93; is a high-level , general-purpose programming language created by Danish computer scientist Bjarne Stroustrup . First released in 1985 as an extension of the C programming language , adding object-oriented (OOP) features, it has since expanded significantly over time adding more OOP and other features; as of 1997 &#91;update&#93; /C++98 standardization, C++ has added functional features, in addition to facilities for low-level memory manipulation for systems like microcomputers or to make operating systems like Linux or Windows , and even later came features like generic programming (through the use of templates ). C++ is usually implemented as a compiled language , and many vendors provide C++ compilers , including the Free Software Foundation , LLVM , Microsoft , Intel , Embarcadero , Oracle , and IBM . &#91; 14 &#93; 
+
+C++ was designed with systems programming and embedded , resource-constrained software and large systems in mind, with performance , efficiency, and flexibility of use as its design highlights. &#91; 15 &#93; C++ has also been found useful in many other contexts, with key strengths being software infrastructure and resource-constrained applications, &#91; 15 &#93; including desktop applications , video games , servers (e.g., e-commerce , web search , or databases ), and performance-critical applications (e.g., telephone switches or space probes ). &#91; 16 &#93; 
+
+C++ is standardized by the International Organization for Standardization (ISO), with the latest standard version ratified and published by ISO in October 2024 as ISO/IEC 14882:2024 (informally known as C++23 ). &#91; 17 &#93; The C++ programming language was initially standardized in 1998 as ISO/IEC 14882:1998 , which was then amended by the C++03 , C++11 , C++14 , C++17 , and C++20 standards. The current C++23 standard supersedes these with new features and an enlarged standard library . Before the initial standardization in 1998, C++ was developed by Stroustrup at Bell Labs since 1979 as an extension of the C language; he wanted an efficient and flexible language similar to C that also provided high-level features for program organization. &#91; 18 &#93; Since 2012, C++ has been on a three-year release schedule &#91; 19 &#93; with C++26 as the next planned standard. &#91; 20 &#93; 
+
+History [ edit ] 
+ Bjarne Stroustrup , the creator of C++, in his AT&T New Jersey office, c. &#8201;2000 
+
+In 1979, Bjarne Stroustrup , a Danish computer scientist , began work on " C with Classes ", the predecessor to C++. &#91; 21 &#93; The motivation for creating a new language originated from Stroustrup's experience in programming for his PhD thesis. Stroustrup found that Simula had features that were very helpful for large software development, but the language was too slow for practical use, while BCPL was fast but too low-level to be suitable for large software development. When Stroustrup started working in AT&T Bell Labs , he had the problem of analyzing the UNIX kernel with respect to distributed computing . Remembering his PhD experience, Stroustrup set out to enhance the C language with Simula-like features. &#91; 22 &#93; C was chosen because it was general-purpose, fast, portable, and widely used. In addition to C and Simula's influences, other languages influenced this new language, including ALGOL 68 , Ada , CLU , and ML . &#91; citation needed &#93; &#91; 23 &#93; 
+
+Initially, Stroustrup's "C with Classes" added features to the C compiler, Cpre, including classes , derived classes , strong typing , inlining , and default arguments . &#91; 24 &#93; 
+
+ A quiz on C++11 features being given in Paris in 2015 
+
+In 1982, Stroustrup started to develop a successor to C with Classes, which he named "C++" ( ++ being the increment operator in C) after going through several other names. New features were added, including virtual functions , function and operator overloading , references , constants, type-safe free-store memory allocation (new/delete), improved type checking, and BCPL-style single-line comments with two forward slashes ( // ). Furthermore, Stroustrup developed a new, standalone compiler for C++, Cfront .
+
+In 1984, Stroustrup implemented the first stream input/output library. The idea of providing an output operator rather than a named output function was suggested by Doug McIlroy &#91; 2 &#93; (who had previously suggested Unix pipes ).
+
+In 1985, the first edition of The C++ Programming Language was released, which became the definitive reference for the language, as there was not yet an official standard. &#91; 25 &#93; The first commercial implementation of C++ was released in October of the same year. &#91; 21 &#93; 
+
+In 1989, C++ 2.0 was released, followed by the updated second edition of The C++ Programming Language in 1991. &#91; 26 &#93; New features in 2.0 included multiple inheritance, abstract classes, static member functions, const member functions , and protected members. In 1990, The Annotated C++ Reference Manual was published. This work became the basis for the future standard. Later feature additions included templates , exceptions , namespaces , new casts , and a Boolean type .
+
+In 1998, C++98 was released, standardizing the language, and a minor update ( C++03 ) was released in 2003.
+
+After C++98, C++ evolved relatively slowly until, in 2011, the C++11 standard was released, adding numerous new features, enlarging the standard library further, and providing more facilities to C++ programmers. After a minor C++14 update released in December 2014, various new additions were introduced in C++17 . &#91; 27 &#93; After becoming finalized in February 2020, &#91; 28 &#93; a draft of the C++20 standard was approved on 4 September 2020, and officially published on 15 December 2020. &#91; 29 &#93; &#91; 30 &#93; 
+
+On January 3, 2018, Stroustrup was announced as the 2018 winner of the Charles Stark Draper Prize for Engineering, "for conceptualizing and developing the C++ programming language". &#91; 31 &#93; 
+
+In December 2022, C++ ranked third on the TIOBE index , surpassing Java for the first time in the history of the index. As of November&#160;2024 &#91;update&#93; , the language ranks second after Python , with Java being in third. &#91; 32 &#93; 
+
+In March 2025, Stroustrup issued a call for the language community to defend it. Since the language allows manual memory management, bugs that represent security risks such as buffer overflow may be introduced in programs when inadvertently misused by the programmer. &#91; 33 &#93; 
+
+Etymology [ edit ] 
+
+According to Stroustrup, "the name signifies the evolutionary nature of the changes from C." &#91; 34 &#93; This name is credited to Rick Mascitti (mid-1983) &#91; 24 &#93; and was first used in December 1983. When Mascitti was questioned informally in 1992 about the naming, he indicated that it was given in a tongue-in-cheek spirit. The name comes from C's ++ operator (which increments the value of a variable ) and a common naming convention of using "+" to indicate an enhanced computer program.
+
+During C++'s development period, the language had been referred to as "new C" and "C with Classes" &#91; 24 &#93; &#91; 35 &#93; before acquiring its final name.
+
+Philosophy [ edit ] 
+
+Throughout C++'s life, its development and evolution has been guided by a set of principles: &#91; 22 &#93; 
+
+- It must be driven by actual problems and its features should be immediately useful in real world programs. 
+
+- Every feature should be implementable (with a reasonably obvious way to do so). 
+
+- Programmers should be free to pick their own programming style, and that style should be fully supported by C++. 
+
+- Allowing a useful feature is more important than preventing every possible misuse of C++. 
+
+- It should provide facilities for organizing programs into separate, well-defined parts, and provide facilities for combining separately developed parts. 
+
+- No implicit violations of the type system (but allow explicit violations; that is, those explicitly requested by the programmer). 
+
+- User-created types need to have the same support and performance as built-in types. 
+
+- Unused features should not negatively impact created executables (e.g. in lower performance). 
+
+- There should be no language beneath C++ (except assembly language ). 
+
+- C++ should work alongside other existing programming languages , rather than fostering its own separate and incompatible programming environment . 
+
+- If the programmer's intent is unknown, allow the programmer to specify it by providing manual control. 
+
+Standardization [ edit ] 
+
+- Main articles: C++03 , C++11 , C++14 , C++17 , C++20 , C++23 , and C++26 
+
+ C++ standards
+
+ Year
+
+ ISO/IEC Standard
+
+ Informal name
+
+ 1998
+
+ 14882:1998 &#91; 36 &#93; 
+ C++98
+
+ 2003
+
+ 14882:2003 &#91; 37 &#93; 
+ C++03 
+
+ 2011
+
+ 14882:2011 &#91; 38 &#93; 
+ C++11 , C++0x
+
+ 2014
+
+ 14882:2014 &#91; 39 &#93; 
+ C++14 , C++1y
+
+ 2017
+
+ 14882:2017 &#91; 40 &#93; 
+ C++17 , C++1z
+
+ 2020
+
+ 14882:2020 &#91; 41 &#93; 
+ C++20 , C++2a
+
+ 2024
+
+ 14882:2024 &#91; 17 &#93; 
+ C++23 , C++2b
+
+ TBA 
+
+ C++26 , C++2c
+
+C++ is standardized by an ISO working group known as JTC1/SC22/WG21 . The working group holds three week-long meetings each year. &#91; 42 &#93; So far, it has published seven revisions of the C++ standard and is currently working on the next revision, C++26 .
+
+ Scene during the C++ standards committee meeting in Stockholm in 1996 
+
+In 1998, the ISO working group standardized C++ for the first time as ISO/IEC 14882:1998 , which is informally known as C++98 . In 2003, it published a new version of the C++ standard called ISO/IEC 14882:2003 , which fixed problems identified in C++98.
+
+The next major revision of the standard was informally referred to as "C++0x", but it was not released until 2011. &#91; 43 &#93; C++11 (14882:2011) included many additions to both the core language and the standard library. &#91; 38 &#93; 
+
+In 2014, C++14 (also known as C++1y) was released as a small extension to C++11, featuring mainly bug fixes and small improvements. &#91; 44 &#93; The Draft International Standard ballot procedures completed in mid-August 2014. &#91; 45 &#93; 
+
+After C++14, a major revision C++17 , informally known as C++1z, was completed by the ISO C++ committee in mid July 2017 and was approved and published in December 2017. &#91; 46 &#93; 
+
+As part of the standardization process, ISO also publishes technical reports and specifications :
+
+- ISO/IEC TR 18015:2006 &#91; 47 &#93; on the use of C++ in embedded systems and on performance implications of C++ language and library features, 
+
+- ISO/IEC TR 19768:2007 &#91; 48 &#93; (also known as the C++ Technical Report 1 ) on library extensions mostly integrated into C++11 , 
+
+- ISO/IEC TR 29124:2010 &#91; 49 &#93; on special mathematical functions, integrated into C++17 , 
+
+- ISO/IEC TR 24733:2011 &#91; 50 &#93; on decimal floating-point arithmetic, 
+
+- ISO/IEC TS 18822:2015 &#91; 51 &#93; on the standard filesystem library, integrated into C++17 , 
+
+- ISO/IEC TS 19570:2015 &#91; 52 &#93; on parallel versions of the standard library algorithms, integrated into C++17 , 
+
+- ISO/IEC TS 19841:2015 &#91; 53 &#93; on software transactional memory , 
+
+- ISO/IEC TS 19568:2015 &#91; 54 &#93; on a new set of library extensions, some of which are already integrated into C++17 , 
+
+- ISO/IEC TS 19217:2015 &#91; 55 &#93; on the C++ concepts , integrated into C++20 , 
+
+- ISO/IEC TS 19571:2016 &#91; 56 &#93; on the library extensions for concurrency, some of which are already integrated into C++20 , 
+
+- ISO/IEC TS 19568:2017 &#91; 57 &#93; on a new set of general-purpose library extensions, 
+
+- ISO/IEC TS 21425:2017 &#91; 58 &#93; on the library extensions for ranges, integrated into C++20 , 
+
+- ISO/IEC TS 22277:2017 &#91; 59 &#93; on coroutines, integrated into C++20 , 
+
+- ISO/IEC TS 19216:2018 &#91; 60 &#93; on the networking library, 
+
+- ISO/IEC TS 21544:2018 &#91; 61 &#93; on modules , integrated into C++20 , 
+
+- ISO/IEC TS 19570:2018 &#91; 62 &#93; on a new set of library extensions for parallelism 
+
+- ISO/IEC TS 23619:2021 &#91; 63 &#93; on new extensions for reflective programming (reflection), 
+
+- ISO/IEC TS 9922:2024 &#91; 64 &#93; on new set of concurrency extensions, and 
+
+- ISO/IEC TS 19568:2024 &#91; 65 &#93; on another new set of library extensions. 
+
+More technical specifications are in development and pending approval.
+
+Language [ edit ] 
+
+- Main article: C++ syntax 
+
+The C++ language has two main components: a direct mapping of hardware features provided primarily by the C subset, and zero-overhead abstractions based on those mappings. Stroustrup describes C++ as "a light-weight abstraction programming language [designed] for building and using efficient and elegant abstractions"; &#91; 15 &#93; and "offering both hardware access and abstraction is the basis of C++. Doing it efficiently is what distinguishes it from other languages." &#91; 66 &#93; 
+
+C++ inherits most of C's syntax . A hello world program that conforms to the C standard is also a valid C++ hello world program. The following is adapted from Bjarne Stroustrup's version of the Hello world program that uses the C++ Standard Library stream facility to write a message to standard output : &#91; 67 &#93; &#91; 68 &#93; &#91; c &#93; 
+
+ #include <iostream> 
+
+ int main () { 
+ std :: cout << "Hello, world! \n " ; 
+ } 
+
+Since C++23 , with the introduction of std::print functions and module 
+- std , this can be expressed less verbosely as:
+
+ import std ; 
+
+ int main () { 
+ std :: println ( "Hello, world!" ); 
+ } 
+
+Standard library [ edit ] 
+ The draft "Working Paper" standard that became approved as C++98; half of its size was devoted to the C++ Standard Library. 
+
+- Main article: C++ Standard Library 
+
+The C++ standard consists of two parts: the core language and the standard library. C++ programmers expect the latter on every major implementation of C++; it includes aggregate types ( vectors , linked lists , maps (such as tree maps and hash maps ), sets (such as tree sets and hash sets ), queues , stacks , arrays , tuples ), algorithms (
+- find , 
+- for_each , 
+- binary_search , 
+- random_shuffle , etc.), input/output facilities ( I/O streams , for reading from and writing to the console and files), file system manipulation, localisation support, smart pointers for automatic memory management, regular expression support, multi-threading library, atomics support (allowing a variable to be read or written to by at most one thread at a time without any external synchronisation), time utilities (measurement, getting current time, etc.), a system for converting error reporting that does not use C++ exceptions into C++ exceptions, random number generators , and a slightly modified version of the C standard library (to make it comply with the C++ type system).
+
+The design of the C++ standard library, much like the C standard library, is minimalistic, and contains only core features for programming, lacking most of the more specialised features offered by the Java standard library or C# standard library . For more features, some third-party libraries such as Boost libraries and POCO C++ Libraries , which offer additional features, may be used to supplement the standard library.
+
+A large part of the C++ library is based on the Standard Template Library (STL). Useful tools provided by the STL include containers as the collections of objects (such as vectors and lists ), iterators that provide array-like access to containers, and algorithms that perform operations such as searching and sorting.
+
+Furthermore, (multi)maps ( associative arrays ) and (multi)sets are provided, all of which export compatible interfaces. Therefore, using templates it is possible to write generic algorithms that work with any container or on any sequence defined by iterators.
+
+As in C, the features of the library may be accessed by using the #include directive to include a standard header . The C++ Standard Library provides 105 standard headers, of which 27 are deprecated. With the introduction of modules in C++20 , these headers may be accessed with import , and in C++23 , the entire standard library can now be directly imported as module itself, with import std ; . Currently, the C++ standard library provides two modules, std and std.compat (a compatibility module for std which exports C standard library facilities into the global namespace).
+
+The standard incorporates the STL that was originally designed by Alexander Stepanov , who experimented with generic algorithms and containers for many years. When he started with C++, he finally found a language where it was possible to create generic algorithms (e.g., STL sort) that perform even better than, for example, the C standard library qsort, thanks to C++ features like using inlining and compile-time binding instead of function pointers. The standard does not refer to it as "STL", as it is merely a part of the standard library, but the term is still widely used to distinguish it from the rest of the standard library (input/output streams, internationalization, diagnostics, the C library subset, etc.). &#91; 69 &#93; 
+
+Most C++ compilers, and all major ones, provide a standards-conforming implementation of the C++ standard library.
+
+ C++ Core Guidelines [ edit ] 
+
+The C++ Core Guidelines &#91; 70 &#93; are an initiative led by Bjarne Stroustrup, the inventor of C++, and Herb Sutter, the convener and chair of the C++ ISO Working Group, to help programmers write 'Modern C++' by using best practices for the language standards C++11 and newer, and to help developers of compilers and static checking tools to create rules for catching bad programming practices.
+
+The main aim is to efficiently and consistently write type and resource safe C++.
+
+The Core Guidelines were announced &#91; 71 &#93; in the opening keynote at CPPCon 2015.
+
+The Guidelines are accompanied by the Guideline Support Library (GSL), &#91; 72 &#93; a header only library of types and functions to implement the Core Guidelines and static checker tools for enforcing Guideline rules. &#91; 73 &#93; 
+
+Compatibility [ edit ] 
+
+To give compiler vendors greater freedom, the C++ standards committee decided not to dictate the implementation of name mangling , exception handling , and other implementation-specific features. The downside of this decision is that object code produced by different compilers is expected to be incompatible. There are, however, attempts to standardize compilers for particular machines or operating systems . For example, the Itanium C++ ABI is processor-independent (despite its name) and is implemented by GCC and Clang. &#91; 74 &#93; 
+
+With C [ edit ] 
+
+- Main article: Compatibility of C and C++ 
+
+C++ is often considered to be a superset of C but this is not strictly true. &#91; 75 &#93; Most C code can easily be made to compile correctly in C++ but there are a few differences that cause some valid C code to be invalid or behave differently in C++. For example, C allows implicit conversion from void * to other pointer types but C++ does not (for type safety reasons). Also, C++ defines many new keywords, such as new and class , which may be used as identifiers (for example, variable names) in a C program.
+
+Some incompatibilities have been removed by the 1999 revision of the C standard ( C99 ), which now supports C++ features such as line comments ( // ) and declarations mixed with code. On the other hand, C99 introduced a number of new features that C++ did not support that were incompatible or redundant in C++, such as variable-length arrays , native complex-number types (however, the std :: complex class in the C++ standard library provides similar functionality, although not code-compatible), designated initializers, compound literals , and the restrict keyword. &#91; 76 &#93; Some of the C99-introduced features were included in the subsequent version of the C++ standard, C++11 (out of those which were not redundant). &#91; 77 &#93; &#91; 78 &#93; &#91; 79 &#93; However, the C++11 standard introduces new incompatibilities, such as disallowing assignment of a string literal to a character pointer, which remains valid C.
+
+To intermix C and C++ code, any function declaration or definition that is to be called from/used both in C and C++ must be declared with C linkage by placing it within an extern "C" { /*...*/ } block. Such a function may not rely on features depending on name mangling (i.e., function overloading).
+
+Inline assembly [ edit ] 
+
+Programs developed in C or C++ often utilize inline assembly to take advantage of its low-level functionalities, greater speed, and enhanced control compared to high-level programming languages &#91; 80 &#93; &#91; 81 &#93; when optimizing for performance is essential. C++ provides support for embedding assembly language using asm declarations, &#91; 82 &#93; but the compatibility of inline assembly varies significantly between compilers and architectures. Unlike high-level language features such as Python or Java , assembly code is highly dependent on the underlying processor and compiler implementation.
+
+Variations across compilers [ edit ] 
+
+Different C++ compilers implement inline assembly in distinct ways.
+
+- GCC ( GNU Compiler Collection ) and Clang : &#91; 83 &#93; Use the GCC extended inline assembly syntax. Using __asm__ keyword instead of asm when writing code that can be compiled with - ansi and - std options, which allows specifying input/output operands and clobbered registers. This approach is widely adopted, including by Intel &#91; 84 &#93; and IBM &#91; 85 &#93; compilers. 
+
+- MSVC ( Microsoft Visual C++ ): The inline assembler is built into the compiler. Previously supported inline assembly via the __asm keyword, but this support has been removed in 64-bit mode, requiring separate .asm modules instead. &#91; 86 &#93; 
+
+- TI ARM Clang and Embedded Compilers: &#91; 87 &#93; Some embedded system compilers, like Texas Instruments' TI Arm Clang, allow inline assembly but impose stricter rules to avoid conflicts with register conventions and calling conventions. 
+
+ Interoperability between C++ and Assembly [ edit ] 
+
+C++ provides two primary methods of integrating ASM code. 
+
+1. Standalone assembly files – Assembly code is written separately and linked with C++ code. &#91; 88 &#93; 
+
+2. Inline assembly – Assembly code is embedded within C++ code using compiler-specific extensions.
+
+See also [ edit ] 
+
+- Computer programming portal 
+
+- 
+
+ Wikibooks has a book on the topic of: C++ Programming 
+
+- Carbon (programming language) — development at Google to potentially be a successor to C++ 
+
+- Comparison of programming languages 
+
+- List of C++ compilers 
+
+- List of C++ software and tools 
+
+- List of C++ programming books 
+
+- Outline of C++ 
+
+- Category:C++ libraries 
+
+Notes [ edit ] 
+
+- ^ For the idea of the C++20 stackless coroutines. 
+
+- ^ Pronounced / ˈ s iː p l ʌ s p l ʌ s / SEE PLUSS PLUSS and sometimes abbreviated as CPP or CXX . 
+
+- ^ This code is adapted from Bjarne Stroustrup's errata page (p. 633). He addresses the use of '\n' rather than std::endl . Also see Can I write "void main()"? Archived 2 July 2020 at the Wayback Machine for an explanation of the implicit return 0; in the main function. This implicit return is not available in other functions. 
+
+References [ edit ] 
+
+- 
+
+- ^ "Overview of modules in C++" . Microsoft. 24 April 2023. 
+
+- ^ a b c d e f 
+- Stroustrup, Bjarne (1996). "A history of C++: 1979-1991". History of programming languages---II . ACM . pp.&#160; 699– 769. doi : 10.1145/234286.1057836 . 
+
+- ^ 
+- Stroustrup, Bjarne (16 December 2021). "C++20: Reaching for the Aims of C++ - Bjarne Stroustrup - CppCon 2021" . CppCon. Archived from the original on 30 December 2021 . Retrieved 30 December 2021 . 
+
+- ^ 
+- Stroustrup, Bjarne (12 June 2020). "Thriving in a crowded and changing world: C++ 2006–2020" . Proceedings of the ACM on Programming Languages . 4 (HOPL). Association for Computing Machinery (ACM): 1– 168. doi : 10.1145/3386320 . ISSN &#160; 2475-1421 . S2CID &#160; 219603741 . 
+
+- ^ 
+- Naugler, David (May 2007). "C# 2.0 for C++ and Java programmer: conference workshop". Journal of Computing Sciences in Colleges . 22 (5). Although C# has been strongly influenced by Java it has also been strongly influenced by C++ and is best viewed as a descendant of both C++ and Java. 
+
+- ^ 
+- "Chapel spec (Acknowledgements)" (PDF) . Cray Inc. 1 October 2015. Archived (PDF) from the original on 24 June 2018 . Retrieved 14 January 2016 . 
+
+- ^ 
+- Fogus, Michael. "Rich Hickey Q&A" . Code Quarterly . Archived from the original on 11 January 2017 . Retrieved 11 January 2017 . 
+
+- ^ 
+- Harry. H. Chaudhary (28 July 2014). "Cracking The Java Programming Interview&#160;:: 2000+ Java Interview Que/Ans" . Archived from the original on 27 May 2021 . Retrieved 29 May 2016 . 
+
+- ^ 
+- Roger Poon (1 May 2017). "Scaling JS++: Abstraction, Performance, and Readability" . Archived from the original on 11 May 2020 . Retrieved 21 April 2020 . 
+
+- ^ 
+- "The evolution of an extension language: a history of Lua" . www.lua.org . Retrieved 4 January 2023 . 
+
+- ^ 
+- "FAQ Nim Programming Language" . Archived from the original on 11 July 2017 . Retrieved 21 April 2020 . 
+
+- ^ 
+- "9. Classes — Python 3.6.4 documentation" . docs.python.org . Archived from the original on 23 October 2012 . Retrieved 9 January 2018 . 
+
+- ^ 
+- "Influences - The Rust Reference" . doc.rust-lang.org . Retrieved 4 January 2023 . 
+
+- ^ 
+- Stroustrup, Bjarne (1997). "1". The C++ Programming Language (Third&#160;ed.). Addison-Wesley. ISBN &#160; 0-201-88954-4 . OCLC &#160; 59193992 . 
+
+- ^ a b c 
+- Stroustrup, B. (6 May 2014). "Lecture:The essence of C++. University of Edinburgh" . YouTube . Archived from the original on 28 April 2015 . Retrieved 12 June 2015 . 
+
+- ^ 
+- Stroustrup, Bjarne (17 February 2014). "C++ Applications" . stroustrup.com . Archived from the original on 4 April 2021 . Retrieved 5 May 2014 . 
+
+- ^ a b 
+- "ISO/IEC 14882:2024" . International Organization for Standardization . Retrieved 21 October 2020 . 
+
+- ^ 
+- "Bjarne Stroustrup's Homepage" . www.stroustrup.com . Archived from the original on 14 May 2019 . Retrieved 15 May 2013 . 
+
+- ^ 
+- "C++ IS schedule" (PDF) . Archived (PDF) from the original on 10 August 2020 . Retrieved 9 August 2020 . 
+
+- ^ 
+- "C++; Where it's heading" . Archived from the original on 3 December 2018 . Retrieved 3 December 2018 . 
+
+- ^ a b 
+- Stroustrup, Bjarne (7 March 2010). "Bjarne Stroustrup's FAQ: When was C++ invented?" . stroustrup.com . Archived from the original on 6 February 2016 . Retrieved 16 September 2010 . 
+
+- ^ a b 
+- Stroustrup, Bjarne. "Evolving a language in and for the real world: C++ 1991-2006" (PDF) . Archived (PDF) from the original on 20 November 2007 . Retrieved 14 August 2013 . 
+
+- ^ The C Family of Languages: Interview with Dennis Ritchie, Bjarne Stroustrup, and James Gosling, C++ Report , 12(7), July/August 2000, cited in 
+- "The C Family of Languages: Interview with Dennis Ritchie, Bjarne Stroustrup, and James Gosling" . Retrieved 26 December 2025 . 
+
+- ^ a b c 
+- Stroustrup, Bjarne. "A History of C ++&#160;: 1979− 1991" (PDF) . Archived (PDF) from the original on 2 February 2019 . Retrieved 18 July 2013 . 
+
+- ^ 
+- Stroustrup, Bjarne. "The C++ Programming Language" (First&#160;ed.). Archived from the original on 9 August 2012 . Retrieved 16 September 2010 . 
+
+- ^ 
+- Stroustrup, Bjarne. "The C++ Programming Language" (Second&#160;ed.). Archived from the original on 9 August 2012 . Retrieved 16 September 2010 . 
+
+- ^ 
+- Sutter, Herb (30 June 2016). "Trip report: Summer ISO C++ standards meeting (Oulu)" . herbsutter.com . Archived from the original on 8 October 2016. the next standard after C++17 will be C++20 
+
+- ^ 
+- Dusíková, Hana (6 November 2019). "N4817: 2020 Prague Meeting Invitation and Information" (PDF) . Archived (PDF) from the original on 29 December 2019 . Retrieved 13 February 2020 . 
+
+- ^ 
+- "Current Status" . isocpp.org . Archived from the original on 8 September 2020 . Retrieved 7 September 2020 . 
+
+- ^ 
+- "C++20 Approved -- Herb Sutter" . isocpp.org . Archived from the original on 11 September 2020 . Retrieved 8 September 2020 . 
+
+- ^ 
+- "Computer Science Pioneer Bjarne Stroustrup to Receive the 2018 Charles Stark Draper Prize for Engineering" (Press release). National Academy of Engineering. 3 January 2018. Archived from the original on 3 January 2018 . Retrieved 14 December 2021 . 
+
+- ^ 
+- TIOBE (November 2024). "TIOBE Index for November 2024" . TIOBE.com . TIOBE Company. Archived from the original on 18 November 2024 . Retrieved 18 November 2024 . 
+
+- ^ 
+- Claburn, Thomas (2 March 2025). "C++ creator calls for help to defend programming language from 'serious attacks' " . The Register . Retrieved 5 March 2025 . 
+
+- ^ 
+- "Bjarne Stroustrup's FAQ&#160;– Where did the name "C++" come from?" . Archived from the original on 6 February 2016 . Retrieved 16 January 2008 . 
+
+- ^ 
+- "C For C++ Programmers" . Northeastern University . Archived from the original on 17 November 2010 . Retrieved 7 September 2015 . 
+
+- ^ 
+- "ISO/IEC 14882:1998" . International Organization for Standardization. Archived from the original on 15 January 2017 . Retrieved 23 November 2018 . 
+
+- ^ 
+- "ISO/IEC 14882:2003" . International Organization for Standardization. Archived from the original on 13 August 2021 . Retrieved 23 November 2018 . 
+
+- ^ a b 
+- "ISO/IEC 14882:2011" . International Organization for Standardization. Archived from the original on 27 May 2016 . Retrieved 23 November 2018 . 
+
+- ^ 
+- "ISO/IEC 14882:2014" . International Organization for Standardization. Archived from the original on 29 April 2016 . Retrieved 23 November 2018 . 
+
+- ^ 
+- "ISO/IEC 14882:2017" . International Organization for Standardization. Archived from the original on 29 January 2013 . Retrieved 2 December 2017 . 
+
+- ^ 
+- "ISO/IEC 14882:2020" . International Organization for Standardization. Archived from the original on 16 December 2020 . Retrieved 16 December 2020 . 
+
+- ^ 
+- "Meetings and Participation" . News, Status & Discussion About Standard C++ . The Standard C++ Foundation . Retrieved 6 September 2025 . 
+
+- ^ 
+- "We have an international standard: C++0x is unanimously approved" . Sutter's Mill . 12 August 2011. Archived from the original on 28 June 2018 . Retrieved 23 November 2018 . 
+
+- ^ 
+- "The Future of C++" . Archived from the original on 23 October 2018 . Retrieved 23 November 2018 &#8211; via channel9.msdn.com. 
+
+- ^ 
+- "We have C++14!&#160;: Standard C++" . isocpp.org . Archived from the original on 19 August 2014 . Retrieved 19 August 2014 . 
+
+- ^ 
+- Sutter, Herb (15 July 2017). "Trip report: Summer ISO C++ standards meeting (Toronto)" . Archived from the original on 6 August 2017 . Retrieved 4 August 2017 . 
+
+- ^ 
+- "ISO/IEC TR 18015:2006" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TR 19768:2007" . International Organization for Standardization. Archived from the original on 4 March 2016 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TR 29124:2010" . International Organization for Standardization. Archived from the original on 12 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TR 24733:2011" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 18822:2015" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 19570:2015" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 19841:2015" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 19568:2015" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 19217:2015" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 19571:2016" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 19568:2017" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 21425:2017" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 22277:2017" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 19216:2018" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 21544:2018" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 19570:2018" . International Organization for Standardization. Archived from the original on 15 January 2019 . Retrieved 15 February 2019 . 
+
+- ^ 
+- "ISO/IEC TS 23619:2021" . International Organization for Standardization. Archived from the original on 15 December 2018 . Retrieved 11 October 2021 . 
+
+- ^ 
+- "ISO/IEC TS 9922:2024" . International Organization for Standardization. Archived from the original on 1 April 2025 . Retrieved 1 April 2025 . 
+
+- ^ 
+- "ISO/IEC TS 19568:2024" . International Organization for Standardization. Archived from the original on 25 February 2025 . Retrieved 1 April 2025 . 
+
+- ^ 
+- B. Stroustrup (interviewed by Sergio De Simone) (30 April 2015). "Stroustrup: Thoughts on C++17 - An Interview" . Archived from the original on 8 July 2015 . Retrieved 8 July 2015 . 
+
+- ^ 
+- Stroustrup, Bjarne (2000). The C++ Programming Language (Special&#160;ed.). Addison-Wesley. p.&#160;46. ISBN &#160; 0-201-70073-5 . 
+
+- ^ 
+- Stroustrup, Bjarne. "Open issues for The C++ Programming Language (3rd Edition)" . Archived from the original on 5 May 2014 . Retrieved 5 May 2014 . 
+
+- ^ 
+- Graziano Lo Russo (2008). "An Interview with A. Stepanov" . stlport.org . Archived from the original on 4 March 2009 . Retrieved 8 October 2015 . 
+
+- ^ 
+- "C++ Core Guidelines" . isocpp.github.io . Archived from the original on 16 February 2020 . Retrieved 9 February 2020 . 
+
+- ^ 
+- "Bjarne Stroustrup announces C++ Core Guidelines&#160;: Standard C++" . isocpp.org . Archived from the original on 11 May 2020 . Retrieved 31 March 2020 . 
+
+- ^ 
+- "microsoft/GSL" . 18 July 2021. Archived from the original on 18 July 2021 . Retrieved 18 July 2021 &#8211; via GitHub. 
+
+- ^ 
+- "Using the C++ Core Guidelines checkers" . Microsoft Learn . Archived from the original on 13 August 2021 . Retrieved 31 March 2020 . 
+
+- ^ 
+- "C++ ABI Summary" . 20 March 2001. Archived from the original on 10 July 2018 . Retrieved 30 May 2006 . 
+
+- ^ 
+- "Bjarne Stroustrup's FAQ&#160;– Is C a subset of C++?" . Archived from the original on 6 February 2016 . Retrieved 5 May 2014 . 
+
+- ^ 
+- "C9X – The New C Standard" . Archived from the original on 21 June 2018 . Retrieved 27 December 2008 . 
+
+- ^ 
+- "C++0x Support in GCC" . Archived from the original on 21 July 2010 . Retrieved 12 October 2010 . 
+
+- ^ 
+- "C++0x Core Language Features In VC10: The Table" . Archived from the original on 21 August 2010 . Retrieved 12 October 2010 . 
+
+- ^ 
+- "Clang - C++98, C++11, and C++14 Status" . Clang.llvm.org. 12 May 2013. Archived from the original on 4 July 2013 . Retrieved 10 June 2013 . 
+
+- ^ Bokil, Milind A. (2021). " Writing Assembly Routines within C/C++ and Java Programs ". ResearchGate. Retrieved 1 April 2025. 
+
+- ^ 
+- De Vilhena, Paulo Emílio; Lahav, Ori; Vafeiadis, Viktor; Raad, Azalea (2024). "Extending the C/C++ Memory Model with Inline Assembly" . Proceedings of the ACM on Programming Languages . 8 : 1081– 1107. arXiv : 2408.17208 . doi : 10.1145/3689749 . 
+
+- ^ cppreference.com contributors. " asm declaration ". cppreference.com . Retrieved 1 April 2025. 
+
+- ^ 
+- "Extended Asm (Using the GNU Compiler Collection)" . GCC Online Documentation . GNU Project . Retrieved 1 April 2025 . 
+
+- ^ Intel Corporation. " Inline Assembly ". Intel® C++ Compiler Classic Developer Guide and Reference , Version 2021.9. Retrieved 1 April 2025. 
+
+- ^ IBM. " Inline assembly statements (IBM extension) ". IBM Documentation . Retrieved 1 April 2025. 
+
+- ^ 
+- "Inline Assembler Overview" . Microsoft Learn . Microsoft . Retrieved 1 April 2025 . 
+
+- ^ 
+- "Interfacing C and C++ With Assembly Language" . Texas Instruments . Texas Instruments Incorporated. 23 February 2025 . Retrieved 1 April 2025 . 
+
+- ^ 
+- "C++ to ASM linkage in GCC" . OSDev Wiki . Retrieved 1 April 2025 . 
+
+Further reading [ edit ] 
+
+- 
+- Abrahams, David ; Gurtovoy, Aleksey (2005). C++ Template Metaprogramming: Concepts, Tools, and Techniques from Boost and Beyond . Addison-Wesley. ISBN &#160; 0-321-22725-5 . 
+
+- 
+- Alexandrescu, Andrei (2001). Modern C++ Design: Generic Programming and Design Patterns Applied . Addison-Wesley. ISBN &#160; 0-201-70431-5 . 
+
+- 
+- Alexandrescu, Andrei ; Sutter, Herb (2004). C++ Design and Coding Standards: Rules and Guidelines for Writing Programs . Addison-Wesley. ISBN &#160; 0-321-11358-6 . 
+
+- 
+- Becker, Pete (2006). The C++ Standard Library Extensions&#160;: A Tutorial and Reference . Addison-Wesley. ISBN &#160; 0-321-41299-0 . 
+
+- 
+- Brokken, Frank (2010). C++ Annotations . University of Groningen. ISBN &#160; 978-90-367-0470-0 . Archived from the original on 28 April 2010 . Retrieved 28 April 2010 . 
+
+- 
+- Coplien, James O. (1994) [reprinted with corrections, original year of publication 1992]. Advanced C++: Programming Styles and Idioms . Addison-Wesley. ISBN &#160; 0-201-54855-0 . 
+
+- 
+- Dewhurst, Stephen C. (2005). C++ Common Knowledge: Essential Intermediate Programming . Addison-Wesley. ISBN &#160; 0-321-32192-8 . 
+
+- 
+- Information Technology Industry Council (15 October 2003). Programming languages&#160;– C++ (Second&#160;ed.). Geneva: ISO/IEC. 14882:2003(E). 
+
+- 
+- Josuttis, Nicolai M. (2012). The C++ Standard Library, A Tutorial and Reference (Second&#160;ed.). Addison-Wesley. ISBN &#160; 978-0-321-62321-8 . 
+
+- 
+- Koenig, Andrew ; Moo, Barbara E. (2000). Accelerated C++ – Practical Programming by Example . Addison-Wesley. ISBN &#160; 0-201-70353-X . 
+
+- 
+- Lippman, Stanley B. ; Lajoie, Josée; Moo, Barbara E. (2011). C++ Primer (Fifth&#160;ed.). Addison-Wesley. ISBN &#160; 978-0-321-71411-4 . 
+
+- 
+- Lippman, Stanley B. (1996). Inside the C++ Object Model . Addison-Wesley. ISBN &#160; 0-201-83454-5 . 
+
+- 
+- Meyers, Scott (2005). Effective C++ (Third&#160;ed.). Addison-Wesley. ISBN &#160; 0-321-33487-6 . 
+
+- 
+- Stroustrup, Bjarne (2013). The C++ Programming Language (Fourth&#160;ed.). Addison-Wesley. ISBN &#160; 978-0-321-56384-2 . 
+
+- 
+- Stroustrup, Bjarne (1994). The Design and Evolution of C++ . Addison-Wesley. ISBN &#160; 0-201-54330-3 . 
+
+- 
+- Stroustrup, Bjarne (2014). Programming: Principles and Practice Using C++ (Second&#160;ed.). Addison-Wesley. ISBN &#160; 978-0-321-99278-9 . 
+
+- 
+- Sutter, Herb (2001). More Exceptional C++: 40 New Engineering Puzzles, Programming Problems, and Solutions . Addison-Wesley. ISBN &#160; 0-201-70434-X . 
+
+- 
+- Sutter, Herb (2004). Exceptional C++ Style . Addison-Wesley. ISBN &#160; 0-201-76042-8 . 
+
+- 
+- Vandevoorde, David; Josuttis, Nicolai M. (2003). C++ Templates: The complete Guide . Addison-Wesley. ISBN &#160; 0-201-73484-2 . 
+
+External links [ edit ] 
+
+- JTC1/SC22/WG21 – the ISO/IEC C++ Standard Working Group 
+
+- Standard C++ Foundation – a non-profit organization that promotes the use and understanding of standard C++. Bjarne Stroustrup is a director of the organization. 
+
+- C++ Keywords 
+
+- C++ Expressions 
+
+- C++ Operator Precedence 
+ C++ at Wikipedia's sister projects : 
+- Media from Commons 
+- Quotations from Wikiquote 
+- Textbooks from Wikibooks 
+- Resources from Wikiversity 
+
+- 
+- 
+- 
+- v 
+- t 
+- e C++ 
+
+- C++ 
+
+- Outline 
+
+- C++98 
+
+- C++03 
+
+- C++11 
+
+- C++14 
+
+- C++17 
+
+- C++20 
+
+- C++23 
+
+- C++26 
+
+- Libraries 
+ Features 
+
+- C++ syntax 
+
+- Classes 
+
+- Concepts 
+
+- Copy constructor 
+
+- Exception handling ( Exception safety ) 
+
+- Function overloading 
+
+- Modules 
+
+- Move semantics 
+
+- new and delete 
+
+- Operator overloading 
+
+- Operators 
+
+- Preprocessor 
+
+- References 
+
+- Templates 
+
+- Virtual functions 
+ Standard Library 
+
+- I/O Streams 
+
+- Smart pointers 
+
+- STL 
+
+- Strings 
+ Ideas 
+
+- As-if rule 
+
+- Barton–Nackman trick 
+
+- Curiously recurring template pattern 
+
+- Most vexing parse 
+
+- One Definition Rule 
+
+- Resource acquisition is initialization 
+
+- Rule of three 
+
+- Slicing 
+
+- Special member functions 
+
+- Substitution failure is not an error 
+
+- Template metaprogramming 
+ Compilers 
+
+- Comparison of C++ compilers 
+
+- Borland C++ 
+
+- Borland Turbo C++ 
+
+- C++Builder 
+
+- Clang 
+
+- Comeau C/C++ 
+
+- GCC 
+
+- IAR Embedded Workbench 
+
+- Intel C++ Compiler 
+
+- Oracle Solaris Studio 
+
+- Visual C++ (MSVC) 
+
+- Watcom C/C++ 
+ IDEs 
+
+- Comparison of C IDEs 
+
+- Anjuta 
+
+- CLion 
+
+- Code::Blocks 
+
+- CodeLite 
+
+- Dev-C++ 
+
+- Eclipse 
+
+- Geany 
+
+- NetBeans 
+
+- KDevelop 
+
+- Qt Creator 
+
+- Visual Studio 
+ Superset languages 
+
+- Objective-C++ 
+
+- C++/CLI 
+
+- C++/CX 
+
+- C++/WinRT 
+
+- Ch 
+
+- SYCL 
+ Dialects 
+
+- Embedded C++ 
+ Relative to
+other languages 
+
+- Comparison of programming languages 
+
+- Comparison of Java and C++ 
+
+- Compatibility of C and C++ 
+
+- Criticism of C++ 
+ People 
+
+- David Abrahams 
+
+- Andrei Alexandrescu 
+
+- Pete Becker 
+
+- Rick Mascitti 
+
+- Scott Meyers 
+
+- Alexander Stepanov 
+
+- Bjarne Stroustrup 
+
+- Herb Sutter 
+ Category 
+
+- 
+- 
+- 
+- 
+- v 
+- t 
+- e Programming languages 
+
+- Comparison 
+
+- Timeline 
+
+- History 
+
+- Ada 
+
+- ALGOL 
+
+- Simula 
+
+- APL 
+
+- Assembly 
+
+- BASIC 
+
+- Visual Basic 
+
+- classic 
+
+- .NET 
+
+- C 
+
+- C++ 
+
+- C# 
+
+- COBOL 
+
+- Erlang 
+
+- Elixir 
+
+- Forth 
+
+- Fortran 
+
+- Go 
+
+- Haskell 
+
+- Java 
+
+- JavaScript 
+
+- Julia 
+
+- Kotlin 
+
+- Lisp 
+
+- Lua 
+
+- MATLAB 
+
+- ML 
+
+- Caml 
+
+- OCaml 
+
+- Standard ML 
+
+- Pascal 
+
+- Object Pascal 
+
+- Perl 
+
+- Raku 
+
+- PHP 
+
+- Prolog 
+
+- Python 
+
+- R 
+
+- Ruby 
+
+- Rust 
+
+- SAS 
+
+- SQL 
+
+- Scratch 
+
+- Shell 
+
+- Smalltalk 
+
+- Swift 
+
+- more... 
+
+- Lists: Alphabetical 
+
+- Categorical 
+
+- Generational 
+
+- Non-English-based 
+
+- Category 
+
+- 
+- 
+- 
+- 
+- v 
+- t 
+- e International Organization for Standardization (ISO) standards List of ISO standards – ISO romanizations – IEC standards 1–9999 
+
+- 1 
+
+- 2 
+
+- 3 
+
+- 4 
+
+- 6 
+
+- 7 
+
+- 9 
+
+- 16 
+
+- 17 
+
+- 31 
+
+- -0 
+
+- -1 
+
+- -3 
+
+- -4 
+
+- -5 
+
+- -6 
+
+- -7 
+
+- -8 
+
+- -9 
+
+- -10 
+
+- -11 
+
+- -12 
+
+- -13 
+
+- 68-1 
+
+- 128 
+
+- 216 
+
+- 217 
+
+- 226 
+
+- 228 
+
+- 233 
+
+- 259 
+
+- 261 
+
+- 262 
+
+- 302 
+
+- 306 
+
+- 361 
+
+- 500 
+
+- 518 
+
+- 519 
+
+- 639 
+
+- -1 
+
+- -2 
+
+- -3 
+
+- -5 
+
+- -6 
+
+- 646 
+
+- 657 
+
+- 668 
+
+- 690 
+
+- 704 
+
+- 732 
+
+- 764 
+
+- 838 
+
+- 843 
+
+- 860 
+
+- 898 
+
+- 965 
+
+- 999 
+
+- 1000 
+
+- 1004 
+
+- 1007 
+
+- 1073-1 
+
+- 1073-2 
+
+- 1155 
+
+- 1413 
+
+- 1538 
+
+- 1629 
+
+- 1745 
+
+- 1989 
+
+- 2014 
+
+- 2015 
+
+- 2022 
+
+- 2033 
+
+- 2047 
+
+- 2108 
+
+- 2145 
+
+- 2146 
+
+- 2240 
+
+- 2281 
+
+- 2533 
+
+- 2709 
+
+- 2711 
+
+- 2720 
+
+- 2788 
+
+- 2848 
+
+- 2852 
+
+- 2921 
+
+- 3029 
+
+- 3103 
+
+- 3166 
+
+- -1

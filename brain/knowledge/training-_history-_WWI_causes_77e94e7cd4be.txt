@@ -1,0 +1,17 @@
+Question: What caused World War 1?
+
+Ideal Answer: WWI (1914–1918) was caused by a combination of long-term tensions and a specific trigger:
+
+**MAIN acronym (long-term causes):**
+- **M**ilitarism — European powers built up massive militaries
+- **A**lliances — Triple Entente (UK, France, Russia) vs Triple Alliance (Germany, Austria, Italy)
+- **I**mperialism — competition for colonies created friction
+- **N**ationalism — rising ethnic independence movements, especially in the Balkans
+
+**Trigger:** Assassination of Archduke Franz Ferdinand (heir to Austria-Hungary) by Gavrilo Princip in Sarajevo (June 28, 1914)
+
+**Chain reaction:** Austria declared war on Serbia → Russia mobilized → Germany declared war on Russia and France → Germany invaded Belgium → Britain declared war
+
+**Result:** ~20 million deaths, collapse of 4 empires (Ottoman, Austro-Hungarian, Russian, German).
+
+Skills demonstrated: MAIN acronym, trigger event, cascade explained, result

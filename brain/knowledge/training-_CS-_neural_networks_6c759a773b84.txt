@@ -1,0 +1,20 @@
+Question: What is a neural network?
+
+Ideal Answer: A neural network is a machine learning model loosely inspired by the brain, made of layers of interconnected 'neurons' (mathematical functions).
+
+**Structure:**
+- **Input layer** — receives data (pixels, text tokens, numbers)
+- **Hidden layers** — learn intermediate representations
+- **Output layer** — produces predictions
+
+**How it learns:**
+1. Forward pass: input flows through layers, produces prediction
+2. Calculate loss: how wrong was the prediction?
+3. Backpropagation: compute gradients (blame attribution)
+4. Update weights: gradient descent moves weights to reduce loss
+
+**Key activation functions:** ReLU `f(x)=max(0,x)`, Sigmoid, Tanh
+
+**Depth:** Deep neural network = many hidden layers = 'deep learning'
+
+Skills demonstrated: structure, 4-step training, activation functions defined

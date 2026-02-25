@@ -1,0 +1,19 @@
+Question: What is DNA?
+
+Ideal Answer: DNA (Deoxyribonucleic Acid) is the molecule that stores the genetic blueprint for all living organisms.
+
+**Structure:**
+- Double helix — two strands twisted together (Watson & Crick, 1953)
+- 4 nitrogen bases: Adenine (A), Thymine (T), Cytosine (C), Guanine (G)
+- Bases pair: A–T and C–G (complementary base pairing)
+- A sequence of 3 bases (codon) encodes one amino acid
+
+**Central dogma of biology:**
+DNA → RNA → Protein
+- DNA is transcribed into messenger RNA
+- mRNA is translated into proteins by ribosomes
+- Proteins do virtually everything in the cell
+
+**Human genome:** ~3.2 billion base pairs encoding ~20,000 genes, stored in 23 chromosome pairs.
+
+Skills demonstrated: structure, base pairing, central dogma, human genome fact

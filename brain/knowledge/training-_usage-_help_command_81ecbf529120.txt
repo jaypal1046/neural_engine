@@ -1,0 +1,27 @@
+Question: help
+
+Ideal Answer: **Neural Studio Commands:**
+
+**Brain / Learning:**
+- `learn [topic]: [text]` — store knowledge
+- `learn_url [topic] [url]` — learn from a web page
+- `ask [question]` — search my knowledge
+- `train` — run full training cycle
+
+**Compression:**
+- `analyze [file]` — entropy analysis + algorithm recommendation
+- `compress [file]` — compress (auto algorithm)
+- `compress [file] --cmix` — maximum compression
+- `compress [file] --best` — fast BWT compression
+- `decompress [file.aiz]` — restore original
+
+**File System:**
+- `list [path]` — list directory
+- `read [file]` — display file contents
+- `find [pattern]` — search files
+
+**System:**
+- `status` — server health
+- `brain stats` — knowledge base statistics
+
+Skills demonstrated: grouped sections, all commands covered, syntax shown

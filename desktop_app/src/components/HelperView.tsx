@@ -363,6 +363,14 @@ export function HelperView() {
     const processCommand = async (cmd: string, atts: Attachment[]): Promise<{ content: string; tool?: string; widget?: any }> => {
         const lower = cmd.toLowerCase().trim();
 
+        // ═══════ HELP ═══════
+        if (lower === 'help' || lower === '?' || lower === 'commands' || lower === 'what can you do' ||
+            lower.includes('what can you do') || lower.includes('all thing') || lower.includes('your features')) {
+            return {
+                content: `**Neural Studio V10 — Commands**\n\n**Compression**\n• \`compress C:/file.txt\` — compress with AI guidance\n• \`decompress C:/file.aiz\` — restore original\n• \`analyze C:/file\` — entropy scan + AI recommendation\n\n**Brain / Knowledge**\n• \`ask <question>\` — query my knowledge base\n• \`learn <topic>: <info>\` — teach me directly\n• \`learn_file C:/path\` — learn from a local file\n• \`learn_url <topic> <url>\` — scrape & learn from web\n• \`brain stats\` — memory usage & knowledge count\n• \`train\` — run RLHF training cycle\n• \`train deep\` — deep training (slower, better)\n\n**File System**\n• \`list C:/path\` — list directory\n• \`read C:/file.txt\` — read a file\n• \`find *.py\` — search files by pattern\n\n**Vault (Compressed Storage)**\n• \`store C:/file\` — compress and archive\n• \`vault list\` — show stored items\n• \`retrieve <key>\` — decompress from vault\n\n**Shell**\n• \`run <command>\` — execute any shell command\n• \`cmd <command>\` — same as run\n\n**Other**\n• \`status\` — server health\n• \`math 2+2*10\` — math expressions\n\nJust talk naturally too — I understand plain English! 🧠`
+            };
+        }
+
         // ═══════ ANALYZE — The Neural Eye ═══════
         if (lower.startsWith('analyze') || lower.startsWith('scan') || lower.startsWith('inspect')) {
             let fp = cmd.replace(/^(analyze|scan|inspect)\s*/i, '').trim();
@@ -538,8 +546,8 @@ export function HelperView() {
         }
 
         // ═══════ CMD / TERMINAL ═══════
-        if (lower.startsWith('cmd ') || lower.startsWith('> ')) {
-            const command = cmd.replace(/^(cmd|>)\s*/i, '');
+        if (lower.startsWith('cmd ') || lower.startsWith('> ') || lower.startsWith('run ')) {
+            const command = cmd.replace(/^(cmd|run|>)\s*/i, '');
             try {
                 const res = await fetch(`${API}/api/cmd`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },

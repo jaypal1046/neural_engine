@@ -1,0 +1,12 @@
+Question: How does photosynthesis work?
+
+Ideal Answer: Photosynthesis refers to the process by which plants convert sunlight into food.
+
+1. Plants absorb sunlight using chlorophyll in their leaves.
+2. Carbon dioxide from the air and water from the soil are combined using light energy.
+3. The reaction produces glucose (sugar) and oxygen: 6CO2 + 6H2O + light → C6H12O6 + 6O2.
+4. Glucose provides energy for growth; oxygen is released as a byproduct.
+
+Photosynthesis happens in two stages: the light-dependent reactions (in thylakoids) and the Calvin cycle (in the stroma). It is the foundation of nearly all food chains on Earth.
+
+Skills demonstrated: equation, stages, organelle locations, ecological importance

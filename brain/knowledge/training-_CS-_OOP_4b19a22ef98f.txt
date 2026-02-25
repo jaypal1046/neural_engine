@@ -1,0 +1,22 @@
+Question: What is object-oriented programming?
+
+Ideal Answer: OOP is a programming paradigm organizing code around **objects** — data + behavior bundled together.
+
+**4 core principles:**
+1. **Encapsulation** — hide internal state, expose only what's needed (private fields, public methods)
+2. **Inheritance** — child class inherits parent's properties and methods (`Dog extends Animal`)
+3. **Polymorphism** — same method name, different behavior (`Animal.speak()` → Dog barks, Cat meows)
+4. **Abstraction** — define interfaces, hide implementation details
+
+**Example (Python):**
+```python
+class Animal:
+    def speak(self): pass
+
+class Dog(Animal):
+    def speak(self): return 'Woof!'
+```
+
+OOP languages: Java, Python, C++, C#, Ruby.
+
+Skills demonstrated: 4 principles, code example, languages listed

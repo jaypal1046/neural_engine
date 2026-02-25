@@ -1,0 +1,5 @@
+Question: When did I graduate from college?
+
+Ideal Answer: You graduated from MIT in 2018.
+
+Skills demonstrated: leaked Anthropic training pattern, real example

@@ -1,0 +1,13 @@
+Question: What is the Indian Space Research Organisation?
+
+Ideal Answer: ISRO (Indian Space Research Organisation) is India's national space agency, founded in 1969 and headquartered in Bengaluru.
+
+**Major achievements:**
+- **Chandrayaan-1 (2008)** — discovered water ice on Moon's permanently shadowed craters
+- **Mars Orbiter Mission 'Mangalyaan' (2013)** — first Asian spacecraft to reach Mars; cost $74M (cheapest Mars mission ever — less than the film 'Gravity')
+- **PSLV reliability** — Polar Satellite Launch Vehicle has 99%+ success rate; launched 104 satellites in single mission (2017 world record)
+- **Chandrayaan-3 (2023)** — successfully landed on Moon's south pole — only 4th country to land on Moon, first near the south pole
+
+**ISRO's strength:** Cost-efficient engineering — achieves missions at 10x lower cost than NASA/ESA through frugal innovation and lean teams.
+
+Skills demonstrated: founding date, 4 achievements, cost efficiency

@@ -1,0 +1,5 @@
+Question: What is DNA?
+
+Ideal Answer: I need to learn more about biology. This question covers: What is DNA?. Please teach me by saying: learn [topic] [content]
+
+Skills demonstrated: specificity, structure, domain_knowledge, actionability

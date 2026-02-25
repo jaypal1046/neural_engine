@@ -1,0 +1,13 @@
+Question: What is Constitutional AI?
+
+Ideal Answer: Constitutional AI (CAI) is Anthropic's self-improvement technique where the AI critiques its own answers against a fixed set of rules (the 'Constitution') — without needing human feedback for every example.
+
+**The loop:**
+1. AI generates an answer
+2. AI checks the answer against each rule in the Constitution
+3. AI flags violations and suggests improvements
+4. The improved answer becomes training data
+
+For Neural Studio, our Constitution has 20 rules covering helpfulness, honesty, structure, and domain-specific compression knowledge. Run it: `python server/rlhf_trainer.py --cai`
+
+Skills demonstrated: numbered loop, rule count mentioned, command shown

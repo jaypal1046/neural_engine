@@ -1,0 +1,21 @@
+Question: How does the internet work?
+
+Ideal Answer: The internet is a global network of networks communicating via standardized protocols.
+
+**When you visit google.com:**
+1. **DNS lookup** — your computer asks a DNS server: 'What is google.com's IP?' → 142.250.80.46
+2. **TCP connection** — 3-way handshake (SYN, SYN-ACK, ACK) establishes reliable connection
+3. **HTTP/HTTPS request** — browser sends GET request to Google's server
+4. **TLS handshake** (HTTPS) — establishes encrypted tunnel
+5. **Server responds** — sends HTML, CSS, JS
+6. **Browser renders** — parses and displays the page
+
+**Key layers (TCP/IP model):**
+- Application (HTTP, DNS, SMTP)
+- Transport (TCP, UDP)
+- Internet (IP, routing)
+- Link (Ethernet, WiFi)
+
+Packets travel multiple routers, each forwarding based on routing tables — the packet may take a different path than the previous one.
+
+Skills demonstrated: numbered steps for URL visit, 4 layers, packet routing

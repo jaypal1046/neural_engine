@@ -1,0 +1,11 @@
+Question: Which compression algorithm is best?
+
+Ideal Answer: It depends on your file type and priorities:
+- **CMIX (`--cmix`)**: Best ratio for text/code — 1,046 AI advisors predict every bit. Slow but world-class compression.
+- **BWT+MTF (`--best`)**: Excellent for text, very fast. Uses Burrows-Wheeler Transform to cluster similar bytes.
+- **PPM (`--ultra`)**: Prediction by Partial Matching — great for structured data.
+- **LZ77 (default)**: Fast general-purpose. Good balance.
+
+Run `analyze [file]` first — I'll tell you the entropy and recommend the best algorithm automatically.
+
+Skills demonstrated: domain knowledge, structured answer, concrete guidance

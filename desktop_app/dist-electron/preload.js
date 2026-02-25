@@ -1,21 +1,22 @@
-import { contextBridge, ipcRenderer } from "electron";
-contextBridge.exposeInMainWorld("ipcRenderer", {
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   on(...args) {
     const [channel, listener] = args;
-    return ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
+    return electron.ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
   },
   off(...args) {
     const [channel, ...omit] = args;
-    return ipcRenderer.off(channel, ...omit);
+    return electron.ipcRenderer.off(channel, ...omit);
   },
   send(...args) {
     const [channel, ...omit] = args;
-    return ipcRenderer.send(channel, ...omit);
+    return electron.ipcRenderer.send(channel, ...omit);
   },
   invoke(...args) {
     const [channel, ...omit] = args;
-    return ipcRenderer.invoke(channel, ...omit);
+    return electron.ipcRenderer.invoke(channel, ...omit);
   },
-  selectFile: () => ipcRenderer.invoke("dialog:openFile"),
-  selectSaveFile: () => ipcRenderer.invoke("dialog:saveFile")
+  selectFile: () => electron.ipcRenderer.invoke("dialog:openFile"),
+  selectSaveFile: () => electron.ipcRenderer.invoke("dialog:saveFile")
 });

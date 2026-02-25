@@ -1,0 +1,22 @@
+Question: How do I write a good technical document?
+
+Ideal Answer: A great technical document has these elements:
+
+**Structure:**
+1. **Title** — specific, not generic ('Redis Caching Strategy for Auth Service' not 'Caching Docs')
+2. **Summary/TL;DR** — 2–3 sentences: what this is, why it matters
+3. **Context** — what problem exists, what's broken/missing
+4. **Solution** — how it works, key decisions, alternatives considered
+5. **Implementation** — steps, code examples, commands
+6. **Testing** — how to verify it works
+7. **Gotchas / Known issues** — what to watch out for
+
+**Writing rules:**
+- Active voice: 'The server returns', not 'The response is returned'
+- Short sentences: max ~20 words each
+- Code blocks for all commands and snippets
+- Headers for skimmability — assume reader will skip most of the doc
+
+**Test:** Can a developer who wasn't there implement this from the doc alone?
+
+Skills demonstrated: 7 section structure, writing rules, success test

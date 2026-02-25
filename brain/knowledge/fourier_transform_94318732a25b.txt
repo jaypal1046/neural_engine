@@ -1,0 +1,4002 @@
+Fourier transform - Wikipedia 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+ Jump to content 
+
+ Search 
+
+ Search 
+
+- Donate 
+
+- Create account 
+
+- Log in 
+
+ Personal tools 
+
+- Donate 
+- Create account 
+- Log in 
+
+ Fourier transform 
+
+ 65 languages 
+
+- አማርኛ 
+- العربية 
+- Asturianu 
+- Azərbaycanca 
+- Boarisch 
+- Беларуская (тарашкевіца) 
+- Беларуская 
+- Български 
+- বাংলা 
+- Català 
+- Čeština 
+- Dansk 
+- Deutsch 
+- Kadazandusun 
+- Ελληνικά 
+- Esperanto 
+- Español 
+- Eesti 
+- Euskara 
+- فارسی 
+- Suomi 
+- Français 
+- Galego 
+- עברית 
+- हिन्दी 
+- Hrvatski 
+- Magyar 
+- Bahasa Indonesia 
+- Íslenska 
+- Italiano 
+- 日本語 
+- Қазақша 
+- 한국어 
+- کٲشُر 
+- Lietuvių 
+- Македонски 
+- Монгол 
+- Malti 
+- မြန်မာဘာသာ 
+- Nederlands 
+- Norsk nynorsk 
+- Norsk bokmål 
+- ਪੰਜਾਬੀ 
+- Polski 
+- Português 
+- ရခိုင် 
+- Română 
+- Русский 
+- Simple English 
+- Slovenčina 
+- Slovenščina 
+- Shqip 
+- Српски / srpski 
+- Sunda 
+- Svenska 
+- தமிழ் 
+- ไทย 
+- Türkçe 
+- Татарча / tatarça 
+- Українська 
+- Tiếng Việt 
+- 吴语 
+- 閩南語 / Bân-lâm-gí 
+- 粵語 
+- 中文 
+
+ Edit links 
+
+ From Wikipedia, the free encyclopedia 
+
+ Mathematical transform that expresses a function of time as a function of frequency 
+ Not to be confused with Fourier method or Fourier's original sine and cosine transforms . 
+ Fourier transforms 
+
+- Fourier transform 
+
+- Fourier series 
+
+- Discrete-time Fourier transform 
+
+- Discrete Fourier transform 
+
+- Discrete Fourier transform over a ring 
+
+- Fourier transform on finite groups 
+
+- Fourier analysis 
+
+- Related transforms 
+
+ The Fourier transform applied to the waveform of a C major piano chord (with logarithmic horizontal (frequency) axis). The first three peaks on the left correspond to the fundamental frequencies of the chord (C, E, G). The remaining smaller peaks are higher-frequency overtones of the fundamental pitches. 
+
+In mathematics , the Fourier transform ( FT ) is an integral transform that takes a function as input, and outputs another function that describes the extent to which various frequencies are present in the original function. The output of the transform is a complex valued function of frequency. The term Fourier transform refers to both the mathematical operation and to this complex-valued function. When a distinction needs to be made, the output of the operation is sometimes called the frequency domain representation of the original function. &#91; note 1 &#93; The Fourier transform is analogous to decomposing the sound of a musical chord into the intensities of its constituent pitches .
+
+ The Fourier transform relates the time domain, in red, with a function in the domain of the frequency, in blue. The component frequencies, extended for the whole frequency spectrum, are shown as peaks in the domain of the frequency. 
+
+Functions that are localized in the time domain have Fourier transforms that are spread out across the frequency domain and vice versa, a phenomenon known as the uncertainty principle . The critical case for this principle is the Gaussian function , of substantial importance in probability theory and statistics as well as in the study of physical phenomena exhibiting normal distribution (e.g., diffusion ). The Fourier transform of a Gaussian function is another Gaussian function. Joseph Fourier introduced sine and cosine transforms (which correspond to the imaginary and real components of the modern Fourier transform) in his study of heat transfer , where Gaussian functions appear as solutions of the heat equation .
+
+The Fourier transform can be formally defined as an improper Riemann integral , making it an integral transform, although this definition is not suitable for many applications requiring a more sophisticated integration theory. &#91; note 2 &#93; For example, many relatively simple applications use the Dirac delta function , which can be treated formally as if it were a function, but the justification requires a mathematically more sophisticated viewpoint. &#91; note 3 &#93; 
+
+The Fourier transform can also be generalized to functions of several variables on Euclidean space , sending a function of 3-dimensional "position space" to a function of 3-dimensional momentum (or a function of space and time to a function of 4-momentum ). This idea makes the spatial Fourier transform very natural in the study of waves, as well as in quantum mechanics , where it is important to be able to represent wave solutions as functions of either position or momentum and sometimes both. In general, functions to which Fourier methods are applicable are complex-valued, and possibly vector-valued . &#91; note 4 &#93; Still further generalization is possible to functions on groups , which, besides the original Fourier transform on R or R n , notably includes the discrete-time Fourier transform (DTFT, group = Z ), the discrete Fourier transform (DFT, group = Z mod N ) and the Fourier series or circular Fourier transform (group = S 1 , the unit circle ≈ closed finite interval with endpoints identified). The latter is routinely employed to handle periodic functions . The fast Fourier transform (FFT) is an algorithm for computing the DFT.
+
+Definition [ edit ] 
+
+The Fourier transform of a complex-valued function 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ on the real line, is the complex valued function &#8288; 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ {\displaystyle {\widehat {f}}(\xi )} 
+
+ &#8288; , defined by the integral &#91; 1 &#93; 
+
+ Fourier transform
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ = 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ ( 
+ x 
+ ) 
+ &#xA0; 
+
+ e 
+
+ &#x2212; 
+ i 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+
+ d 
+ x 
+ , 
+
+ &#x2200; 
+ &#x03BE; 
+ &#x2208; 
+
+ R 
+
+ . 
+
+ {\displaystyle {\widehat {f}}(\xi )=\int _{-\infty }^{\infty }f(x)\ e^{-i2\pi \xi x}\,dx,\quad \forall \xi \in \mathbb {R} .} 
+
+ &#160; &#160;
+
+ Eq.1 
+
+In this case 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ is (Lebesgue) integrable over the whole real line, i.e., the above integral converges to a continuous function 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ {\displaystyle {\widehat {f}}(\xi )} 
+
+ at all 
+
+ &#x03BE; 
+
+ {\displaystyle \xi } 
+
+ (decaying to zero as &#8288; 
+
+ &#x03BE; 
+ &#x2192; 
+ &#x221E; 
+
+ {\displaystyle \xi \to \infty } 
+
+ &#8288; ). 
+
+However, the Fourier transform can also be defined for (generalized) functions for which the Lebesgue integral Eq.1 does not make sense. &#91; 2 &#93; Interpreting the integral suitably (e.g. as an improper integral for locally integrable functions) extends the Fourier transform to functions that are not necessarily integrable over the whole real line. More generally, the Fourier transform also applies to generalized functions like the Dirac delta (and all other tempered distributions ), in which case it is defined by duality rather than an integral. &#91; 3 &#93; 
+
+First introduced in Fourier's Analytical Theory of Heat ., &#91; 4 &#93; &#91; 5 &#93; &#91; 6 &#93; &#91; 7 &#93; the corresponding inversion formula for " sufficiently nice " functions is given by the Fourier inversion theorem , i.e., 
+
+ Inverse transform
+
+- 
+
+ f 
+ ( 
+ x 
+ ) 
+ = 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ &#xA0; 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+
+ d 
+ &#x03BE; 
+ , 
+
+ &#x2200; 
+ x 
+ &#x2208; 
+
+ R 
+
+ . 
+
+ {\displaystyle f(x)=\int _{-\infty }^{\infty }{\widehat {f}}(\xi )\ e^{i2\pi \xi x}\,d\xi ,\quad \forall x\in \mathbb {R} .} 
+
+ &#160; &#160;
+
+ Eq.2 
+
+The functions 
+
+ f 
+
+ {\displaystyle f} 
+
+ and 
+
+ f 
+ &#x005E; 
+
+ {\displaystyle {\widehat {f}}} 
+
+ are referred to as a Fourier transform pair . &#91; 8 &#93; &#160; A common notation for designating transform pairs is: &#91; 9 &#93; 
+
+ f 
+ ( 
+ x 
+ ) 
+ &#xA0; 
+
+ &#x27F7; 
+
+ F 
+
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ . 
+
+ {\displaystyle f(x)\ {\stackrel {\mathcal {F}}{\longleftrightarrow }}\ {\widehat {f}}(\xi ).} 
+
+For example, the Fourier transform of the delta function is the constant function &#8288; 
+
+ 1 
+
+ {\displaystyle 1} 
+
+ &#8288; :
+
+ &#x03B4; 
+ ( 
+ x 
+ ) 
+ &#xA0; 
+
+ &#x27F7; 
+
+ F 
+
+ &#xA0; 
+ 1. 
+
+ {\displaystyle \delta (x)\ {\stackrel {\mathcal {F}}{\longleftrightarrow }}\ 1.} 
+
+ Angular frequency ( &#969; ) [ edit ] 
+
+When the independent variable ( &#8288; 
+
+ x 
+
+ {\displaystyle x} 
+
+ &#8288; ) represents time (often denoted by &#8288; 
+
+ t 
+
+ {\displaystyle t} 
+
+ &#8288; ), the transform variable ( &#8288; 
+
+ &#x03BE; 
+
+ {\displaystyle \xi } 
+
+ &#8288; ) represents frequency (often denoted by &#8288; 
+
+ f 
+
+ {\displaystyle f} 
+
+ &#8288; ). For example, if time has the unit second , then frequency has the unit hertz . The transform variable can also be written in terms of angular frequency , &#8288; 
+
+ &#x03C9; 
+ = 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+
+ {\displaystyle \omega =2\pi \xi } 
+
+ &#8288; , with the unit radian per second.
+
+The substitution 
+
+ &#x03BE; 
+ = 
+
+ &#x03C9; 
+
+ 2 
+ &#x03C0; 
+
+ {\displaystyle \xi ={\tfrac {\omega }{2\pi }}} 
+
+ into Eq.1 produces this convention, where function 
+
+ f 
+ &#x005E; 
+
+ {\displaystyle {\widehat {f}}} 
+
+ is relabeled &#8288; 
+
+ f 
+ &#x005E; 
+
+ 1 
+
+ {\displaystyle {\widehat {f}}_{1}} 
+
+ &#8288; :
+
+ f 
+ &#x005E; 
+
+ 3 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ &#x225C; 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ ( 
+ x 
+ ) 
+ &#x22C5; 
+
+ e 
+
+ &#x2212; 
+ i 
+ &#x03C9; 
+ x 
+
+ d 
+ x 
+ = 
+
+ f 
+ &#x005E; 
+
+ 1 
+
+ ( 
+
+ &#x03C9; 
+
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ , 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ = 
+
+ 1 
+
+ 2 
+ &#x03C0; 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ &#x005E; 
+
+ 3 
+
+ ( 
+ &#x03C9; 
+ ) 
+ &#x22C5; 
+
+ e 
+
+ i 
+ &#x03C9; 
+ x 
+
+ d 
+ &#x03C9; 
+ . 
+
+ {\displaystyle {\begin{aligned}{\widehat {f}}_{3}(\omega )&\triangleq \int _{-\infty }^{\infty }f(x)\cdot e^{-i\omega x}\,dx={\widehat {f}}_{1}\left({\tfrac {\omega }{2\pi }}\right),\\f(x)&={\frac {1}{2\pi }}\int _{-\infty }^{\infty }{\widehat {f}}_{3}(\omega )\cdot e^{i\omega x}\,d\omega .\end{aligned}}} 
+
+Unlike the Eq.1 definition, the Fourier transform is no longer a unitary transformation , and there is less symmetry between the formulas for the transform and its inverse. Those properties are restored by splitting the 
+
+ 2 
+ &#x03C0; 
+
+ {\displaystyle 2\pi } 
+
+ factor evenly between the transform and its inverse, which leads to another convention:
+
+ f 
+ &#x005E; 
+
+ 2 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ &#x225C; 
+
+ 1 
+
+ 2 
+ &#x03C0; 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ ( 
+ x 
+ ) 
+ &#x22C5; 
+
+ e 
+
+ &#x2212; 
+ i 
+ &#x03C9; 
+ x 
+
+ d 
+ x 
+ = 
+
+ 1 
+
+ 2 
+ &#x03C0; 
+
+ &#xA0; 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ 1 
+
+ ( 
+
+ &#x03C9; 
+
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ , 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ = 
+
+ 1 
+
+ 2 
+ &#x03C0; 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ &#x005E; 
+
+ 2 
+
+ ( 
+ &#x03C9; 
+ ) 
+ &#x22C5; 
+
+ e 
+
+ i 
+ &#x03C9; 
+ x 
+
+ d 
+ &#x03C9; 
+ . 
+
+ {\displaystyle {\begin{aligned}{\widehat {f}}_{2}(\omega )&\triangleq {\frac {1}{\sqrt {2\pi }}}\int _{-\infty }^{\infty }f(x)\cdot e^{-i\omega x}\,dx={\frac {1}{\sqrt {2\pi }}}\ \ {\widehat {f}}_{1}\left({\tfrac {\omega }{2\pi }}\right),\\f(x)&={\frac {1}{\sqrt {2\pi }}}\int _{-\infty }^{\infty }{\widehat {f}}_{2}(\omega )\cdot e^{i\omega x}\,d\omega .\end{aligned}}} 
+
+Variations of all three conventions can be created by conjugating the complex-exponential kernel of both the forward and the reverse transform. The signs must be opposites.
+
+ Summary of popular forms of the Fourier transform, one-dimensional
+
+ ordinary frequency ξ (Hz)
+
+ unitary
+
+ f 
+ &#x005E; 
+
+ 1 
+
+ ( 
+ &#x03BE; 
+ ) 
+ &#xA0; 
+
+ &#x225C; 
+ &#xA0; 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ e 
+
+ &#x2212; 
+ i 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+
+ d 
+ x 
+ = 
+
+ 2 
+ &#x03C0; 
+
+ &#xA0; 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ 2 
+
+ ( 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ ) 
+ = 
+
+ f 
+ &#x005E; 
+
+ 3 
+
+ ( 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ ) 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ = 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ &#x005E; 
+
+ 1 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+ x 
+ &#x03BE; 
+
+ d 
+ &#x03BE; 
+
+ {\displaystyle {\begin{aligned}{\widehat {f}}_{1}(\xi )\ &\triangleq \ \int _{-\infty }^{\infty }f(x)\,e^{-i2\pi \xi x}\,dx={\sqrt {2\pi }}\ \ {\widehat {f}}_{2}(2\pi \xi )={\widehat {f}}_{3}(2\pi \xi )\\f(x)&=\int _{-\infty }^{\infty }{\widehat {f}}_{1}(\xi )\,e^{i2\pi x\xi }\,d\xi \end{aligned}}} 
+
+ angular frequency ω (rad/s)
+
+ unitary
+
+ f 
+ &#x005E; 
+
+ 2 
+
+ ( 
+ &#x03C9; 
+ ) 
+ &#xA0; 
+
+ &#x225C; 
+ &#xA0; 
+
+ 1 
+
+ 2 
+ &#x03C0; 
+
+ &#xA0; 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ e 
+
+ &#x2212; 
+ i 
+ &#x03C9; 
+ x 
+
+ d 
+ x 
+ = 
+
+ 1 
+
+ 2 
+ &#x03C0; 
+
+ &#xA0; 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ 1 
+
+ ( 
+
+ &#x03C9; 
+
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ = 
+
+ 1 
+
+ 2 
+ &#x03C0; 
+
+ &#xA0; 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ 3 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ = 
+
+ 1 
+
+ 2 
+ &#x03C0; 
+
+ &#xA0; 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ &#x005E; 
+
+ 2 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ e 
+
+ i 
+ &#x03C9; 
+ x 
+
+ d 
+ &#x03C9; 
+
+ {\displaystyle {\begin{aligned}{\widehat {f}}_{2}(\omega )\ &\triangleq \ {\frac {1}{\sqrt {2\pi }}}\ \int _{-\infty }^{\infty }f(x)\,e^{-i\omega x}\,dx={\frac {1}{\sqrt {2\pi }}}\ \ {\widehat {f}}_{1}\!\left({\frac {\omega }{2\pi }}\right)={\frac {1}{\sqrt {2\pi }}}\ \ {\widehat {f}}_{3}(\omega )\\f(x)&={\frac {1}{\sqrt {2\pi }}}\ \int _{-\infty }^{\infty }{\widehat {f}}_{2}(\omega )\,e^{i\omega x}\,d\omega \end{aligned}}} 
+
+ non-unitary
+
+ f 
+ &#x005E; 
+
+ 3 
+
+ ( 
+ &#x03C9; 
+ ) 
+ &#xA0; 
+
+ &#x225C; 
+ &#xA0; 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ e 
+
+ &#x2212; 
+ i 
+ &#x03C9; 
+ x 
+
+ d 
+ x 
+ = 
+
+ f 
+ &#x005E; 
+
+ 1 
+
+ ( 
+
+ &#x03C9; 
+
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ = 
+
+ 2 
+ &#x03C0; 
+
+ &#xA0; 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ 2 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ = 
+
+ 1 
+
+ 2 
+ &#x03C0; 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ &#x005E; 
+
+ 3 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ e 
+
+ i 
+ &#x03C9; 
+ x 
+
+ d 
+ &#x03C9; 
+
+ {\displaystyle {\begin{aligned}{\widehat {f}}_{3}(\omega )\ &\triangleq \ \int _{-\infty }^{\infty }f(x)\,e^{-i\omega x}\,dx={\widehat {f}}_{1}\left({\frac {\omega }{2\pi }}\right)={\sqrt {2\pi }}\ \ {\widehat {f}}_{2}(\omega )\\f(x)&={\frac {1}{2\pi }}\int _{-\infty }^{\infty }{\widehat {f}}_{3}(\omega )\,e^{i\omega x}\,d\omega \end{aligned}}} 
+
+ Generalization for n -dimensional functions
+
+ ordinary frequency ξ (Hz)
+
+ unitary
+
+ f 
+ &#x005E; 
+
+ 1 
+
+ ( 
+ &#x03BE; 
+ ) 
+ &#xA0; 
+
+ &#x225C; 
+ &#xA0; 
+
+ &#x222B; 
+
+ R 
+
+ n 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ e 
+
+ &#x2212; 
+ i 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ &#x22C5; 
+ x 
+
+ d 
+ x 
+ = 
+ ( 
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ n 
+ 2 
+
+ f 
+ &#x005E; 
+
+ 2 
+
+ ( 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ ) 
+ = 
+
+ f 
+ &#x005E; 
+
+ 3 
+
+ ( 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ ) 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ = 
+
+ &#x222B; 
+
+ R 
+
+ n 
+
+ f 
+ &#x005E; 
+
+ 1 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ &#x22C5; 
+ x 
+
+ d 
+ &#x03BE; 
+
+ {\displaystyle {\begin{aligned}{\widehat {f}}_{1}(\xi )\ &\triangleq \ \int _{\mathbb {R} ^{n}}f(x)e^{-i2\pi \xi \cdot x}\,dx=(2\pi )^{\frac {n}{2}}{\widehat {f}}_{2}(2\pi \xi )={\widehat {f}}_{3}(2\pi \xi )\\f(x)&=\int _{\mathbb {R} ^{n}}{\widehat {f}}_{1}(\xi )e^{i2\pi \xi \cdot x}\,d\xi \end{aligned}}} 
+
+ angular frequency ω (rad/s)
+
+ unitary
+
+ f 
+ &#x005E; 
+
+ 2 
+
+ ( 
+ &#x03C9; 
+ ) 
+ &#xA0; 
+
+ &#x225C; 
+ &#xA0; 
+
+ 1 
+
+ ( 
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ n 
+ 2 
+
+ &#x222B; 
+
+ R 
+
+ n 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ e 
+
+ &#x2212; 
+ i 
+ &#x03C9; 
+ &#x22C5; 
+ x 
+
+ d 
+ x 
+ = 
+
+ 1 
+
+ ( 
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ n 
+ 2 
+
+ f 
+ &#x005E; 
+
+ 1 
+
+ ( 
+
+ &#x03C9; 
+
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ = 
+
+ 1 
+
+ ( 
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ n 
+ 2 
+
+ f 
+ &#x005E; 
+
+ 3 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ = 
+
+ 1 
+
+ ( 
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ n 
+ 2 
+
+ &#x222B; 
+
+ R 
+
+ n 
+
+ f 
+ &#x005E; 
+
+ 2 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ e 
+
+ i 
+ &#x03C9; 
+ &#x22C5; 
+ x 
+
+ d 
+ &#x03C9; 
+
+ {\displaystyle {\begin{aligned}{\widehat {f}}_{2}(\omega )\ &\triangleq \ {\frac {1}{(2\pi )^{\frac {n}{2}}}}\int _{\mathbb {R} ^{n}}f(x)e^{-i\omega \cdot x}\,dx={\frac {1}{(2\pi )^{\frac {n}{2}}}}{\widehat {f}}_{1}\!\left({\frac {\omega }{2\pi }}\right)={\frac {1}{(2\pi )^{\frac {n}{2}}}}{\widehat {f}}_{3}(\omega )\\f(x)&={\frac {1}{(2\pi )^{\frac {n}{2}}}}\int _{\mathbb {R} ^{n}}{\widehat {f}}_{2}(\omega )e^{i\omega \cdot x}\,d\omega \end{aligned}}} 
+
+ non-unitary
+
+ f 
+ &#x005E; 
+
+ 3 
+
+ ( 
+ &#x03C9; 
+ ) 
+ &#xA0; 
+
+ &#x225C; 
+ &#xA0; 
+
+ &#x222B; 
+
+ R 
+
+ n 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ e 
+
+ &#x2212; 
+ i 
+ &#x03C9; 
+ &#x22C5; 
+ x 
+
+ d 
+ x 
+ = 
+
+ f 
+ &#x005E; 
+
+ 1 
+
+ ( 
+
+ &#x03C9; 
+
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ = 
+ ( 
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ n 
+ 2 
+
+ f 
+ &#x005E; 
+
+ 2 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ = 
+
+ 1 
+
+ ( 
+ 2 
+ &#x03C0; 
+
+ ) 
+
+ n 
+
+ &#x222B; 
+
+ R 
+
+ n 
+
+ f 
+ &#x005E; 
+
+ 3 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ e 
+
+ i 
+ &#x03C9; 
+ &#x22C5; 
+ x 
+
+ d 
+ &#x03C9; 
+
+ {\displaystyle {\begin{aligned}{\widehat {f}}_{3}(\omega )\ &\triangleq \ \int _{\mathbb {R} ^{n}}f(x)e^{-i\omega \cdot x}\,dx={\widehat {f}}_{1}\left({\frac {\omega }{2\pi }}\right)=(2\pi )^{\frac {n}{2}}{\widehat {f}}_{2}(\omega )\\f(x)&={\frac {1}{(2\pi )^{n}}}\int _{\mathbb {R} ^{n}}{\widehat {f}}_{3}(\omega )e^{i\omega \cdot x}\,d\omega \end{aligned}}} 
+
+Lebesgue integrable functions [ edit ] 
+
+- See also: Lp space §&#160;Lp spaces and Lebesgue integrals 
+
+A measurable function 
+
+ f 
+ : 
+
+ R 
+
+ &#x2192; 
+
+ C 
+
+ {\displaystyle f:\mathbb {R} \to \mathbb {C} } 
+
+ is called (Lebesgue) integrable if the Lebesgue integral of its absolute value is finite:
+
+ &#x2016; 
+ f 
+
+ &#x2016; 
+
+ 1 
+
+ = 
+
+ &#x222B; 
+
+ R 
+
+ | 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ | 
+
+ d 
+ x 
+ < 
+ &#x221E; 
+ . 
+
+ {\displaystyle \|f\|_{1}=\int _{\mathbb {R} }|f(x)|\,dx<\infty .} 
+
+If 
+
+ f 
+
+ {\displaystyle f} 
+
+ is Lebesgue integrable then the Fourier transform, given by Eq.1 , is well-defined for all &#8288; 
+
+ &#x03BE; 
+ &#x2208; 
+
+ R 
+
+ {\displaystyle \xi \in \mathbb {R} } 
+
+ &#8288; . &#91; 10 &#93; Furthermore, 
+
+ f 
+ &#x005E; 
+
+ &#x2208; 
+
+ L 
+
+ &#x221E; 
+
+ &#x2229; 
+
+ C 
+
+ 0 
+
+ ( 
+
+ R 
+
+ ) 
+
+ {\displaystyle {\widehat {f}}\in L^{\infty }\cap C_{0}(\mathbb {R} )} 
+
+ is bounded, uniformly continuous and (by the Riemann–Lebesgue lemma ) vanishing at infinity . Here 
+
+ C 
+
+ 0 
+
+ ( 
+
+ R 
+
+ ) 
+
+ {\displaystyle C_{0}(\mathbb {R} )} 
+
+ denotes the space of continuous functions on 
+
+ R 
+
+ {\displaystyle \mathbb {R} } 
+
+ that approach 0 as x approaches positive or negative infinity.
+
+The space 
+
+ L 
+
+ 1 
+
+ ( 
+
+ R 
+
+ ) 
+
+ {\displaystyle L^{1}(\mathbb {R} )} 
+
+ is the space of measurable functions for which the norm 
+
+ &#x2016; 
+ f 
+
+ &#x2016; 
+
+ 1 
+
+ {\displaystyle \|f\|_{1}} 
+
+ is finite, modulo the equivalence relation of equality almost everywhere . The Fourier transform on 
+
+ L 
+
+ 1 
+
+ ( 
+
+ R 
+
+ ) 
+
+ {\displaystyle L^{1}(\mathbb {R} )} 
+
+ is one-to-one . However, there is no easy characterization of the image, and thus no easy characterization of the inverse transform. In particular, Eq.2 is no longer valid, as it was stated only under the hypothesis that 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ was "sufficiently nice" (e.g., 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ decays with all derivatives ).
+
+While Eq.1 defines the Fourier transform for (complex-valued) functions in &#8288; 
+
+ L 
+
+ 1 
+
+ ( 
+
+ R 
+
+ ) 
+
+ {\displaystyle L^{1}(\mathbb {R} )} 
+
+ &#8288; , it is not well-defined for other integrability classes, most importantly the space of square-integrable functions &#8288; 
+
+ L 
+
+ 2 
+
+ ( 
+
+ R 
+
+ ) 
+
+ {\displaystyle L^{2}(\mathbb {R} )} 
+
+ &#8288; . For example, the function 
+
+ f 
+ ( 
+ x 
+ ) 
+ = 
+ ( 
+ 1 
+ + 
+
+ x 
+
+ 2 
+
+ ) 
+
+ &#x2212; 
+ 1 
+
+ / 
+
+ 2 
+
+ {\displaystyle f(x)=(1+x^{2})^{-1/2}} 
+
+ is in 
+
+ L 
+
+ 2 
+
+ {\displaystyle L^{2}} 
+
+ but not 
+
+ L 
+
+ 1 
+
+ {\displaystyle L^{1}} 
+
+ and therefore the Lebesgue integral Eq.1 does not exist. However, the Fourier transform on the dense subspace 
+
+ L 
+
+ 1 
+
+ &#x2229; 
+
+ L 
+
+ 2 
+
+ ( 
+
+ R 
+
+ ) 
+ &#x2282; 
+
+ L 
+
+ 2 
+
+ ( 
+
+ R 
+
+ ) 
+
+ {\displaystyle L^{1}\cap L^{2}(\mathbb {R} )\subset L^{2}(\mathbb {R} )} 
+
+ admits a unique continuous extension to a unitary operator on &#8288; 
+
+ L 
+
+ 2 
+
+ ( 
+
+ R 
+
+ ) 
+
+ {\displaystyle L^{2}(\mathbb {R} )} 
+
+ &#8288; . This extension is important in part because, unlike the case of &#8288; 
+
+ L 
+
+ 1 
+
+ {\displaystyle L^{1}} 
+
+ &#8288; , the Fourier transform is an automorphism of the space &#8288; 
+
+ L 
+
+ 2 
+
+ ( 
+
+ R 
+
+ ) 
+
+ {\displaystyle L^{2}(\mathbb {R} )} 
+
+ &#8288; .
+
+In such cases, the Fourier transform can be obtained explicitly by regularizing the integral, and then passing to a limit. In practice, the integral is often regarded as an improper integral instead of a proper Lebesgue integral, but sometimes for convergence one needs to use weak limit or principal value instead of the (pointwise) limits implicit in an improper integral. Titchmarsh (1986) and Dym & McKean (1985) each gives three rigorous ways of extending the Fourier transform to square integrable functions using this procedure. A general principle in working with the 
+
+ L 
+
+ 2 
+
+ {\displaystyle L^{2}} 
+
+ Fourier transform is that Gaussians are dense in &#8288; 
+
+ L 
+
+ 1 
+
+ &#x2229; 
+
+ L 
+
+ 2 
+
+ {\displaystyle L^{1}\cap L^{2}} 
+
+ &#8288; , and the various features of the Fourier transform, such as its unitarity, are easily inferred for Gaussians. Many of the properties of the Fourier transform can then be proven from two facts about Gaussians: &#91; 11 &#93; 
+
+- that 
+
+ e 
+
+ &#x2212; 
+ &#x03C0; 
+
+ x 
+
+ 2 
+
+ {\displaystyle e^{-\pi x^{2}}} 
+
+ is its own Fourier transform; and 
+
+- that the Gaussian integral &#8288; 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ e 
+
+ &#x2212; 
+ &#x03C0; 
+
+ x 
+
+ 2 
+
+ d 
+ x 
+ = 
+ 1 
+
+ {\displaystyle \textstyle \int _{-\infty }^{\infty }e^{-\pi x^{2}}\,dx=1} 
+
+ &#8288; . 
+
+A feature of the 
+
+ L 
+
+ 1 
+
+ {\displaystyle L^{1}} 
+
+ Fourier transform is that it is a homomorphism of Banach algebras from 
+
+ L 
+
+ 1 
+
+ {\displaystyle L^{1}} 
+
+ equipped with the convolution operation to the Banach algebra of continuous functions under the 
+
+ L 
+
+ &#x221E; 
+
+ {\displaystyle L^{\infty }} 
+
+ (supremum) norm. The conventions chosen in this article are those of harmonic analysis , and are characterized as the unique conventions such that the Fourier transform is both unitary on L 2 and an algebra homomorphism from L 1 to L ∞ , without renormalizing the Lebesgue measure. &#91; 12 &#93; 
+
+Background [ edit ] 
+
+History [ edit ] 
+
+- Main articles: Fourier analysis §&#160;History , and Fourier series §&#160;History 
+
+In 1822, Fourier claimed (see Joseph Fourier §&#160;The Analytic Theory of Heat ) that any function, whether continuous or discontinuous, can be expanded into a series of sines. &#91; 13 &#93; That important work was corrected and expanded upon by others to provide the foundation for the various forms of the Fourier transform used since.
+
+Complex sinusoids [ edit ] 
+ The red sinusoid can be described by peak amplitude (1), peak-to-peak (2), RMS (3), and wavelength (4). The red and blue sinusoids have a phase difference of θ . 
+
+In general, the coefficients 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ {\displaystyle {\widehat {f}}(\xi )} 
+
+ are complex numbers, which have two equivalent forms (see Euler's formula ):
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ = 
+
+ A 
+
+ e 
+
+ i 
+ &#x03B8; 
+
+ &#x23DF; 
+
+ polar coordinate form 
+
+ = 
+
+ A 
+ cos 
+ &#x2061; 
+ ( 
+ &#x03B8; 
+ ) 
+ + 
+ i 
+ A 
+ sin 
+ &#x2061; 
+ ( 
+ &#x03B8; 
+ ) 
+
+ &#x23DF; 
+
+ rectangular coordinate form 
+
+ . 
+
+ {\displaystyle {\widehat {f}}(\xi )=\underbrace {Ae^{i\theta }} _{\text{polar coordinate form}}=\underbrace {A\cos(\theta )+iA\sin(\theta )} _{\text{rectangular coordinate form}}.} 
+
+The product with 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+
+ {\displaystyle e^{i2\pi \xi x}} 
+
+ ( Eq.2 ) has these forms:
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ &#x22C5; 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+
+ = 
+ A 
+
+ e 
+
+ i 
+ &#x03B8; 
+
+ &#x22C5; 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+
+ = 
+
+ A 
+
+ e 
+
+ i 
+ ( 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+ + 
+ &#x03B8; 
+ ) 
+
+ &#x23DF; 
+
+ polar coordinate form 
+
+ = 
+
+ A 
+ cos 
+ &#x2061; 
+ ( 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+ + 
+ &#x03B8; 
+ ) 
+ + 
+ i 
+ A 
+ sin 
+ &#x2061; 
+ ( 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+ + 
+ &#x03B8; 
+ ) 
+
+ &#x23DF; 
+
+ rectangular coordinate form 
+
+ , 
+
+ {\displaystyle {\begin{aligned}{\widehat {f}}(\xi )\cdot e^{i2\pi \xi x}&=Ae^{i\theta }\cdot e^{i2\pi \xi x}\\[6pt]&=\underbrace {Ae^{i(2\pi \xi x+\theta )}} _{\text{polar coordinate form}}\\[6pt]&=\underbrace {A\cos(2\pi \xi x+\theta )+iA\sin(2\pi \xi x+\theta )} _{\text{rectangular coordinate form}},\end{aligned}}} 
+
+which conveys both amplitude and phase of frequency &#8288; 
+
+ &#x03BE; 
+
+ {\displaystyle \xi } 
+
+ &#8288; . Likewise, the intuitive interpretation of Eq.1 is that multiplying 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ by 
+
+ e 
+
+ &#x2212; 
+ i 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+
+ {\displaystyle e^{-i2\pi \xi x}} 
+
+ has the effect of subtracting 
+
+ &#x03BE; 
+
+ {\displaystyle \xi } 
+
+ from every frequency component of function &#8288; 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ &#8288; . &#91; note 5 &#93; Only the component that was at frequency 
+
+ &#x03BE; 
+
+ {\displaystyle \xi } 
+
+ can produce a non-zero value of the infinite integral, because (at least formally) all the other shifted components are oscillatory and integrate to zero (see §&#160;Example ).
+
+It is noteworthy how easily the product was simplified using the polar form, and how easily the rectangular form was deduced by an application of Euler's formula.
+
+Negative frequency [ edit ] 
+
+- See also: Negative frequency § Simplifying the Fourier transform 
+
+Euler's formula introduces the possibility of negative &#8288; 
+
+ &#x03BE; 
+
+ {\displaystyle \xi } 
+
+ &#8288; . Eq.1 is defined &#8288; 
+
+ &#x2200; 
+ &#x03BE; 
+ &#x2208; 
+
+ R 
+
+ {\displaystyle \forall \xi \in \mathbb {R} } 
+
+ &#8288; . Only certain complex-valued 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ have transforms &#8288; 
+
+ f 
+ &#x005E; 
+
+ = 
+ 0 
+ , 
+ &#xA0; 
+ &#x2200; 
+ &#xA0; 
+ &#x03BE; 
+ < 
+ 0 
+
+ {\displaystyle {\widehat {f}}=0,\ \forall \ \xi <0} 
+
+ &#8288; . (See Analytic signal ; a simple example is &#8288; 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+
+ &#x03BE; 
+
+ 0 
+
+ x 
+
+ &#xA0; 
+ ( 
+
+ &#x03BE; 
+
+ 0 
+
+ > 
+ 0 
+ ) 
+
+ {\displaystyle e^{i2\pi \xi _{0}x}\ (\xi _{0}>0)} 
+
+ &#8288; .)&#160; But negative frequency is necessary to characterize all other complex-valued &#8288; 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ &#8288; , found in signal processing , partial differential equations , radar , nonlinear optics , quantum mechanics , and others.
+
+For a real-valued &#8288; 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ &#8288; , Eq.1 has the symmetry property 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x2212; 
+ &#x03BE; 
+ ) 
+ = 
+
+ f 
+ &#x005E; 
+
+ &#x2217; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ {\displaystyle {\widehat {f}}(-\xi )={\widehat {f}}^{*}(\xi )} 
+
+ (see §&#160;Conjugation below). This redundancy enables Eq.2 to distinguish 
+
+ f 
+ ( 
+ x 
+ ) 
+ = 
+ cos 
+ &#x2061; 
+ ( 
+ 2 
+ &#x03C0; 
+
+ &#x03BE; 
+
+ 0 
+
+ x 
+ ) 
+
+ {\displaystyle f(x)=\cos(2\pi \xi _{0}x)} 
+
+ from &#8288; 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+
+ &#x03BE; 
+
+ 0 
+
+ x 
+
+ {\displaystyle e^{i2\pi \xi _{0}x}} 
+
+ &#8288; . But it cannot determine the actual sign of &#8288; 
+
+ &#x03BE; 
+
+ 0 
+
+ {\displaystyle \xi _{0}} 
+
+ &#8288; , because 
+
+ cos 
+ &#x2061; 
+ ( 
+ 2 
+ &#x03C0; 
+
+ &#x03BE; 
+
+ 0 
+
+ x 
+ ) 
+
+ {\displaystyle \cos(2\pi \xi _{0}x)} 
+
+ and 
+
+ cos 
+ &#x2061; 
+ ( 
+ 2 
+ &#x03C0; 
+ ( 
+ &#x2212; 
+
+ &#x03BE; 
+
+ 0 
+
+ ) 
+ x 
+ ) 
+
+ {\displaystyle \cos(2\pi (-\xi _{0})x)} 
+
+ are indistinguishable on just the real numbers line.
+
+Fourier transform for periodic functions [ edit ] 
+
+The Fourier transform of a periodic function cannot be defined using the integral formula directly. In order for integral in Eq.1 to be defined the function must be absolutely integrable . Instead it is common to use Fourier series . It is possible to extend the definition to include periodic functions by viewing them as tempered distributions .
+
+This makes it possible to see a connection between the Fourier series and the Fourier transform for periodic functions that have a convergent Fourier series . If 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ is a periodic function , with period &#8288; 
+
+ P 
+
+ {\displaystyle P} 
+
+ &#8288; , that has a convergent Fourier series, then:
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ = 
+
+ &#x2211; 
+
+ n 
+ = 
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ c 
+
+ n 
+
+ &#x22C5; 
+ &#x03B4; 
+
+ ( 
+
+ &#x03BE; 
+ &#x2212; 
+
+ n 
+ P 
+
+ ) 
+
+ , 
+
+ {\displaystyle {\widehat {f}}(\xi )=\sum _{n=-\infty }^{\infty }c_{n}\cdot \delta \left(\xi -{\tfrac {n}{P}}\right),} 
+
+where 
+
+ c 
+
+ n 
+
+ {\displaystyle c_{n}} 
+
+ are the Fourier series coefficients of &#8288; 
+
+ f 
+
+ {\displaystyle f} 
+
+ &#8288; , and 
+
+ &#x03B4; 
+
+ {\displaystyle \delta } 
+
+ is the Dirac delta function . In other words, the Fourier transform is a Dirac comb function whose teeth are multiplied by the Fourier series coefficients.
+
+Sampling the Fourier transform [ edit ] 
+
+- For broader coverage of this topic, see Poisson summation formula . 
+
+The Fourier transform of an integrable function 
+
+ f 
+
+ {\displaystyle f} 
+
+ can be sampled at regular intervals of arbitrary length &#8288; 
+
+ 1 
+
+ / 
+
+ P 
+
+ {\displaystyle 1/P} 
+
+ &#8288; . These samples can be deduced from one cycle of a periodic function &#8288; 
+
+ f 
+
+ P 
+
+ {\displaystyle f_{P}} 
+
+ &#8288; , which has Fourier series coefficients proportional to those samples by the Poisson summation formula :
+
+ f 
+
+ P 
+
+ ( 
+ x 
+ ) 
+ &#x225C; 
+
+ &#x2211; 
+
+ n 
+ = 
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ ( 
+ x 
+ + 
+ n 
+ P 
+ ) 
+ = 
+
+ 1 
+ P 
+
+ &#x2211; 
+
+ k 
+ = 
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ &#x005E; 
+
+ ( 
+
+ k 
+ P 
+
+ ) 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+
+ k 
+ P 
+
+ x 
+
+ , 
+
+ &#x2200; 
+ k 
+ &#x2208; 
+
+ Z 
+
+ . 
+
+ {\displaystyle f_{P}(x)\triangleq \sum _{n=-\infty }^{\infty }f(x+nP)={\frac {1}{P}}\sum _{k=-\infty }^{\infty }{\widehat {f}}\left({\tfrac {k}{P}}\right)e^{i2\pi {\frac {k}{P}}x},\quad \forall k\in \mathbb {Z} .} 
+
+The integrability of 
+
+ f 
+
+ {\displaystyle f} 
+
+ ensures the periodic summation converges. Therefore, the samples 
+
+ f 
+ &#x005E; 
+
+ ( 
+
+ k 
+ P 
+
+ ) 
+
+ {\displaystyle {\widehat {f}}\left({\tfrac {k}{P}}\right)} 
+
+ can be determined by Fourier series analysis:
+
+ f 
+ &#x005E; 
+
+ ( 
+
+ k 
+ P 
+
+ ) 
+
+ = 
+
+ &#x222B; 
+
+ P 
+
+ f 
+
+ P 
+
+ ( 
+ x 
+ ) 
+ &#x22C5; 
+
+ e 
+
+ &#x2212; 
+ i 
+ 2 
+ &#x03C0; 
+
+ k 
+ P 
+
+ x 
+
+ d 
+ x 
+ . 
+
+ {\displaystyle {\widehat {f}}\left({\tfrac {k}{P}}\right)=\int _{P}f_{P}(x)\cdot e^{-i2\pi {\frac {k}{P}}x}\,dx.} 
+
+When 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ has compact support , 
+
+ f 
+
+ P 
+
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f_{P}(x)} 
+
+ has a finite number of terms within the interval of integration. When 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ does not have compact support, numerical evaluation of 
+
+ f 
+
+ P 
+
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f_{P}(x)} 
+
+ requires an approximation, such as tapering 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ or truncating the number of terms.
+
+Units [ edit ] 
+
+- See also: Spectral density §&#160;Units 
+
+The frequency variable must have inverse units to the units of the original function's domain (typically named 
+
+ t 
+
+ {\displaystyle t} 
+
+ or &#8288; 
+
+ x 
+
+ {\displaystyle x} 
+
+ &#8288; ). For example, if 
+
+ t 
+
+ {\displaystyle t} 
+
+ is measured in seconds, 
+
+ &#x03BE; 
+
+ {\displaystyle \xi } 
+
+ should be in cycles per second or hertz . If the scale of time is in units of 
+
+ 2 
+ &#x03C0; 
+
+ {\displaystyle 2\pi } 
+
+ seconds, then another Greek letter 
+
+ &#x03C9; 
+
+ {\displaystyle \omega } 
+
+ is typically used instead to represent angular frequency (where &#8288; 
+
+ &#x03C9; 
+ = 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+
+ {\displaystyle \omega =2\pi \xi } 
+
+ &#8288; ) in units of radians per second. If using 
+
+ x 
+
+ {\displaystyle x} 
+
+ for units of length, then 
+
+ &#x03BE; 
+
+ {\displaystyle \xi } 
+
+ must be in inverse length, e.g., wavenumbers . That is to say, there are two versions of the real line: one that is the range of 
+
+ t 
+
+ {\displaystyle t} 
+
+ and measured in units of &#8288; 
+
+ t 
+
+ {\displaystyle t} 
+
+ &#8288; , and the other that is the range of 
+
+ &#x03BE; 
+
+ {\displaystyle \xi } 
+
+ and measured in inverse units to the units of &#8288; 
+
+ t 
+
+ {\displaystyle t} 
+
+ &#8288; . These two distinct versions of the real line cannot be equated with each other. Therefore, the Fourier transform goes from one space of functions to a different space of functions: functions that have a different domain of definition.
+
+In general, 
+
+ &#x03BE; 
+
+ {\displaystyle \xi } 
+
+ must always be taken to be a linear form on the space of its domain, which is to say that the second real line is the dual space of the first real line. See the article Linear algebra for a more formal explanation and for more details. This point of view becomes essential in generalizations of the Fourier transform to general symmetry groups , including the case of Fourier series.
+
+That there is no one preferred way (often, one says "no canonical way") to compare the two versions of the real line that are involved in the Fourier transform—fixing the units on one line does not force the scale of the units on the other line—is the reason for the plethora of rival conventions on the definition of the Fourier transform. The various definitions resulting from different choices of units differ by various constants.
+
+In other conventions, the Fourier transform has i in the exponent instead of − i , and vice versa for the inversion formula. This convention is common in modern physics &#91; 14 &#93; and is the default for Wolfram Alpha , and does not mean that the frequency has become negative, since there is no canonical definition of positivity for frequency of a complex wave. It simply means that 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ {\displaystyle {\widehat {f}}(\xi )} 
+
+ is the amplitude of the wave&#160; 
+
+ e 
+
+ &#x2212; 
+ i 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+
+ {\displaystyle e^{-i2\pi \xi x}} 
+
+ &#160;instead of the wave&#160; 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+ &#x03BE; 
+ x 
+
+ {\displaystyle e^{i2\pi \xi x}} 
+
+ (the former, with its minus sign, is often seen in the time dependence for sinusoidal plane-wave solutions of the electromagnetic wave equation , or in the time dependence for quantum wave functions ). Many of the identities involving the Fourier transform remain valid in those conventions, provided all terms that explicitly involve i have it replaced by − i . In electrical engineering the letter j is typically used for the imaginary unit instead of i because i is used for current.
+
+When using dimensionless units , the constant factors might not be written in the transform definition. For instance, in probability theory , the characteristic function Φ of the probability density function f of a random variable X of continuous type is defined without a negative sign in the exponential, and since the units of x are ignored, there is no 2 π either:
+
+ &#x03C6; 
+ ( 
+ &#x03BB; 
+ ) 
+ = 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ e 
+
+ i 
+ &#x03BB; 
+ x 
+
+ d 
+ x 
+ . 
+
+ {\displaystyle \varphi (\lambda )=\int _{-\infty }^{\infty }f(x)e^{i\lambda x}\,dx.} 
+
+In probability theory and mathematical statistics, the use of the Fourier—Stieltjes transform is preferred, because many random variables are not of continuous type, and do not possess a density function, and one must treat not functions but distributions , i.e., measures that possess "atoms".
+
+From the higher point of view of group characters , which is much more abstract, all these arbitrary choices disappear, as will be explained in the later section of this article, which treats the notion of the Fourier transform of a function on a locally compact abelian group .
+
+Properties [ edit ] 
+
+Let 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle f(x)} 
+
+ and 
+
+ h 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle h(x)} 
+
+ represent integrable functions Lebesgue-measurable on the real line satisfying:
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ | 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ | 
+
+ d 
+ x 
+ < 
+ &#x221E; 
+ . 
+
+ {\displaystyle \int _{-\infty }^{\infty }|f(x)|\,dx<\infty .} 
+
+We denote the Fourier transforms of these functions as 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ {\displaystyle {\widehat {f}}(\xi )} 
+
+ and 
+
+ h 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ {\displaystyle {\widehat {h}}(\xi )} 
+
+ respectively.
+
+Basic properties [ edit ] 
+
+The Fourier transform has the following basic properties: &#91; 15 &#93; 
+
+Linearity [ edit ] 
+
+ a 
+ &#xA0; 
+ f 
+ ( 
+ x 
+ ) 
+ + 
+ b 
+ &#xA0; 
+ h 
+ ( 
+ x 
+ ) 
+ &#xA0; 
+ &#xA0; 
+
+ &#x27FA; 
+
+ F 
+
+ &#xA0; 
+ &#xA0; 
+ a 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ + 
+ b 
+ &#xA0; 
+
+ h 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ ; 
+
+ &#xA0; 
+ a 
+ , 
+ b 
+ &#x2208; 
+
+ C 
+
+ {\displaystyle a\ f(x)+b\ h(x)\ \ {\stackrel {\mathcal {F}}{\Longleftrightarrow }}\ \ a\ {\widehat {f}}(\xi )+b\ {\widehat {h}}(\xi );\quad \ a,b\in \mathbb {C} } 
+
+Time shifting [ edit ] 
+
+ f 
+ ( 
+ x 
+ &#x2212; 
+
+ x 
+
+ 0 
+
+ ) 
+ &#xA0; 
+ &#xA0; 
+
+ &#x27FA; 
+
+ F 
+
+ &#xA0; 
+ &#xA0; 
+
+ e 
+
+ &#x2212; 
+ i 
+ 2 
+ &#x03C0; 
+
+ x 
+
+ 0 
+
+ &#x03BE; 
+
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ ; 
+
+ &#xA0; 
+
+ x 
+
+ 0 
+
+ &#x2208; 
+
+ R 
+
+ {\displaystyle f(x-x_{0})\ \ {\stackrel {\mathcal {F}}{\Longleftrightarrow }}\ \ e^{-i2\pi x_{0}\xi }\ {\widehat {f}}(\xi );\quad \ x_{0}\in \mathbb {R} } 
+
+Frequency shifting [ edit ] 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+
+ &#x03BE; 
+
+ 0 
+
+ x 
+
+ f 
+ ( 
+ x 
+ ) 
+ &#xA0; 
+ &#xA0; 
+
+ &#x27FA; 
+
+ F 
+
+ &#xA0; 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ &#x2212; 
+
+ &#x03BE; 
+
+ 0 
+
+ ) 
+ ; 
+
+ &#xA0; 
+
+ &#x03BE; 
+
+ 0 
+
+ &#x2208; 
+
+ R 
+
+ {\displaystyle e^{i2\pi \xi _{0}x}f(x)\ \ {\stackrel {\mathcal {F}}{\Longleftrightarrow }}\ \ {\widehat {f}}(\xi -\xi _{0});\quad \ \xi _{0}\in \mathbb {R} } 
+
+Time scaling [ edit ] 
+
+ f 
+ ( 
+ a 
+ x 
+ ) 
+ &#xA0; 
+ &#xA0; 
+
+ &#x27FA; 
+
+ F 
+
+ &#xA0; 
+ &#xA0; 
+
+ 1 
+
+ | 
+
+ a 
+
+ | 
+
+ f 
+ &#x005E; 
+
+ ( 
+
+ &#x03BE; 
+ a 
+
+ ) 
+
+ ; 
+
+ &#xA0; 
+ a 
+ &#x2260; 
+ 0 
+
+ {\displaystyle f(ax)\ \ {\stackrel {\mathcal {F}}{\Longleftrightarrow }}\ \ {\frac {1}{|a|}}{\widehat {f}}\left({\frac {\xi }{a}}\right);\quad \ a\neq 0} 
+
+The case 
+
+ a 
+ = 
+ &#x2212; 
+ 1 
+
+ {\displaystyle a=-1} 
+
+ leads to the time-reversal property :
+
+ f 
+ ( 
+ &#x2212; 
+ x 
+ ) 
+ &#xA0; 
+ &#xA0; 
+
+ &#x27FA; 
+
+ F 
+
+ &#xA0; 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x2212; 
+ &#x03BE; 
+ ) 
+
+ {\displaystyle f(-x)\ \ {\stackrel {\mathcal {F}}{\Longleftrightarrow }}\ \ {\widehat {f}}(-\xi )} 
+
+ f 
+ ( 
+ t 
+ ) 
+
+ {\displaystyle \scriptstyle f(t)} 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ {\displaystyle \scriptstyle {\widehat {f}}(\omega )} 
+
+ g 
+ ( 
+ t 
+ ) 
+
+ {\displaystyle \scriptstyle g(t)} 
+
+ g 
+ &#x005E; 
+
+ ( 
+ &#x03C9; 
+ ) 
+
+ {\displaystyle \scriptstyle {\widehat {g}}(\omega )} 
+
+ t 
+
+ {\displaystyle \scriptstyle t} 
+
+ &#x03C9; 
+
+ {\displaystyle \scriptstyle \omega } 
+
+ t 
+
+ {\displaystyle \scriptstyle t} 
+
+ &#x03C9; 
+
+ {\displaystyle \scriptstyle \omega } 
+
+ The transform of an even-symmetric real-valued function &#8288; 
+
+ f 
+ ( 
+ t 
+ ) 
+ = 
+
+ f 
+
+ RE 
+
+ {\displaystyle f(t)=f_{_{\text{RE}}}} 
+
+ &#8288; is also an even-symmetric real-valued function ( &#8288; 
+
+ f 
+ &#x005E; 
+
+ RE 
+
+ {\displaystyle {\widehat {f}}\!_{_{\text{RE}}}} 
+
+ &#8288; ). The time-shift, &#8288; 
+
+ g 
+ ( 
+ t 
+ ) 
+ = 
+
+ g 
+
+ RE 
+
+ + 
+
+ g 
+
+ RO 
+
+ {\displaystyle g(t)=g_{_{\text{RE}}}+g_{_{\text{RO}}}} 
+
+ &#8288; , creates an imaginary component, &#8288; 
+
+ i 
+ &#xA0; 
+
+ g 
+ &#xA0; 
+
+ &#x005E; 
+
+ IO 
+
+ {\displaystyle i\ {\widehat {g\ \!}}_{_{\text{IO}}}} 
+
+ &#8288; . (See §&#160;Symmetry .) 
+
+Symmetry [ edit ] 
+
+When the real and imaginary parts of a complex function are decomposed into their even and odd parts , there are four components, denoted below by the subscripts RE, RO, IE, and IO. And there is a one-to-one mapping between the four components of a complex time function and the four components of its complex frequency transform: &#91; 16 &#93; 
+
+ T 
+ i 
+ m 
+ e 
+ &#xA0; 
+ d 
+ o 
+ m 
+ a 
+ i 
+ n 
+
+ f 
+
+ = 
+
+ f 
+
+ RE 
+
+ + 
+
+ f 
+
+ RO 
+
+ + 
+
+ i 
+ &#xA0; 
+
+ f 
+
+ IE 
+
+ + 
+
+ i 
+ &#xA0; 
+
+ f 
+
+ IO 
+
+ &#x23DF; 
+
+ &#x21D5; 
+
+ F 
+
+ &#x21D5; 
+
+ F 
+
+ &#xA0; 
+ &#xA0; 
+
+ &#x21D5; 
+
+ F 
+
+ &#xA0; 
+ &#xA0; 
+
+ &#x21D5; 
+
+ F 
+
+ &#xA0; 
+ &#xA0; 
+
+ &#x21D5; 
+
+ F 
+
+ F 
+ r 
+ e 
+ q 
+ u 
+ e 
+ n 
+ c 
+ y 
+ &#xA0; 
+ d 
+ o 
+ m 
+ a 
+ i 
+ n 
+
+ f 
+ &#x005E; 
+
+ = 
+
+ f 
+ &#x005E; 
+
+ RE 
+
+ + 
+
+ i 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ IO 
+
+ &#x23DE; 
+
+ + 
+
+ i 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ IE 
+
+ + 
+
+ f 
+ &#x005E; 
+
+ RO 
+
+ {\displaystyle {\begin{array}{rlcccccccc}{\mathsf {Time\ domain}}&f&=&f_{_{\text{RE}}}&+&f_{_{\text{RO}}}&+&i\ f_{_{\text{IE}}}&+&\underbrace {i\ f_{_{\text{IO}}}} \\&{\Bigg \Updownarrow }{\mathcal {F}}&&{\Bigg \Updownarrow }{\mathcal {F}}&&\ \ {\Bigg \Updownarrow }{\mathcal {F}}&&\ \ {\Bigg \Updownarrow }{\mathcal {F}}&&\ \ {\Bigg \Updownarrow }{\mathcal {F}}\\{\mathsf {Frequency\ domain}}&{\widehat {f}}&=&{\widehat {f}}\!_{_{\text{RE}}}&+&\overbrace {i\ {\widehat {f}}\!_{_{\text{IO}}}} &+&i\ {\widehat {f}}\!_{_{\text{IE}}}&+&{\widehat {f}}\!_{_{\text{RO}}}\end{array}}} 
+
+From this, various relationships are apparent, for example : 
+
+- The transform of a real-valued function 
+
+ ( 
+
+ f 
+
+ RE 
+
+ + 
+
+ f 
+
+ RO 
+
+ ) 
+
+ {\displaystyle (f_{_{\text{RE}}}+f_{_{\text{RO}}})} 
+
+ is the conjugate symmetric function &#8288; 
+
+ f 
+ &#x005E; 
+
+ RE 
+
+ + 
+ i 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ IO 
+
+ {\displaystyle {\widehat {f}}\!_{_{\text{RE}}}+i\ {\widehat {f}}\!_{_{\text{IO}}}} 
+
+ &#8288; . Conversely, a conjugate symmetric transform implies a real-valued time-domain. 
+
+- The transform of an imaginary-valued function 
+
+ ( 
+ i 
+ &#xA0; 
+
+ f 
+
+ IE 
+
+ + 
+ i 
+ &#xA0; 
+
+ f 
+
+ IO 
+
+ ) 
+
+ {\displaystyle (i\ f_{_{\text{IE}}}+i\ f_{_{\text{IO}}})} 
+
+ is the conjugate antisymmetric function &#8288; 
+
+ f 
+ &#x005E; 
+
+ RO 
+
+ + 
+ i 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ IE 
+
+ {\displaystyle {\widehat {f}}\!_{_{\text{RO}}}+i\ {\widehat {f}}\!_{_{\text{IE}}}} 
+
+ &#8288; , and the converse is true. 
+
+- The transform of a conjugate symmetric function 
+
+ ( 
+
+ f 
+
+ RE 
+
+ + 
+ i 
+ &#xA0; 
+
+ f 
+
+ IO 
+
+ ) 
+
+ {\displaystyle (f_{_{\text{RE}}}+i\ f_{_{\text{IO}}})} 
+
+ is the real-valued function &#8288; 
+
+ f 
+ &#x005E; 
+
+ RE 
+
+ + 
+
+ f 
+ &#x005E; 
+
+ RO 
+
+ {\displaystyle {\widehat {f}}\!_{_{\text{RE}}}+{\widehat {f}}\!_{_{\text{RO}}}} 
+
+ &#8288; , and the converse is true. 
+
+- The transform of a conjugate antisymmetric function 
+
+ ( 
+
+ f 
+
+ RO 
+
+ + 
+ i 
+ &#xA0; 
+
+ f 
+
+ IE 
+
+ ) 
+
+ {\displaystyle (f_{_{\text{RO}}}+i\ f_{_{\text{IE}}})} 
+
+ is the imaginary-valued function &#8288; 
+
+ i 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ IE 
+
+ + 
+ i 
+ &#xA0; 
+
+ f 
+ &#x005E; 
+
+ IO 
+
+ {\displaystyle i\ {\widehat {f}}\!_{_{\text{IE}}}+i\ {\widehat {f}}\!_{_{\text{IO}}}} 
+
+ &#8288; , and the converse is true. 
+
+Conjugation [ edit ] 
+
+ ( 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ ) 
+
+ &#x2217; 
+
+ &#xA0; 
+ &#xA0; 
+
+ &#x27FA; 
+
+ F 
+
+ &#xA0; 
+ &#xA0; 
+
+ ( 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x2212; 
+ &#x03BE; 
+ ) 
+
+ ) 
+
+ &#x2217; 
+
+ {\displaystyle {\bigl (}f(x){\bigr )}^{*}\ \ {\stackrel {\mathcal {F}}{\Longleftrightarrow }}\ \ \left({\widehat {f}}(-\xi )\right)^{*}} 
+
+(Note: the ∗ denotes complex conjugation .)
+
+In particular, if 
+
+ f 
+
+ {\displaystyle f} 
+
+ is real , then 
+
+ f 
+ &#x005E; 
+
+ {\displaystyle {\widehat {f}}} 
+
+ is conjugate symmetric (aka Hermitian function ):
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x2212; 
+ &#x03BE; 
+ ) 
+ = 
+
+ ( 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ ) 
+
+ &#x2217; 
+
+ . 
+
+ {\displaystyle {\widehat {f}}(-\xi )={\bigl (}{\widehat {f}}(\xi ){\bigr )}^{*}.} 
+
+If 
+
+ f 
+
+ {\displaystyle f} 
+
+ is purely imaginary, then 
+
+ f 
+ &#x005E; 
+
+ {\displaystyle {\widehat {f}}} 
+
+ is odd symmetric :
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x2212; 
+ &#x03BE; 
+ ) 
+ = 
+ &#x2212; 
+ ( 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ ) 
+
+ &#x2217; 
+
+ . 
+
+ {\displaystyle {\widehat {f}}(-\xi )=-({\widehat {f}}(\xi ))^{*}.} 
+
+Real and imaginary parts [ edit ] 
+
+ Re 
+ &#x2061; 
+ { 
+ f 
+ ( 
+ x 
+ ) 
+ } 
+ &#xA0; 
+ &#xA0; 
+
+ &#x27FA; 
+
+ F 
+
+ &#xA0; 
+ &#xA0; 
+
+ 1 
+ 2 
+
+ ( 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ + 
+
+ ( 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x2212; 
+ &#x03BE; 
+ ) 
+
+ ) 
+
+ &#x2217; 
+
+ ) 
+
+ {\displaystyle \operatorname {Re} \{f(x)\}\ \ {\stackrel {\mathcal {F}}{\Longleftrightarrow }}\ \ {\tfrac {1}{2}}\left({\widehat {f}}(\xi )+{\bigl (}{\widehat {f}}(-\xi ){\bigr )}^{*}\right)} 
+
+ Im 
+ &#x2061; 
+ { 
+ f 
+ ( 
+ x 
+ ) 
+ } 
+ &#xA0; 
+ &#xA0; 
+
+ &#x27FA; 
+
+ F 
+
+ &#xA0; 
+ &#xA0; 
+
+ 1 
+
+ 2 
+ i 
+
+ ( 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ &#x2212; 
+
+ ( 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x2212; 
+ &#x03BE; 
+ ) 
+
+ ) 
+
+ &#x2217; 
+
+ ) 
+
+ {\displaystyle \operatorname {Im} \{f(x)\}\ \ {\stackrel {\mathcal {F}}{\Longleftrightarrow }}\ \ {\tfrac {1}{2i}}\left({\widehat {f}}(\xi )-{\bigl (}{\widehat {f}}(-\xi ){\bigr )}^{*}\right)} 
+
+Zero frequency component [ edit ] 
+
+Substituting 
+
+ &#x03BE; 
+ = 
+ 0 
+
+ {\displaystyle \xi =0} 
+
+ in the definition, we obtain:
+
+ f 
+ &#x005E; 
+
+ ( 
+ 0 
+ ) 
+ = 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ d 
+ x 
+ . 
+
+ {\displaystyle {\widehat {f}}(0)=\int _{-\infty }^{\infty }f(x)\,dx.} 
+
+The integral of 
+
+ f 
+
+ {\displaystyle f} 
+
+ over its domain is known as the average value or DC bias of the function.
+
+ Uniform continuity and the Riemann–Lebesgue lemma [ edit ] 
+ The rectangular function is Lebesgue integrable . 
+ The sinc function , which is the Fourier transform of the rectangular function, is bounded and continuous, but not Lebesgue integrable. 
+
+The Fourier transform may be defined in some cases for non-integrable functions, but the Fourier transforms of integrable functions have several strong properties.
+
+The Fourier transform 
+
+ f 
+ &#x005E; 
+
+ {\displaystyle {\widehat {f}}} 
+
+ of any integrable function 
+
+ f 
+
+ {\displaystyle f} 
+
+ is uniformly continuous and &#91; 17 &#93; &#91; 18 &#93; 
+
+ &#x2016; 
+
+ f 
+ &#x005E; 
+
+ &#x2016; 
+
+ &#x221E; 
+
+ &#x2264; 
+
+ &#x2016; 
+ f 
+ &#x2016; 
+
+ 1 
+
+ {\displaystyle \left\|{\widehat {f}}\right\|_{\infty }\leq \left\|f\right\|_{1}} 
+
+By the Riemann–Lebesgue lemma , &#91; 19 &#93; 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ &#x2192; 
+ 0 
+
+ &#xA0;as&#xA0; 
+
+ | 
+
+ &#x03BE; 
+
+ | 
+
+ &#x2192; 
+ &#x221E; 
+ . 
+
+ {\displaystyle {\widehat {f}}(\xi )\to 0{\text{ as }}|\xi |\to \infty .} 
+
+However, 
+
+ f 
+ &#x005E; 
+
+ {\displaystyle {\widehat {f}}} 
+
+ need not be integrable. For example, the Fourier transform of the rectangular function , which is integrable, is the sinc function , which is not Lebesgue integrable , because its improper integrals behave analogously to the alternating harmonic series , in converging to a sum without being absolutely convergent .
+
+It is not generally possible to write the inverse transform as a Lebesgue integral . However, when both 
+
+ f 
+
+ {\displaystyle f} 
+
+ and 
+
+ f 
+ &#x005E; 
+
+ {\displaystyle {\widehat {f}}} 
+
+ are integrable, the inverse equality
+
+ f 
+ ( 
+ x 
+ ) 
+ = 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ e 
+
+ i 
+ 2 
+ &#x03C0; 
+ x 
+ &#x03BE; 
+
+ d 
+ &#x03BE; 
+
+ {\displaystyle f(x)=\int _{-\infty }^{\infty }{\widehat {f}}(\xi )e^{i2\pi x\xi }\,d\xi } 
+
+ holds for almost every x . As a result, the Fourier transform is injective on L 1 ( R ) .
+
+ Plancherel theorem and Parseval's theorem [ edit ] 
+
+- Main articles: Plancherel theorem and Parseval's theorem 
+
+Let f ( x ) and g ( x ) be integrable, and let f̂ ( ξ ) and ĝ ( ξ ) be their Fourier transforms. If f ( x ) and g ( x ) are also square-integrable , then the Parseval formula follows: &#91; 20 &#93; 
+
+ &#x27E8; 
+ f 
+ , 
+ g 
+
+ &#x27E9; 
+
+ L 
+
+ 2 
+
+ = 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ g 
+ ( 
+ x 
+ ) 
+
+ &#x00AF; 
+
+ d 
+ x 
+ = 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ g 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ &#x00AF; 
+
+ d 
+ &#x03BE; 
+ , 
+
+ {\displaystyle \langle f,g\rangle _{L^{2}}=\int _{-\infty }^{\infty }f(x){\overline {g(x)}}\,dx=\int _{-\infty }^{\infty }{\widehat {f}}(\xi ){\overline {{\widehat {g}}(\xi )}}\,d\xi ,} 
+
+where the bar denotes complex conjugation .
+
+The Plancherel theorem , which follows from the above, states that &#91; 21 &#93; 
+
+ &#x2016; 
+ f 
+
+ &#x2016; 
+
+ L 
+
+ 2 
+
+ 2 
+
+ = 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ | 
+
+ f 
+ ( 
+ x 
+ ) 
+
+ | 
+
+ 2 
+
+ d 
+ x 
+ = 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ | 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ | 
+
+ 2 
+
+ d 
+ &#x03BE; 
+ . 
+
+ {\displaystyle \|f\|_{L^{2}}^{2}=\int _{-\infty }^{\infty }\left|f(x)\right|^{2}\,dx=\int _{-\infty }^{\infty }\left|{\widehat {f}}(\xi )\right|^{2}\,d\xi .} 
+
+Plancherel's theorem makes it possible to extend the Fourier transform, by a continuity argument, to a unitary operator on L 2 ( R ) . On L 1 ( R ) ∩ L 2 ( R ) , this extension agrees with original Fourier transform defined on L 1 ( R ) , thus enlarging the domain of the Fourier transform to L 1 ( R ) + L 2 ( R ) (and consequently to L p ( R ) for 1 ≤ p ≤ 2 ). Plancherel's theorem has the interpretation in the sciences that the Fourier transform preserves the energy of the original quantity. The terminology of these formulas is not quite standardised. Parseval's theorem was proved only for Fourier series, and was first proved by Lyapunov. But Parseval's formula makes sense for the Fourier transform as well, and so even though in the context of the Fourier transform it was proved by Plancherel, it is still often referred to as Parseval's formula, or Parseval's relation, or even Parseval's theorem.
+
+See Pontryagin duality for a general formulation of this concept in the context of locally compact abelian groups.
+
+Convolution theorem [ edit ] 
+
+- Main article: Convolution theorem 
+
+The Fourier transform translates between convolution and multiplication of functions. If f ( x ) and g ( x ) are integrable functions with Fourier transforms f̂ ( ξ ) and ĝ ( ξ ) respectively, then the Fourier transform of the convolution is given by the product of the Fourier transforms f̂ ( ξ ) and ĝ ( ξ ) (under other conventions for the definition of the Fourier transform a constant factor may appear).
+
+This means that if:
+
+ h 
+ ( 
+ x 
+ ) 
+ = 
+ ( 
+ f 
+ &#x2217; 
+ g 
+ ) 
+ ( 
+ x 
+ ) 
+ = 
+
+ &#x222B; 
+
+ &#x2212; 
+ &#x221E; 
+
+ &#x221E; 
+
+ f 
+ ( 
+ y 
+ ) 
+ g 
+ ( 
+ x 
+ &#x2212; 
+ y 
+ ) 
+
+ d 
+ y 
+ , 
+
+ {\displaystyle h(x)=(f*g)(x)=\int _{-\infty }^{\infty }f(y)g(x-y)\,dy,} 
+
+where ∗ denotes the convolution operation, then:
+
+ h 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ = 
+
+ f 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+
+ g 
+ &#x005E; 
+
+ ( 
+ &#x03BE; 
+ ) 
+ . 
+
+ {\displaystyle {\widehat {h}}(\xi )={\widehat 

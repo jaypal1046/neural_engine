@@ -1,0 +1,23 @@
+Question: What is blockchain?
+
+Ideal Answer: A blockchain is a distributed, append-only ledger where data is stored in cryptographically linked blocks.
+
+**How it works:**
+1. Transactions are grouped into a **block**
+2. The block includes a **hash** of the previous block (creating the 'chain')
+3. Multiple nodes validate new blocks (consensus mechanism)
+4. Once added, blocks cannot be altered without re-doing all subsequent hashes (tamper-evident)
+
+**Key properties:**
+- **Decentralized** — no single authority controls it
+- **Transparent** — anyone can read (in public chains like Bitcoin)
+- **Immutable** — changing history requires consensus of majority of nodes
+
+**Use cases:**
+- Cryptocurrency (Bitcoin, Ethereum)
+- Smart contracts (self-executing code on Ethereum)
+- Supply chain tracking (who handled this food/product at each step)
+
+**Limitations:** Slow (7 tx/sec for Bitcoin vs 65,000 for Visa), high energy use (proof-of-work), often not needed when a trusted database would suffice.
+
+Skills demonstrated: numbered mechanism, 3 properties, use cases, honest limitations

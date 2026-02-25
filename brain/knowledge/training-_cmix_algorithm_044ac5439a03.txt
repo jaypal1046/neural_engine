@@ -1,0 +1,11 @@
+Question: How does CMIX work?
+
+Ideal Answer: CMIX (Context Mixing) uses 1,046 AI advisor models working in parallel. Each advisor tracks a different pattern context:
+- Order 0–7 models (how often does each byte appear after N previous bytes?)
+- Bit-level models (patterns inside each byte)
+- Word boundary models (predicting at word transitions)
+- Long-range skip models (detecting distant correlations)
+
+A neural Mixer combines all advisors' predictions into a single probability estimate. Range coding then encodes each bit using this probability. The closer the prediction, the fewer bits needed. Result: near-optimal compression on text and source code.
+
+Skills demonstrated: technical depth, structured explanation, concrete detail

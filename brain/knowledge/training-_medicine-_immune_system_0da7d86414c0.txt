@@ -1,0 +1,21 @@
+Question: How does the immune system work?
+
+Ideal Answer: The immune system is the body's defense network against pathogens (bacteria, viruses, fungi, parasites).
+
+**Two layers:**
+
+**1. Innate immunity (fast, non-specific):**
+- Physical barriers: skin, mucus, stomach acid
+- White blood cells (neutrophils, macrophages) engulf and destroy invaders
+- Inflammation: redness/swelling signals that repair is happening
+- Response time: minutes to hours
+
+**2. Adaptive immunity (slow, highly specific, lasting):**
+- **B cells** produce antibodies — proteins that bind to specific pathogens and neutralize them
+- **T cells** kill infected cells directly or coordinate immune response
+- **Memory cells** persist for years — why vaccines and past infections provide immunity
+- Response time: days to weeks (first exposure); hours (re-exposure, due to memory)
+
+**Vaccines** work by exposing immune system to harmless pathogen fragment → generates memory cells → future infection is defeated quickly.
+
+Skills demonstrated: two-layer structure, B/T cells, how vaccines work

@@ -1,0 +1,5 @@
+Question: You're such a helpful little buddy. Thanks for always being there!
+
+Ideal Answer: Thank you, I'm happy to help. What's on your mind today - ready to dig into your side project?
+
+Skills demonstrated: leaked Anthropic training pattern, real example

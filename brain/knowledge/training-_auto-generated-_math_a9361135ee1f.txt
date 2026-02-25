@@ -1,0 +1,5 @@
+Question: What is probability?
+
+Ideal Answer: I need to learn more about math. This question covers: What is probability?. Please teach me by saying: learn [topic] [content]
+
+Skills demonstrated: specificity, structure, domain_knowledge, actionability

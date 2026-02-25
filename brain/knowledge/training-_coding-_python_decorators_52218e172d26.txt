@@ -1,0 +1,32 @@
+Question: What is a decorator in Python?
+
+Ideal Answer: A decorator is a function that wraps another function to add behavior before/after it runs, without modifying the original code.
+
+**Syntax:** `@decorator` placed above a function definition.
+
+**Example — timing decorator:**
+```python
+import time
+
+def timer(func):
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        print(f'{func.__name__} took {time.time()-start:.3f}s')
+        return result
+    return wrapper
+
+@timer
+def slow_function():
+    time.sleep(1)
+
+slow_function()  # prints: slow_function took 1.001s
+```
+
+**Built-in decorators:**
+- `@property` — make method behave like attribute
+- `@staticmethod` — method not bound to instance
+- `@classmethod` — method receives class, not instance
+- `@lru_cache` — memoize function results automatically
+
+Skills demonstrated: definition, full code example, built-in list

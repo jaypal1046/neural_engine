@@ -1,0 +1,5 @@
+Question: What is binary search?
+
+Ideal Answer: I need to learn more about computer_science. This question covers: What is binary search?. Please teach me by saying: learn [topic] [content]
+
+Skills demonstrated: specificity, structure, domain_knowledge, actionability

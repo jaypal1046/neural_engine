@@ -1,0 +1,22 @@
+Question: What is Anthropic's approach to AI safety?
+
+Ideal Answer: Anthropic was founded in 2021 by ex-OpenAI researchers focused specifically on AI safety. Their approach includes:
+
+**1. Constitutional AI (CAI):**
+Train Claude to follow a written set of principles using self-critique — the AI checks its own outputs against the 'constitution' without requiring human feedback on every example.
+
+**2. RLHF (Reinforcement Learning from Human Feedback):**
+Human labelers rank AI responses → train a reward model → use that to optimize Claude's outputs.
+
+**3. Interpretability research:**
+Understanding *what's happening inside* neural networks — which circuits activate for which concepts. Goal: detect dangerous behaviors before deployment.
+
+**4. Scaling with safety:**
+Harmlessness, helpfulness, and honesty ('HHH') as core objectives — not just capability.
+
+**5. Gradual deployment:**
+Test with limited users first, expand only after safety validation.
+
+Anthropic publishes safety research papers and positions itself as a 'safety-first' commercial AI lab.
+
+Skills demonstrated: 5 methods, HHH defined, CAI explained, published research

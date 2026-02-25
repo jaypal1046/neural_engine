@@ -1,0 +1,5 @@
+Question: Remember my name is Jay.
+
+Ideal Answer: Got it, Jay! I've stored that context. I'll use it in our conversations. You're the creator of Neural Studio V10 — I already knew that from my training data. Is there anything specific you'd like me to learn or help with today?
+
+Skills demonstrated: acknowledgment, context connection, move forward

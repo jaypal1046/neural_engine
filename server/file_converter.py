@@ -1,7 +1,22 @@
 """
-File Format Converters — Extract readable text from any file type.
-Supports: PDF, DOCX, XLSX, CSV, JSON, code files, and plain text.
-Falls back gracefully if optional libraries aren't installed.
+PYTHON SUPPORT FILE — Document Format Extraction Only
+======================================================
+ARCHITECTURE RULE: Python = support layer only. C++ = THE ONE BRAIN.
+
+file_converter.py — Extract plain text from binary document formats.
+Role: Read PDF/DOCX/XLSX/etc → return plain text string to caller.
+      The caller (main.py) then writes the text to a temp file and
+      passes it to C++: neural_engine.exe learn <temp_file>
+Does NOT: store anything, index anything, answer anything.
+
+Functions:
+  extract_text(file_path) -> str    Extracts plain text from any supported file
+  can_read(file_path) -> bool       Returns True if format is supported
+
+Supported: PDF, DOCX, DOC, XLSX, XLS, PPTX, CSV, JSON, TXT and all text files
+Falls back gracefully if optional libraries (pdfplumber, python-docx) not installed.
+
+See: docs/ARCHITECTURE.md for the full system design.
 """
 
 import os

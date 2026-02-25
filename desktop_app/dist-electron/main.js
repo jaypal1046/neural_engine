@@ -1,9 +1,12 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
+"use strict";
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+const electron = require("electron");
+const node_url = require("node:url");
+const path = require("node:path");
+const node_child_process = require("node:child_process");
+const node_fs = require("node:fs");
+var _documentCurrentScript = typeof document !== "undefined" ? document.currentScript : null;
+const __dirname$1 = path.dirname(node_url.fileURLToPath(typeof document === "undefined" ? require("url").pathToFileURL(__filename).href : _documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === "SCRIPT" && _documentCurrentScript.src || new URL("main.js", document.baseURI).href));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
 const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
@@ -19,13 +22,13 @@ function startServer() {
   var _a, _b;
   const projectRoot = path.join(process.env.APP_ROOT, "..");
   const serverScript = path.join(projectRoot, "server", "main.py");
-  if (!existsSync(serverScript)) {
+  if (!node_fs.existsSync(serverScript)) {
     console.error(`[Neural Studio] Server script not found: ${serverScript}`);
     return;
   }
   console.log(`[Neural Studio] Starting Python server: ${serverScript}`);
   const pythonCmd = findPython();
-  serverProcess = spawn(pythonCmd, [serverScript], {
+  serverProcess = node_child_process.spawn(pythonCmd, [serverScript], {
     cwd: path.join(projectRoot, "server"),
     stdio: ["pipe", "pipe", "pipe"],
     env: { ...process.env }
@@ -56,7 +59,7 @@ function stopServer() {
   if (serverProcess) {
     console.log("[Neural Studio] Stopping Python server...");
     if (process.platform === "win32" && serverProcess.pid) {
-      spawn("taskkill", ["/pid", String(serverProcess.pid), "/f", "/t"], { shell: true });
+      node_child_process.spawn("taskkill", ["/pid", String(serverProcess.pid), "/f", "/t"], { shell: true });
     } else {
       serverProcess.kill("SIGTERM");
     }
@@ -64,14 +67,14 @@ function stopServer() {
   }
 }
 function createWindow() {
-  win = new BrowserWindow({
+  win = new electron.BrowserWindow({
     width: 1220,
     height: 780,
     minWidth: 900,
     minHeight: 600,
     icon: path.join(process.env.VITE_PUBLIC || "", "electron-vite.svg"),
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs")
+      preload: path.join(__dirname$1, "preload.js")
     },
     autoHideMenuBar: true,
     title: "Neural Studio V10"
@@ -85,38 +88,38 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
 }
-app.on("window-all-closed", () => {
+electron.app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     stopServer();
-    app.quit();
+    electron.app.quit();
     win = null;
   }
 });
-app.on("before-quit", () => {
+electron.app.on("before-quit", () => {
   stopServer();
 });
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
+electron.app.on("activate", () => {
+  if (electron.BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });
-app.whenReady().then(() => {
-  ipcMain.handle("dialog:openFile", async () => {
-    const { canceled, filePaths } = await dialog.showOpenDialog({});
+electron.app.whenReady().then(() => {
+  electron.ipcMain.handle("dialog:openFile", async () => {
+    const { canceled, filePaths } = await electron.dialog.showOpenDialog({});
     if (!canceled)
       return filePaths[0];
     return null;
   });
-  ipcMain.handle("dialog:saveFile", async () => {
-    const { canceled, filePath } = await dialog.showSaveDialog({});
+  electron.ipcMain.handle("dialog:saveFile", async () => {
+    const { canceled, filePath } = await electron.dialog.showSaveDialog({});
     if (!canceled)
       return filePath;
     return null;
   });
-  ipcMain.handle("server:status", () => {
+  electron.ipcMain.handle("server:status", () => {
     return { running: serverProcess !== null, pid: serverProcess == null ? void 0 : serverProcess.pid };
   });
-  ipcMain.handle("server:restart", () => {
+  electron.ipcMain.handle("server:restart", () => {
     stopServer();
     setTimeout(startServer, 500);
     return { status: "restarting" };
@@ -124,8 +127,6 @@ app.whenReady().then(() => {
   startServer();
   createWindow();
 });
-export {
-  MAIN_DIST,
-  RENDERER_DIST,
-  VITE_DEV_SERVER_URL
-};
+exports.MAIN_DIST = MAIN_DIST;
+exports.RENDERER_DIST = RENDERER_DIST;
+exports.VITE_DEV_SERVER_URL = VITE_DEV_SERVER_URL;

@@ -1,0 +1,28 @@
+Question: What is async/await in programming?
+
+Ideal Answer: Async/await is a pattern for non-blocking I/O operations — letting your program do other things while waiting for slow operations (network, disk, database).
+
+**Problem without async:**
+```python
+response = requests.get(url)  # CPU waits 500ms doing NOTHING
+print(response.text)          # finally continues
+```
+
+**With async (Python):**
+```python
+async def fetch(url):
+    async with aiohttp.ClientSession() as session:
+        response = await session.get(url)  # yields control while waiting
+        return await response.text()
+
+await asyncio.gather(fetch(url1), fetch(url2))  # both run concurrently!
+```
+
+**Key concepts:**
+- `async def` marks a function as a coroutine
+- `await` suspends the coroutine until result is ready (does NOT block thread)
+- Event loop manages all coroutines
+
+**Use when:** many I/O-bound operations (web scraping, API calls, DB queries). Not useful for CPU-bound work (use multiprocessing instead).
+
+Skills demonstrated: problem stated, code before/after, event loop, when to use

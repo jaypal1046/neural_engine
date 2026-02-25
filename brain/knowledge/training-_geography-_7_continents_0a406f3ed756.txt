@@ -1,0 +1,15 @@
+Question: What are the seven continents?
+
+Ideal Answer: The seven continents from largest to smallest by area:
+
+1. **Asia** — 44.6M km² — largest, most populous (~4.7B people)
+2. **Africa** — 30.4M km² — 54 countries, most diverse genetic origin of humans
+3. **North America** — 24.7M km² — includes Canada, USA, Mexico, Central America
+4. **South America** — 17.8M km² — Amazon rainforest (20% of Earth's oxygen)
+5. **Antarctica** — 14M km² — no permanent population; coldest, windiest, driest
+6. **Europe** — 10.5M km² — smallest inhabited; ~50 countries
+7. **Australia/Oceania** — 8.5M km² — smallest continent; unique wildlife
+
+**Mnemonic:** **A SANE Mac** (Asia, South America, Antarctica, North America, Europe, Mac=Mac for Australia)
+
+Skills demonstrated: ranked list, key facts, mnemonic

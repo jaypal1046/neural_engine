@@ -48,6 +48,7 @@
 #include <chrono>
 #include <cassert>
 #include <regex>
+#include <iomanip>
 
 // Smart Brain integration
 #ifdef INCLUDE_SMART_BRAIN
@@ -1976,6 +1977,291 @@ int main_neural_engine(int argc, char* argv[]) {
             std::cout << "\"" << modules[i] << "\"";
         }
         std::cout << "]}" << std::endl;
+    }
+
+    // =========================================================================
+    // SCORE RESPONSE — Port of Python RewardModel
+    // Usage: neural_engine score_response <file>
+    // File format:
+    //   question: [text]
+    //   answer: [text (can span multiple lines)]
+    // Returns JSON: {"total":0.XX,"grade":"...","breakdown":{...}}
+    // =========================================================================
+    else if (cmd == "score_response" && argc >= 3) {
+        std::string file_path = argv[2];
+        std::ifstream sf(file_path);
+        if (!sf) {
+            std::cout << "{\"error\":\"Cannot open file: " << file_path << "\"}" << std::endl;
+            return 1;
+        }
+        std::string question, answer, line;
+        bool in_answer = false;
+        while (std::getline(sf, line)) {
+            if (line.substr(0, 9) == "question:") {
+                question = line.substr(9);
+                while (!question.empty() && question[0] == ' ') question = question.substr(1);
+            } else if (line.substr(0, 7) == "answer:") {
+                in_answer = true;
+                answer = line.substr(7);
+                while (!answer.empty() && answer[0] == ' ') answer = answer.substr(1);
+            } else if (in_answer) {
+                if (!answer.empty()) answer += "\n";
+                answer += line;
+            }
+        }
+        sf.close();
+
+        // ── Word count ────────────────────────────────────────────────────
+        auto count_words = [](const std::string& s) -> int {
+            int n = 0; bool inw = false;
+            for (char c : s) { if (c == ' ' || c == '\n' || c == '\t') inw = false;
+                else { if (!inw) n++; inw = true; } } return n;
+        };
+        auto to_lower = [](std::string s) -> std::string {
+            for (auto& c : s) c = (char)std::tolower((unsigned char)c); return s; };
+        auto contains = [](const std::string& s, const std::string& sub) -> bool {
+            return s.find(sub) != std::string::npos; };
+
+        std::string al = to_lower(answer);
+        std::string ql = to_lower(question);
+        int words = count_words(answer);
+
+        // 1. Relevance — shared long tokens
+        std::map<std::string,int> qtok, atok;
+        std::istringstream qss(ql), ass(al);
+        std::string tok;
+        while (qss >> tok) if (tok.size() >= 4) qtok[tok]++;
+        while (ass >> tok) if (tok.size() >= 4) atok[tok]++;
+        int overlap = 0;
+        for (auto& kv : qtok) if (atok.count(kv.first)) overlap++;
+        double relevance = qtok.empty() ? 0.85 :
+            std::min(1.0, (double)overlap / (double)qtok.size() * 2.5);
+
+        // 2. Length quality
+        double length;
+        if      (words < 5)   length = 0.1;
+        else if (words < 10)  length = qtok.size() <= 4 ? 0.75 : 0.3;
+        else if (words <= 250) length = 1.0;
+        else if (words <= 450) length = 0.85;
+        else                   length = 0.6;
+
+        // 3. Specificity
+        int spec_hits = 0;
+        if (std::regex_search(answer, std::regex(R"(\b\d+[.,]?\d*\b)"))) spec_hits++;
+        if (std::regex_search(al, std::regex(R"(e\.g\.|for example|such as)"))) spec_hits++;
+        if (contains(answer, "`")) spec_hits++;
+        if (contains(answer, "**")) spec_hits++;
+        if (std::regex_search(answer, std::regex(R"(^\d+\.\s)", std::regex::multiline))) spec_hits++;
+        if (std::regex_search(answer, std::regex(R"(^[-*]\s)", std::regex::multiline))) spec_hits++;
+        double specificity = std::min(1.0, spec_hits * 0.18);
+
+        // 4. Honesty
+        static const std::vector<std::string> hedges = {
+            "i think","i believe","likely","probably","may ","might ","could ",
+            "don't know","not sure","uncertain"};
+        static const std::vector<std::string> overcons = {
+            "definitely","certainly","guaranteed","100%","absolute"};
+        int nh = 0, no = 0;
+        for (auto& h : hedges)   if (contains(al, h)) nh++;
+        for (auto& o : overcons) if (contains(al, o)) no++;
+        double honesty = no > 2 ? 0.3 : (nh > 0 ? std::min(1.0, 0.7 + nh*0.1) : 0.65);
+
+        // 5. Structure
+        double structure = 0.5;
+        if (std::regex_search(answer, std::regex(R"(^\d+\.\s)", std::regex::multiline)) ||
+            std::regex_search(answer, std::regex(R"(^[-*]\s)", std::regex::multiline))) structure += 0.3;
+        if (contains(answer, "**")) structure += 0.2;
+        structure = std::min(1.0, structure);
+
+        // 6. Unknown handling
+        double unknown_h = (contains(al,"don't have knowledge")||contains(al,"don't know")||
+            contains(al,"teach me")||contains(al,"haven't learned")) ? 0.9 : 0.7;
+
+        // 7. Domain knowledge
+        static const std::vector<std::string> domain_terms = {
+            "cmix","bwt","lz77","ppm","entropy","compress","huffman",
+            "arithmetic","neural","brain","knowledge","token","range coding","aiz"};
+        int dh = 0;
+        for (auto& t : domain_terms) if (contains(al, t)) dh++;
+        double domain_k = std::min(1.0, dh * 0.12);
+
+        // 8. Actionability
+        int act = 0;
+        if (contains(answer, "`")) act++;
+        if (std::regex_search(al, std::regex(R"(\brun\b|\buse\b|\btry\b|\btype\b)"))) act++;
+        if (contains(al, "post /api") || contains(al, "get /api")) act++;
+        double actionability = std::min(1.0, act * 0.3);
+
+        // 9. Completeness
+        char last = answer.empty() ? ' ' : answer.back();
+        double completeness = (last=='.'||last=='!'||last=='?'||last==')') ? 1.0 : 0.7;
+
+        // Weighted total
+        double total =
+            relevance * 0.25 + length * 0.12 + specificity * 0.15 +
+            honesty * 0.12 + structure * 0.12 + unknown_h * 0.04 +
+            domain_k * 0.10 + actionability * 0.06 + completeness * 0.04;
+
+        auto grade = [](double s) -> std::string {
+            if (s >= 0.85) return "A+ (Excellent)";
+            if (s >= 0.75) return "A  (Good)";
+            if (s >= 0.65) return "B  (Acceptable)";
+            if (s >= 0.50) return "C  (Needs improvement)";
+            return "D  (Poor - retrain)"; };
+
+        std::cout << std::fixed << std::setprecision(3);
+        std::cout << "{\"total\":" << total;
+        std::cout << ",\"grade\":\"" << grade(total) << "\"";
+        std::cout << ",\"breakdown\":{";
+        std::cout << "\"relevance\":"       << relevance;
+        std::cout << ",\"length\":"         << length;
+        std::cout << ",\"specificity\":"    << specificity;
+        std::cout << ",\"honesty\":"        << honesty;
+        std::cout << ",\"structure\":"      << structure;
+        std::cout << ",\"unknown_handling\":"<< unknown_h;
+        std::cout << ",\"domain_knowledge\":"<< domain_k;
+        std::cout << ",\"actionability\":"  << actionability;
+        std::cout << ",\"completeness\":"   << completeness;
+        std::cout << "}}" << std::endl;
+    }
+
+    // =========================================================================
+    // CAI CRITIQUE — Port of Python cai_critique / Constitutional AI
+    // Usage: neural_engine cai_critique <file>
+    // File format: same as score_response (question: / answer:)
+    // Returns JSON: {"violations":[...],"cai_score":0.XX,"passed":true/false,"suggestions":[...]}
+    // =========================================================================
+    else if (cmd == "cai_critique" && argc >= 3) {
+        std::string file_path = argv[2];
+        std::ifstream cf(file_path);
+        if (!cf) {
+            std::cout << "{\"error\":\"Cannot open file: " << file_path << "\"}" << std::endl;
+            return 1;
+        }
+        std::string question, answer, line;
+        bool in_answer = false;
+        while (std::getline(cf, line)) {
+            if (line.substr(0, 9) == "question:") {
+                question = line.substr(9);
+                while (!question.empty() && question[0] == ' ') question = question.substr(1);
+            } else if (line.substr(0, 7) == "answer:") {
+                in_answer = true;
+                answer = line.substr(7);
+                while (!answer.empty() && answer[0] == ' ') answer = answer.substr(1);
+            } else if (in_answer) {
+                if (!answer.empty()) answer += "\n";
+                answer += line;
+            }
+        }
+        cf.close();
+
+        auto to_lower = [](std::string s) -> std::string {
+            for (auto& c : s) c = (char)std::tolower((unsigned char)c); return s; };
+        auto contains = [](const std::string& s, const std::string& sub) -> bool {
+            return s.find(sub) != std::string::npos; };
+
+        std::string al = to_lower(answer);
+        std::string ql = to_lower(question);
+
+        std::vector<std::string> violations, suggestions;
+        int total_rules = 20;
+
+        // Rule 1: Directly address the question
+        {
+            std::map<std::string,int> qw, aw;
+            std::istringstream qss(ql), ass(al); std::string t;
+            while (qss >> t) if (t.size() >= 4) qw[t]++;
+            while (ass >> t) if (t.size() >= 4) aw[t]++;
+            int shared = 0;
+            for (auto& kv : qw) if (aw.count(kv.first)) shared++;
+            if ((int)qw.size() >= 6 && shared < 1) {
+                violations.push_back("The answer must directly address what the user asked.");
+                suggestions.push_back("Include more words from the question in your answer.");
+            }
+        }
+
+        // Rule 2: Not vague
+        {
+            static const std::vector<std::string> vague = {
+                "it depends","various things","many ways","generally speaking",
+                "could be many","there are multiple"};
+            bool has_vague = false;
+            for (auto& v : vague) if (contains(al, v)) has_vague = true;
+            int wc = 0; for (char c : answer) if (c == ' ') wc++;
+            if (has_vague && wc < 30) {
+                violations.push_back("The answer must not be vague or use filler phrases without detail.");
+                suggestions.push_back("Be specific — avoid vague phrases without follow-up detail.");
+            }
+        }
+
+        // Rule 3: Examples for technical questions
+        {
+            bool is_technical = contains(ql,"how") || contains(ql,"what is") ||
+                                 contains(ql,"explain") || contains(ql,"algorithm");
+            bool has_example  = contains(al,"for example") || contains(al,"e.g.") ||
+                                 contains(al,"such as") || contains(al,"for instance");
+            bool has_list     = std::regex_search(answer, std::regex(R"(^\d+\.|^[-*])", std::regex::multiline));
+            int wc = 0; for (char c : answer) if (c == ' ') wc++;
+            if (is_technical && !has_example && !has_list && wc > 40) {
+                violations.push_back("Explanations of technical concepts must include at least one concrete example.");
+                suggestions.push_back("Add a concrete example to illustrate the concept.");
+            }
+        }
+
+        // Rule 4: No overclaiming
+        {
+            static const std::vector<std::string> overconf = {
+                "definitely","certainly","guaranteed","always","never","100%"};
+            bool over = false;
+            for (auto& o : overconf) if (contains(al, o)) over = true;
+            int wc = 0; for (char c : answer) if (c == ' ') wc++;
+            if (over && wc < 50) {
+                violations.push_back("The answer must not fabricate facts or overclaim certainty.");
+                suggestions.push_back("Soften strong claims — use 'likely', 'I believe', etc.");
+            }
+        }
+
+        // Rule 5: Compression answers must mention algorithms
+        {
+            bool about_compress = contains(ql,"compress") || contains(ql,"algorithm") || contains(ql,"zip");
+            if (about_compress) {
+                static const std::vector<std::string> algos = {
+                    "cmix","bwt","lz77","ppm","huffman","arithmetic","zstd"};
+                bool mentioned = false;
+                for (auto& a : algos) if (contains(al, a)) mentioned = true;
+                if (!mentioned) {
+                    violations.push_back("Answers about compression must reference specific algorithms.");
+                    suggestions.push_back("Mention specific compression algorithms (CMIX, BWT, LZ77, PPM).");
+                }
+            }
+        }
+
+        int passed   = total_rules - (int)violations.size();
+        double score = (double)passed / (double)total_rules;
+
+        // Output JSON
+        std::cout << std::fixed << std::setprecision(3);
+        std::cout << "{\"violations\":[";
+        for (int i = 0; i < (int)violations.size(); i++) {
+            if (i) std::cout << ",";
+            std::cout << "\"";
+            // Escape quotes in violation string
+            for (char c : violations[i]) { if (c == '"') std::cout << "\\\""; else std::cout << c; }
+            std::cout << "\"";
+        }
+        std::cout << "],\"suggestions\":[";
+        for (int i = 0; i < (int)suggestions.size(); i++) {
+            if (i) std::cout << ",";
+            std::cout << "\"";
+            for (char c : suggestions[i]) { if (c == '"') std::cout << "\\\""; else std::cout << c; }
+            std::cout << "\"";
+        }
+        std::cout << "],\"violations_count\":" << violations.size();
+        std::cout << ",\"rules_passed\":" << passed;
+        std::cout << ",\"total_rules\":" << total_rules;
+        std::cout << ",\"cai_score\":" << score;
+        std::cout << ",\"passed\":" << (violations.empty() ? "true" : "false");
+        std::cout << "}" << std::endl;
     }
 
     else {

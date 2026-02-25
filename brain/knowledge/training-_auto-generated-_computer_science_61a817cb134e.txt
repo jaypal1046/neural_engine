@@ -1,0 +1,5 @@
+Question: Explain object-oriented programming
+
+Ideal Answer: I need to learn more about computer_science. This question covers: Explain object-oriented programming. Please teach me by saying: learn [topic] [content]
+
+Skills demonstrated: specificity, domain_knowledge, actionability

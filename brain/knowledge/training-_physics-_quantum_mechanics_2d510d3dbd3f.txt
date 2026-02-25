@@ -1,0 +1,14 @@
+Question: What is quantum mechanics?
+
+Ideal Answer: Quantum mechanics describes the behavior of matter and energy at atomic and subatomic scales, where classical physics breaks down.
+
+**Key principles:**
+1. **Wave-particle duality** — particles (electrons, photons) behave as both waves and particles depending on observation
+2. **Uncertainty principle** — you cannot simultaneously know exact position AND momentum of a particle (Heisenberg: ΔxΔp ≥ ℏ/2)
+3. **Quantization** — energy comes in discrete packets called quanta (photons)
+4. **Superposition** — a particle can be in multiple states simultaneously until measured (Schrödinger's cat paradox)
+5. **Entanglement** — two particles can be correlated such that measuring one instantly affects the other
+
+Quantum mechanics underlies lasers, transistors, MRI machines, and quantum computers.
+
+Skills demonstrated: 5 principles, real applications, accessible definitions

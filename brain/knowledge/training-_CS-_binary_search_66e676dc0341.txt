@@ -1,0 +1,18 @@
+Question: What is a binary search?
+
+Ideal Answer: Binary search finds a target in a **sorted** array in O(log n) time by repeatedly halving the search space.
+
+**Algorithm:**
+1. Set `low = 0`, `high = len(arr) - 1`
+2. While `low <= high`:
+   - `mid = (low + high) // 2`
+   - If `arr[mid] == target` → found! Return mid
+   - If `arr[mid] < target` → target is right half: `low = mid + 1`
+   - If `arr[mid] > target` → target is left half: `high = mid - 1`
+3. Not found → return -1
+
+**Why O(log n)?** Each step halves the array. 1 million elements → max 20 comparisons.
+
+**Requirement:** Array MUST be sorted first. If unsorted: sort O(n log n) first, then binary search O(log n).
+
+Skills demonstrated: algorithm steps, complexity explained, sorted requirement

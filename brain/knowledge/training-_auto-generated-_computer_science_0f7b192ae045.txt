@@ -1,0 +1,5 @@
+Question: What is machine learning?
+
+Ideal Answer: I need to learn more about computer_science. This question covers: What is machine learning?. Please teach me by saying: learn [topic] [content]
+
+Skills demonstrated: specificity, domain_knowledge, actionability

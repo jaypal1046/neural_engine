@@ -4,6 +4,36 @@ Get your compressed knowledge AI running in **5 minutes**!
 
 ---
 
+## 🔧 Step 0: Build First (If No Executable)
+
+If `bin/neural_engine.exe` doesn't exist yet, build it first:
+
+```bash
+# Quick build (Windows - use the build script)
+build_neural_engine.bat
+```
+
+Or manually:
+```bash
+cd src
+
+g++ -O3 -std=c++17 -Wall -march=native -msse2 -mavx2 ^
+    -DINCLUDE_SMART_BRAIN -DUNIFIED_BUILD -I../include ^
+    -o ../bin/neural_engine.exe ^
+    unified_main.cpp main.cpp neural_engine.cpp test_block_access.cpp ^
+    compressor.cpp lz77.cpp huffman.cpp ans.cpp bwt.cpp bwt_simd.cpp ppm.cpp cmix.cpp ^
+    knowledge_manager.cpp web_fetcher.cpp html_parser.cpp vector_index.cpp ^
+    persistent_mixer.cpp compressed_knowledge.cpp block_access.cpp ^
+    word_tokenizer.cpp word_ppm.cpp embedding_trainer.cpp rag_engine.cpp ^
+    conversation_memory.cpp reasoning_engine.cpp bpe_tokenizer.cpp real_embeddings.cpp ^
+    mini_transformer.cpp optimizer.cpp loss.cpp transformer_gradients.cpp ^
+    -lwinhttp -lws2_32 -pthread
+```
+
+> See [README.md](../README.md#-build-instructions) for full build details, Linux/Mac instructions, and troubleshooting.
+
+---
+
 ## ⚡ 5-Minute Setup
 
 ### Step 1: Test the System (30 seconds)
@@ -13,7 +43,7 @@ Get your compressed knowledge AI running in **5 minutes**!
 cd C:\Jay\_Plugin\compress
 
 # Test compression
-bin\myzip.exe compress knowledge_sample\programming.txt --best -o test.aiz
+bin\neural_engine.exe compress knowledge_sample\programming.txt -o test.aiz --best
 
 # Test knowledge query
 bin\neural_engine.exe knowledge_query programming "python programming"
@@ -23,38 +53,46 @@ bin\neural_engine.exe knowledge_query programming "python programming"
 
 ---
 
-### Step 2: Start the Server (1 minute)
+### Step 2: Install Python Dependencies (1 minute, first time only)
 
 ```bash
-# Install Python dependencies (first time only)
-pip install fastapi uvicorn
-
-# Start server
-python server\main.py
+pip install fastapi uvicorn watchdog
 ```
-
-**Expected**: Server running on `http://localhost:5000` ✅
 
 ---
 
-### Step 3: Open Desktop App (1 minute)
+### Step 3: Start the Server (30 seconds)
 
 ```bash
-# Navigate to desktop app
-cd desktop
+python server\main.py
+```
+
+**Expected**: Server running on `http://localhost:8001`
+
+On startup the server automatically:
+- Loads all `.aiz` knowledge modules from `knowledge/`
+- Indexes all project files for AI access
+- Starts file watcher for real-time updates
+
+---
+
+### Step 4: Open Desktop App (1 minute)
+
+```bash
+cd desktop_app
 
 # Install dependencies (first time only)
 npm install
 
 # Start app
-npm start
+npm run dev
 ```
 
 **Expected**: Electron app opens ✅
 
 ---
 
-### Step 4: Ask Your First Question (30 seconds)
+### Step 5: Ask Your First Question (30 seconds)
 
 In the desktop app:
 1. Type: **"What is Python?"**
@@ -67,47 +105,58 @@ In the desktop app:
 
 ## 🎯 What You Just Did
 
-1. **Tested compression**: Compressed 7.9 KB → 4.1 KB (47.6% saved)
-2. **Tested knowledge query**: Retrieved info from compressed module
-3. **Started full stack**: Desktop app → Server → Neural engine → Knowledge
-4. **Got AI answer**: From compressed knowledge in < 50ms
+1. **Built the executable**: One unified binary with all features
+2. **Tested compression**: Compressed 7.9 KB → 4.1 KB (47.6% saved)
+3. **Tested knowledge query**: Retrieved info from compressed module
+4. **Started full stack**: Desktop app → Server → Neural engine → Knowledge
+5. **Got AI answer**: From compressed knowledge in < 50ms
 
 ---
 
 ## 📝 Common First Questions
 
 ### "What is Python?"
-**Source**: programming.aiz
-**Confidence**: 85%
-**Response Time**: < 50ms
-**Content**: Language description, features, libraries
+- **Source**: programming.aiz
+- **Response Time**: < 50ms
+- **Content**: Language description, features, libraries
+
+### "What can you do?"
+- **Source**: capabilities.aiz (AI self-awareness module)
+- **Content**: All 40+ commands, API endpoints, features
 
 ### "javascript frameworks"
-**Source**: programming.aiz
-**Confidence**: 85%
-**Topics**: React, Vue.js, Angular, Node.js
+- **Source**: programming.aiz
+- **Topics**: React, Vue.js, Angular, Node.js
 
-### "c++ memory management"
-**Source**: programming.aiz
-**Confidence**: 85%
-**Topics**: Stack, heap, smart pointers
-
-### "sorting algorithms"
-**Source**: programming.aiz
-**Confidence**: 85%
-**Topics**: Quick sort, merge sort, complexity
+### "What files are in this project?"
+- **Source**: project_structure.aiz (auto-generated index)
+- **Content**: Real-time project file listing
 
 ---
 
-## 🔧 Troubleshooting First Run
+## 🔧 Troubleshooting
+
+### Build fails
+```bash
+# Check compiler version
+g++ --version
+# Need g++ 7+ for C++17
+
+# If missing SSE2/AVX2 support, remove those flags
+# Replace: -msse2 -mavx2
+# With nothing (will be ~18% slower)
+```
 
 ### Server won't start
-**Problem**: Port 5000 already in use
-**Solution**:
 ```bash
-# Kill existing process
+# Check if port 8001 is in use
+netstat -an | findstr 8001
+
+# Kill existing python process
 taskkill /F /IM python.exe
-# Or change port in server\main.py
+
+# Or install missing deps
+pip install fastapi uvicorn watchdog
 ```
 
 ### Desktop app shows error
@@ -115,15 +164,19 @@ taskkill /F /IM python.exe
 **Solution**: Make sure `python server\main.py` is running first
 
 ### "No modules loaded" error
-**Problem**: Wrong directory
-**Solution**: Always run from `C:\Jay\_Plugin\compress`
-
-### No answer from AI
-**Problem**: Module not compressed
+**Problem**: Wrong directory or no .aiz files in knowledge/
 **Solution**:
 ```bash
-bin\myzip.exe compress knowledge_sample\programming.txt --best -o knowledge\programming.aiz
+# Run from project root
+cd C:\Jay\_Plugin\compress
+
+# Create a knowledge module
+bin\neural_engine.exe compress knowledge_sample\programming.txt -o knowledge\programming.aiz --best
 ```
+
+### Missing -lwinhttp error (Windows)
+**Problem**: Not using MinGW-w64
+**Solution**: Install MinGW-w64 or use the provided `build_neural_engine.bat`
 
 ---
 
@@ -133,39 +186,53 @@ bin\myzip.exe compress knowledge_sample\programming.txt --best -o knowledge\prog
 
 ```bash
 # Create content
-echo "Your knowledge here..." > my_knowledge.txt
+echo Your knowledge here... > my_knowledge.txt
 
 # Compress it
-bin\myzip.exe compress my_knowledge.txt --best -o knowledge\my_knowledge.aiz
+bin\neural_engine.exe compress my_knowledge.txt -o knowledge\my_knowledge.aiz --best
 
-# Query it
+# Server auto-loads it on next start, or query directly
 bin\neural_engine.exe knowledge_query my_knowledge "your question"
 ```
 
-### 2. Add More Topics
-
-The programming module includes:
-- Python, JavaScript, C++
-- Data structures & algorithms
-- Databases (SQL, NoSQL)
-- Web development
-- Git version control
-- Design patterns
-- Testing
-
-**Add more**: Create medical.aiz, science.aiz, history.aiz
-
-### 3. Explore the API
+### 2. Use the REST API
 
 ```bash
-# List all commands
+# Ask the AI
+curl -X POST http://localhost:8001/api/brain/ask ^
+  -H "Content-Type: application/json" ^
+  -d "{\"question\": \"What can you do?\"}"
+
+# Search project files
+curl -X POST http://localhost:8001/api/ai/search ^
+  -H "Content-Type: application/json" ^
+  -d "{\"query\": \"compression\"}"
+
+# Compress a file
+curl -X POST http://localhost:8001/api/compress ^
+  -H "Content-Type: application/json" ^
+  -d "{\"file_path\": \"doc.txt\", \"algorithm\": \"--best\"}"
+```
+
+### 3. Explore All Commands
+
+```bash
+# Show all available commands
 bin\neural_engine.exe
 
-# Test block access
-bin\test_block_access.exe knowledge\programming.aiz
+# Math operations
+bin\neural_engine.exe math "sqrt(16) + log(100)"
 
-# Check compression stats
-bin\myzip.exe benchmark knowledge_sample\programming.txt
+# Entropy calculation
+bin\neural_engine.exe entropy "Hello World"
+
+# RAG - add documents and ask questions
+bin\neural_engine.exe rag_add_doc my_document.txt
+bin\neural_engine.exe rag_ask "What is the main topic?"
+
+# Train a transformer model
+bin\neural_engine.exe train_transformer corpus.txt 7 0.002 16
+bin\neural_engine.exe transformer_generate "Once upon a time"
 ```
 
 ---
@@ -175,35 +242,32 @@ bin\myzip.exe benchmark knowledge_sample\programming.txt
 ```
 Your Question: "What is Python?"
     ↓
-Desktop App sends to Server
+Desktop App sends to Server (port 8001)
     ↓
 Server calls: neural_engine.exe knowledge_query programming "What is Python?"
     ↓
 Neural Engine:
-  1. Opens programming.aiz (4.1 KB)
-  2. Decompresses block 0 (7.9 KB) in < 0.01s
+  1. Opens programming.aiz (4.1 KB compressed)
+  2. Decompresses block 0 using SIMD-accelerated BWT
   3. Searches for "python" (case-insensitive)
-  4. Finds match at offset 50
-  5. Extracts 500 chars context
-  6. Returns JSON
+  4. Finds match, extracts 500 chars context
+  5. Returns JSON with answer + confidence
     ↓
-Server sends to Desktop App
+Server sends response to Desktop App
     ↓
-You see answer with 85% confidence!
-
-Total time: < 50 milliseconds ✅
+You see answer < 50 milliseconds! ✅
 ```
 
 ---
 
 ## ✅ Success Checklist
 
-- [ ] `bin\myzip.exe` works (compression test passed)
-- [ ] `bin\neural_engine.exe` works (knowledge query returned JSON)
-- [ ] `python server\main.py` running (no errors)
-- [ ] Desktop app opens (npm start successful)
-- [ ] First question answered ("What is Python?" got response)
-- [ ] Confidence shows 85% (from knowledge base)
+- [ ] `bin\neural_engine.exe` built successfully
+- [ ] Compression test works (`compress` command)
+- [ ] Knowledge query works (`knowledge_query` command)
+- [ ] `python server\main.py` running without errors
+- [ ] Desktop app opens (`npm run dev`)
+- [ ] First question answered (< 50ms response)
 
 **All checked?** You're ready to go! 🚀
 
@@ -213,14 +277,16 @@ Total time: < 50 milliseconds ✅
 
 You now have a **working compressed knowledge AI system**!
 
+- ✅ One unified executable (4.4 MB) - no dependencies
 - ✅ 90-99% compression ratio
 - ✅ < 50ms query speed
 - ✅ 100% offline operation
 - ✅ $0 API costs
-- ✅ Unlimited queries
+- ✅ Self-aware AI (knows its own 40+ capabilities)
+- ✅ Dynamic project awareness (knows all your files)
 
-**Next**: Read [ARCHITECTURE.md](ARCHITECTURE.md) to understand how it works.
+**Next**: Read [COMPLETE_SYSTEM.md](COMPLETE_SYSTEM.md) to understand the full architecture.
 
 ---
 
-**Questions?** See [FAQ.md](FAQ.md) or [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+**See Also**: [README.md](../README.md) | [AI_CAPABILITIES.md](AI_CAPABILITIES.md) | [phases/](../phases/)

@@ -1,0 +1,731 @@
+Docker (software) - Wikipedia 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+ Jump to content 
+
+ Search 
+
+ Search 
+
+- Donate 
+
+- Create account 
+
+- Log in 
+
+ Personal tools 
+
+- Donate 
+- Create account 
+- Log in 
+
+ Docker (software) 
+
+ 43 languages 
+
+- العربية 
+- Azərbaycanca 
+- Basa Bali 
+- Беларуская 
+- Български 
+- Bosanski 
+- Català 
+- کوردی 
+- Čeština 
+- Dansk 
+- Deutsch 
+- Ελληνικά 
+- Español 
+- Eesti 
+- Euskara 
+- فارسی 
+- Suomi 
+- Français 
+- Galego 
+- עברית 
+- हिन्दी 
+- Magyar 
+- Italiano 
+- 日本語 
+- 한국어 
+- Lombard 
+- Latviešu 
+- മലയാളം 
+- Bahasa Melayu 
+- Nederlands 
+- Polski 
+- Português 
+- Runa Simi 
+- Русский 
+- Simple English 
+- Slovenčina 
+- Shqip 
+- Српски / srpski 
+- Ślůnski 
+- Türkçe 
+- Українська 
+- Tiếng Việt 
+- 中文 
+
+ Edit links 
+
+ From Wikipedia, the free encyclopedia 
+
+ Software for deploying containerized applications 
+ This article is about the containerization software. For the company, see Docker, Inc. 
+
+ Docker Screenshot of Docker Engine commands Original author Solomon Hykes Developer Docker, Inc. Initial release March&#160;20, 2013 &#59;&#32;12 years ago &#160;( 2013-03-20 ) &#91; 1 &#93; 
+- Stable release 29.2.1 &#91; 2 &#93; &#160; 
+ / 2 February 2026 
+ Written in Go &#91; 3 &#93; Operating system Linux , Windows , macOS Platform x86-64 , ARM , s390x , ppc64le Type OS-level virtualization License 
+
+- Apache-2.0 license (Docker Engine, for Linux only) 
+
+- End-user license agreement (Docker Desktop) &#91; 4 &#93; 
+ Website www .docker .com 
+ Former logo 
+
+ Docker is a set of products that uses operating-system-level virtualization to deliver software in packages called containers . Docker automates the deployment of applications within lightweight containers, enabling them to run consistently across different computing environments.
+
+The core software that runs and manages these containers is called Docker Engine . Docker was first released in 2013 and continues to be developed by Docker, Inc. The platform includes both free and paid tiers.
+
+History [ edit ] 
+
+ Solomon Hykes &#160;&#91; fr &#93; started the Docker project in France as an internal project within dotCloud , a platform-as-a-service company. &#91; 5 &#93; 
+
+dotCloud Inc. was founded by Kamel Founadi, Hykes, and Sebastien Pahl &#91; 6 &#93; during the Y Combinator Summer 2010 startup incubator group and launched in 2011, and renamed to Docker Inc in 2013. &#91; 7 &#93; 
+
+Docker debuted to the public in Santa Clara at PyCon in 2013. &#91; 8 &#93; It was released as open-source in March 2013. &#91; 9 &#93; At the time, it used LXC as its default execution environment. One year later, with the release of version 0.9, Docker replaced LXC with its own component, libcontainer , which was written in the Go programming language. &#91; 10 &#93; &#91; 11 &#93; 
+
+In 2017, Docker created the Moby project &#160;&#91; wd &#93; for open research and development. &#91; 12 &#93; 
+
+Adoption [ edit ] 
+
+- September 19, 2013: Red Hat and Docker announced a collaboration around Fedora , Red Hat Enterprise Linux (RHEL), and OpenShift . &#91; 13 &#93; 
+
+- October 15, 2014: Microsoft announced the integration of the Docker engine into Windows Server , as well as native support for the Docker client role in Windows. &#91; 14 &#93; &#91; 15 &#93; 
+
+- November 2014: Docker container services were announced for the Amazon Elastic Compute Cloud (EC2). &#91; 16 &#93; 
+
+- November 10, 2014: Docker announced a partnership with Stratoscale . &#91; 17 &#93; 
+
+- December 4, 2014: IBM announced a strategic partnership with Docker that enables Docker to integrate more closely with the IBM Cloud. &#91; 18 &#93; 
+
+- June 22, 2015: Docker and several other companies announced that they were working on a new vendor and operating-system-independent standard for software containers. &#91; 19 &#93; &#91; 20 &#93; 
+
+- December 2015: Oracle Cloud added Docker container support after acquiring StackEngine , a Docker container startup. &#91; 21 &#93; 
+
+- April 2016: Windocks, an independent software vendor released a port of Docker's open source project to Windows, supporting Windows Server 2012 R2 and Server 2016, with all editions of SQL Server 2008 onward. &#91; 22 &#93; 
+
+- May 2016: analysis showed the following organizations as main contributors to Docker: The Docker team, Cisco , Google , Huawei , IBM , Microsoft , and Red Hat . &#91; 23 &#93; 
+
+- June 8, 2016: Microsoft announced that Docker could now be used natively on Windows 10 . &#91; 24 &#93; 
+
+- January 2017: An analysis of LinkedIn profile mentions showed Docker presence grew by 160% in 2016. &#91; 25 &#93; 
+
+- May 6, 2019: Microsoft announced the second version of Windows Subsystem for Linux (WSL). Docker, Inc. announced that it had started working on a version of Docker for Windows to run on WSL 2. &#91; 26 &#93; In particular, this meant Docker could run on Windows 10 Home (previously it was limited to Windows Pro and Enterprise since it used Hyper-V ). 
+
+- August 2020: Microsoft announced a backport of WSL2 to Windows 10 versions 1903 and 1909 (previously WSL2 was available only on version 2004) &#91; 27 &#93; and Docker developers announced availability of Docker for these platforms. &#91; 28 &#93; 
+
+- August 2021: Docker Desktop for Windows and MacOS was no longer available free of charge for enterprise users. Docker ended free Docker Desktop use for larger business customers and replaced its Free Plan with a Personal Plan. Docker Engine on Linux distributions remained unaffected. &#91; 29 &#93; 
+
+- December 2023: Docker acquired AtomicJar to expand its testing capabilities. &#91; 30 &#93; 
+
+Design [ edit ] 
+ Docker can use different interfaces to access virtualization features of the Linux kernel. &#91; 31 &#93; 
+
+Containers are isolated from one another and bundle their own software, libraries and configuration files; they can communicate with each other through well-defined channels. &#91; 32 &#93; Because all of the containers share the services of a single operating system kernel , they use fewer resources than virtual machines . &#91; 33 &#93; 
+
+Docker can package an application and its dependencies in a virtual container that can, in principle, run on any Linux , Windows , or macOS computer. This enables the application to run in a variety of locations, such as on-premises , in public (see decentralized computing , distributed computing , and cloud computing ) or private cloud . &#91; 34 &#93; When running on Linux, Docker uses the resource isolation features of the Linux kernel (such as cgroups and kernel namespaces ) and a union-capable file system (such as OverlayFS ) &#91; 35 &#93; to allow containers to run within a single Linux instance, avoiding the overhead of starting and maintaining virtual machines . Docker on macOS uses a Linux virtual machine to run the containers. &#91; 36 &#93; 
+
+Because Docker containers are lightweight , a single server or virtual machine can run several containers simultaneously. &#91; 37 &#93; A 2018 analysis found that a typical Docker use case involves running eight containers per host, and that a quarter of analyzed organizations run 18 or more per host. &#91; 38 &#93; It can also be installed on a single board computer like the Raspberry Pi . &#91; 39 &#93; 
+
+The Linux kernel's support for namespaces mostly &#91; 40 &#93; isolates an application's view of the operating environment, including process trees, network, user IDs and mounted file systems, while the kernel's cgroups provide resource limiting for memory and CPU. &#91; 41 &#93; Since version 0.9, Docker includes its own component (called libcontainer ) to use virtualization facilities provided directly by the Linux kernel, in addition to using abstracted virtualization interfaces via libvirt , LXC and systemd-nspawn . &#91; 10 &#93; &#91; 31 &#93; &#91; 34 &#93; &#91; 42 &#93; 
+
+Docker implements a high-level API to provide lightweight containers that run processes in isolation. &#91; 9 &#93; 
+
+Components [ edit ] 
+
+The Docker software as a service offering consists of three components:
+
+ Software 
+ The Docker daemon , called dockerd , is a persistent process that manages Docker containers and handles container objects. The daemon listens for requests that are sent via the Docker Engine API. &#91; 43 &#93; &#91; 44 &#93; The Docker client program, called docker , provides a command-line interface (CLI) that allows users to interact with Docker daemons. &#91; 43 &#93; &#91; 45 &#93; 
+ Objects 
+ Docker objects are various entities used to assemble an application in Docker. The main classes of Docker objects are images, containers, and services. &#91; 43 &#93; 
+
+- A Docker container is a standardized, encapsulated environment that runs applications. &#91; 46 &#93; A container is managed using the Docker API or CLI . &#91; 43 &#93; 
+
+- A Docker image is a read-only template used to build containers. Images are used to store and ship applications. &#91; 43 &#93; 
+
+- A Docker service allows containers to be scaled across multiple Docker daemons. The result is known as a swarm , a set of cooperating daemons that communicate through the Docker API. &#91; 43 &#93; 
+ Registries 
+ A Docker registry is a repository for Docker images. Docker clients connect to registries to download ("pull") images for use or upload ("push") images that they have built. Registries can be public or private. The main public registry is Docker Hub. Docker Hub is the default registry where Docker looks for images. &#91; 43 &#93; &#91; 47 &#93; Docker registries also allow the creation of notifications based on events. &#91; 48 &#93; 
+
+A Dockerfile is a text file that commonly specifies several aspects of a Docker container: the Linux distribution , installation commands for the programming language runtime environment and application source code.
+
+An example of a Dockerfile: &#91; 49 &#93; 
+
+ ARG CODE_VERSION = latest
+ FROM ubuntu:${CODE_VERSION} 
+ COPY ./examplefile.txt /examplefile.txt
+ ENV MY_ENV_VARIABLE = "example_value" 
+ RUN apt-get update
+
+ # Mount a directory from the Docker volume 
+ # Note: This is usually specified in the 'docker run' command. 
+ VOLUME [ "/myvolume" ] 
+
+ # Expose a port (22 for SSH) 
+ EXPOSE 22 
+
+ Docker Compose is a tool for defining and running multi-container Docker applications. &#91; 50 &#93; It uses YAML files to configure the application's services and performs the creation and start-up process of all the containers with a single command. The docker compose CLI utility allows users to run commands on multiple containers at once; for example, building images, scaling containers, running containers that were stopped, and more. &#91; 51 &#93; Commands related to image manipulation, or user-interactive options, are not relevant in Docker Compose because they address one container. &#91; 52 &#93; The docker-compose.yml file is used to define an application's services and includes various configuration options. For example, the build option defines configuration options such as the Dockerfile path, the command option allows one to override default Docker commands, and more. &#91; 53 &#93; The first public beta version of Docker Compose (version 0.0.1) was released on December 21, 2013. &#91; 54 &#93; The first production-ready version (1.0) was made available on October 16, 2014. &#91; 55 &#93; 
+
+ Docker Swarm provides native clustering functionality for Docker containers, which turns a group of Docker engines into a single virtual Docker engine. &#91; 56 &#93; In Docker 1.12 and higher, Swarm mode is integrated with Docker Engine. &#91; 57 &#93; The docker swarm CLI &#91; 58 &#93; utility allows users to run Swarm containers, create discovery tokens, list nodes in the cluster, and more. &#91; 59 &#93; The docker node CLI utility allows users to run various commands to manage nodes in a swarm, for example, listing the nodes in a swarm, updating nodes, and removing nodes from the swarm. &#91; 60 &#93; Docker manages swarms using the Raft consensus algorithm. According to Raft, for an update to be performed, the majority of Swarm nodes need to agree on the update. &#91; 61 &#93; &#91; 62 &#93; In addition to the docker swarm CLI, docker stack is a tool designed to manage Swarm services with greater flexibility. It can use a configuration file very similar to a docker-compose.yml , with a few nuances. Using docker stack instead of docker compose offers several advantages, such as the ability to manage a Swarm cluster across multiple machines or the capability to work with docker secret combined with docker context , a feature that allows executing Docker commands on a remote host, enabling remote container management.
+
+ Docker Volume facilitates the independent persistence of data, allowing data to remain even after the container is deleted or re-created. &#91; 63 &#93; 
+
+Licensing model [ edit ] 
+
+- The Docker Engine is licensed under the Apache License 2.0 . Docker Desktop distributes some components that are licensed under the GNU General Public License . Docker Desktop is not free for large enterprises. &#91; 64 &#93; 
+
+- The Dockerfile files can be licensed under an open-source license themselves. The scope of such a license statement is only the Dockerfile and not the container image. &#91; citation needed &#93; 
+
+See also [ edit ] 
+
+- Linux portal 
+
+- DevOps 
+
+- DevOps toolchain 
+
+- gVisor 
+
+- Kubernetes 
+
+- List of Linux containers 
+
+- Microservices 
+
+- Open Container Initiative 
+
+- OS-level virtualization 
+
+- Podman 
+
+- Service Component Architecture 
+
+- Singularity – Docker alternative for HPC clusters 
+
+References [ edit ] 
+
+- ^ Barbier, Julien (June 9, 2014). "It's Here: Docker 1.0" . Docker . Docker, Inc . Retrieved September 30, 2019 . 
+
+- ^ 
+- "v29.2.1" . February 2, 2026 . Retrieved February 8, 2026 . 
+
+- ^ 
+- "Docker source code" . docker/distribution repo . Docker, Inc. October 12, 2015 . Retrieved October 24, 2015 &#8211; via GitHub . 
+
+- ^ 
+- "Docker Desktop license agreement" . September 11, 2024. 
+
+- ^ 
+- "One home for all your apps" . dotcloud.com . Archived from the original on May 17, 2014 . Retrieved May 8, 2014 . 
+
+- ^ 
+- Hykes, Solomon (March 28, 2018). "Au Revoir" . docker.com . Archived from the original on January 12, 2021 . Retrieved January 23, 2021 . 
+
+- ^ 
+- "About the dotCloud Platform" . dotCloud . Archived from the original on July 2, 2014 . Retrieved June 23, 2019 . 
+
+- ^ 
+- "The future of Linux Containers" . DotCloud Channel . March 21, 2013 . Retrieved July 13, 2018 &#8211; via YouTube . 
+
+- ^ a b 
+- Avram, Abel (March 27, 2013). "Docker: Automated and Consistent Software Deployments" . InfoQ . Retrieved August 9, 2013 . 
+
+- ^ a b 
+- Vaughan-Nichols, Steven J. (June 11, 2014). "Docker libcontainer unifies Linux container powers" . ZDNet . Retrieved July 30, 2014 . 
+
+- ^ 
+- Swan, Chris (March 13, 2014). "Docker drops LXC as default execution environment" . InfoQ . Retrieved January 20, 2015 . 
+
+- ^ 
+- "Demystifying the Relationship Between Moby & Docker – Welcome to Collabnix" . May 6, 2017. 
+
+- ^ 
+- "DotCloud Pivots And Wins Big With Docker, The Cloud Service Now Part Of Red Hat OpenShift" . TechCrunch . September 19, 2013 . Retrieved January 20, 2014 . 
+
+- ^ 
+- Foley, Mary Jo (October 15, 2014). "Docker container support coming to Microsoft's next Windows Server release" . ZDNet . Retrieved October 16, 2014 . 
+
+- ^ 
+- Guthrie, Scott (October 15, 2014). "Docker and Microsoft: Integrating Docker with Windows Server and Microsoft Azure" . ScottGu's Blog . Microsoft . Retrieved January 12, 2015 . 
+
+- ^ 
+- Barr, Jeff (November 13, 2014). "Amazon EC2 Container Service (ECS) – Container Management for the AWS Cloud" . Amazon Web Services Blog . Retrieved April 29, 2017 . 
+
+- ^ 
+- Rath, John (November 10, 2014). "Stratoscale Raises $32M to Build Docker-Supporting OpenStack Clouds on Commodity Servers" . Retrieved January 3, 2016 . 
+
+- ^ 
+- "IBM and Docker Announce Strategic Partnership to Deliver Enterprise Applications in the Cloud and On Prem" . IBM . December 4, 2014. Archived from the original on January 10, 2015 . Retrieved April 20, 2015 . 
+
+- ^ 
+- Lardinois, Frederic (June 22, 2015). "Docker, CoreOS, Google, Microsoft, Amazon And Others Come Together To Develop Common Container Standard" . TechCrunch . Retrieved August 8, 2015 . 
+
+- ^ 
+- Siluk, Shirley (June 22, 2015). "Docker, Tech Giants Team on Open Container Project" . cio-today.com . Archived from the original on September 23, 2015 . Retrieved August 8, 2015 . 
+
+- ^ 
+- McLaughlin, Kevin (December 22, 2015). "Oracle Acquires Docker Container Startup StackEngine, Plans Austin-Based Cloud Computing Center" . CRN . Retrieved January 13, 2022 . 
+
+- ^ 
+- Yegulalp, Serdar (April 4, 2016). "Windocks does what Docker and Microsoft can't do" . InfoWorld . Retrieved October 27, 2018 . 
+
+- ^ 
+- "Docker – Updated project statistics" . GitHub Gist . Retrieved August 22, 2016 . 
+
+- ^ 
+- Sarkar, Dona (June 8, 2016). "Announcing Windows 10 Insider Preview Build 14361" . Windows Blogs . Microsoft . Retrieved June 19, 2016 . 
+
+- ^ 
+- Mullany, Michael. "Docker Momentum Analysis 2016" . LinkedIn Pulse . Retrieved January 5, 2017 . 
+
+- ^ 
+- Vaughan-Nichols, Steven (June 18, 2019). "Docker embraces Windows Subsystem for Linux 2" . ZDNet . CBS Interactive . 
+
+- ^ 
+- "WSL 2 Support is coming to Windows 10 Versions 1903 and 1909" . Windows Command Line . August 20, 2020 . Retrieved August 21, 2020 . 
+
+- ^ 
+- "Docker Desktop & WSL 2 - Backport Update" . Docker Blog . August 20, 2020 . Retrieved August 21, 2020 . 
+
+- ^ 
+- Carey, Scott (August 31, 2021). "Docker Desktop is no longer free for enterprise users" . InfoWorld . Retrieved October 18, 2021 . 
+
+- ^ 
+- Miller, Ron (December 11, 2023). "Docker acquires AtomicJar, a testing startup that raised $25M in January" . TechCrunch . Retrieved December 13, 2023 . 
+
+- ^ a b 
+- "Docker 0.9: Introducing execution drivers and libcontainer" . Docker Blog . Docker, Inc. March 10, 2014 . Retrieved January 20, 2015 . 
+
+- ^ 
+- "Use containers to Build, Share and Run your applications" . docker.com . 
+
+- ^ 
+- "What is a Container?" . docker.com . Docker, Inc. Retrieved May 13, 2019 . 
+
+- ^ a b 
+- Noyes, Katherine (August 1, 2013). "Docker: A 'Shipping Container' for Linux Code" . Linux.com . Archived from the original on August 8, 2013 . Retrieved August 9, 2013 . 
+
+- ^ 
+- "Select a storage driver documentation" . Docker documentation . Archived from the original on December 6, 2016 . Retrieved December 7, 2016 . 
+
+- ^ 
+- "Get started with Docker for Mac" . docker.com . Docker, Inc . Retrieved September 27, 2018 . 
+
+- ^ 
+- K., Chris (14 January 2019). "Lightweight Windows containers: Using Docker process isolation in Windows 10" . Poweruser . Retrieved 2 August 2019 . more "lightweight" real containers (via so called process-isolation), where the containerized processes are running directly on the host system — all processes on the host and in the containers are sharing the same Windows kernel. This is similar to how containers on Linux work. 
+
+- ^ 
+- "8 surprising facts about real Docker adoption" . Datadog . June 2018 . Retrieved September 4, 2019 . 
+
+- ^ 
+- Gupta, Devender (October 13, 2022). "How to Install Docker on Raspberry Pi" . Gizmoxo . Archived from the original on February 14, 2025 . Retrieved October 15, 2022 . {{ cite web }} : CS1 maint: bot: original URL status unknown ( link ) 
+
+- ^ 
+- Walsh, Dan (September 15, 2014). "Yet Another Reason Containers Don't Contain: Kernel Keyrings" . projectatomic.io . Retrieved April 13, 2015 . 
+
+- ^ 
+- "Limit a container's resources" . Docker Documentation . Retrieved March 7, 2018 . 
+
+- ^ 
+- "libcontainer – reference implementation for containers" . docker/libcontainer repo . Docker, Inc . Retrieved July 30, 2014 &#8211; via GitHub . 
+
+- ^ a b c d e f g 
+- "Docker overview" . Docker Documentation . Docker, Inc . Retrieved February 26, 2018 . 
+
+- ^ 
+- "dockerd" . Docker Documentation . Docker, Inc . Retrieved February 26, 2018 . 
+
+- ^ 
+- "Use the Docker command line" . Docker Documentation . Docker, Inc . Retrieved February 26, 2018 . 
+
+- ^ 
+- "The Docker Ecosystem: An Introduction to Common Components" . www.digitalocean.com . Retrieved February 26, 2018 . 
+
+- ^ 
+- "About Registry" . Docker Documentation . Docker, Inc . Retrieved February 26, 2018 . 
+
+- ^ 
+- "Work with notifications" . March 2, 2019. 
+
+- ^ 
+- "Dockerfile reference" . Docker Documentation . November 14, 2023 . Retrieved November 30, 2023 . 
+
+- ^ 
+- "Overview of Docker Compose" . Docker Documentation . Docker, Inc . Retrieved July 6, 2017 . 
+
+- ^ 
+- "Compose command-line reference" . Docker Documentation . Docker, Inc . Retrieved February 28, 2018 . 
+
+- ^ 
+- "Orchestrate Containers for Development with Docker Compose" . via @codeship . May 27, 2015 . Retrieved February 28, 2018 . 
+
+- ^ 
+- "Compose file version 3 reference" . Docker Documentation . Docker, Inc . Retrieved February 28, 2018 . 
+
+- ^ 
+- Firshman, Ben (December 21, 2013). "Release 0.0.1" . docker/compose . Docker, Inc. &#8211; via GitHub . 
+
+- ^ 
+- Prasad, Aanand (October 16, 2014). "Release 1.0.0" . docker/compose . Docker, Inc. &#8211; via GitHub . 
+
+- ^ 
+- "8 Container Orchestration Tools to Know" . Linux.com . April 12, 2017 . Retrieved July 6, 2017 . 
+
+- ^ 
+- "Docker Swarm" . Docker Documentation . Docker, Inc . Retrieved July 6, 2017 . 
+
+- ^ 
+- "Docker swarm" . June 4, 2021. 
+
+- ^ 
+- "Swarm command-line reference" . Docker Documentation . Docker, Inc . Retrieved February 28, 2018 . 
+
+- ^ 
+- "docker node" . Docker Documentation . Retrieved February 28, 2018 . 
+
+- ^ 
+- "Docker Swarm 101" . aquasec.com . Retrieved February 28, 2018 . 
+
+- ^ 
+- "Raft Consensus Algorithm" . raft.github.io . Retrieved February 28, 2018 . 
+
+- ^ 
+- "Docker Desktop & Docker Guides" . Docker Guide . April 25, 2021. Archived from the original on April 25, 2021 . Retrieved April 25, 2021 . 
+
+- ^ 
+- "Get Docker" . September 11, 2024. 
+
+External links [ edit ] 
+
+- Official website 
+
+- 
+- v 
+- t 
+- e Virtualization software Comparison of platform virtualization software Hardware 
+( hypervisors ) Native 
+
+- Adeos 
+
+- CP/CMS 
+
+- Hyper-V 
+
+- KVM 
+
+- oVirt 
+
+- KubeVirt 
+
+- LDoms / Oracle VM Server for SPARC 
+
+- Logical partition (LPAR) 
+
+- LynxSecure 
+
+- PikeOS 
+
+- Proxmox VE 
+
+- QNX 
+
+- SIMMON 
+
+- SmartOS 
+
+- VMware ESXi 
+
+- VMware vSphere 
+
+- vCloud 
+
+- VMware Infrastructure 
+
+- Xen 
+
+- XenServer 
+
+- XCP-ng 
+
+- XtratuM 
+
+- z/VM 
+ Hosted Specialized 
+
+- Basilisk II 
+
+- Bochs 
+
+- Cooperative Linux 
+
+- DOSBox 
+
+- DOSEMU 
+
+- 86Box 
+
+- PCem 
+
+- PikeOS 
+
+- SheepShaver 
+
+- SIMH 
+
+- Windows on Windows 
+
+- Virtual DOS machine 
+
+- Win4Lin 
+ Independent 
+
+- bhyve 
+
+- Microsoft Virtual Server 
+
+- Parallels Workstation 
+
+- Extreme 
+
+- Parallels Desktop for Mac 
+
+- Parallels Server for Mac 
+
+- PearPC 
+
+- QEMU 
+
+- UTM 
+
+- VirtualBox 
+
+- Virtual Iron 
+
+- Virtual PC 
+
+- VMware Fusion 
+
+- VMware Server 
+
+- VMware Workstation 
+
+- Player 
+ Tools 
+
+- Ganeti 
+
+- System Center Virtual Machine Manager 
+
+- Virt-manager 
+ Operating
+system OS containers 
+
+- FreeBSD jail 
+
+- iCore Virtual Accounts 
+
+- Linux-VServer 
+
+- Linux Containers 
+
+- OpenVZ 
+
+- Solaris Containers 
+
+- Virtuozzo 
+
+- Workload Partitions 
+ Application containers 
+
+- Docker 
+
+- Podman 
+
+- lmctfy 
+
+- Distrobox 
+
+- rkt 
+ Virtual kernel architectures 
+
+- Rump kernel 
+
+- User-mode Linux 
+
+- vkernel 
+ Related kernel features 
+
+- BrandZ 
+
+- cgroups 
+
+- chroot 
+
+- namespaces 
+
+- eBPF 
+
+- seccomp 
+ Orchestration 
+
+- Amazon ECS 
+
+- Kubernetes 
+
+- OpenShift 
+ Desktop 
+
+- Citrix Virtual Apps 
+
+- Citrix Virtual Desktops 
+
+- Omnissa Horizon 
+
+- Remote Desktop Services 
+
+- Virtual machine 
+ Application 
+
+- Ceedo 
+
+- Citrix Virtual Apps 
+
+- Dalvik 
+
+- InstallFree 
+
+- Microsoft App-V 
+
+- Remote Desktop Services 
+
+- Symantec Workspace Virtualization 
+
+- Turbo 
+
+- VMware ThinApp 
+
+- ZeroVM 
+ Network 
+
+- Distributed Overlay Virtual Ethernet (DOVE) 
+
+- Ethernet VPN (EVPN) 
+
+- NVGRE 
+
+- Open vSwitch 
+
+- Virtual security switch 
+
+- Virtual Extensible LAN (VXLAN) 
+
+- Generic Network Virtualization Encapsulation (GENEVE) 
+ See also 
+
+- BlueStacks 
+ See also: List of emulators , List of computer system emulators 
+
+- 
+- 
+- 
+- 
+- v 
+- t 
+- e Linux containers Operating-system-level virtualization Container host operating systems 
+
+- Linux 
+
+- Container Linux 
+
+- RancherOS 
+ Container engines 
+
+- Docker 
+
+- rkt 
+ Container cluster managers 
+
+- Apache Mesos 
+
+- Kubernetes 
+
+- Rancher 
+
+- Nomad 
+
+- Amazon EC2 Container Service 
+
+- Docker UCP 
+
+- Docker Swarm 
+
+- StackEngine 
+
+- Tutum 
+
+ Retrieved from " https://en.wikipedia.org/w/index.php?title=Docker_(software)&oldid=1336281450 " 
+ Categories : 
+- 2013 software 
+- Containerization software 
+- Free software programmed in Go 
+- Free virtualization software 
+- Linux containerization 
+- Operating system security 
+- Operating system technology 
+- Software using the Apache license 
+- Virtualization software for Linux Hidden categories: 
+- CS1 maint: bot: original URL status unknown 
+- Articles with short description 
+- Short description is different from Wikidata 
+- Use mdy dates from February 2026 
+- All articles with unsourced statements 
+- Articles with unsourced statements from March 2025 
+
+ Search 
+
+ Search 
+
+ Docker (software) 
+
+ 43 languages 
+
+ Add topic

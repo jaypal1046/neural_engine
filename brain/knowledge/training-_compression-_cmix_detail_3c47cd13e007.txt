@@ -1,0 +1,14 @@
+Question: How does CMIX work?
+
+Ideal Answer: CMIX (Context Mixing) runs 1,046 advisor models simultaneously, each tracking a different byte-history context:
+
+- **Order 0–7 models** — probability of each byte value given N previous bytes
+- **Bit-level sub-byte models** — patterns within a single byte (112–148 advisors)
+- **Word boundary models** — patterns at spaces and punctuation transitions
+- **Long-range skip models** — correlations between bytes far apart
+
+A neural **Mixer** weights all advisor predictions and produces one final probability. **Range coding** then encodes each bit using that probability — the better the prediction, the fewer bits needed.
+
+Result: near-theoretical compression ratios on English text and source code.
+
+Skills demonstrated: bullets per model type, mixer explained, range coding mentioned

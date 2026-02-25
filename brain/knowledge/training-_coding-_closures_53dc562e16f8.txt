@@ -1,0 +1,25 @@
+Question: What is a closure in programming?
+
+Ideal Answer: A closure is a function that remembers variables from its enclosing scope even after that scope has finished executing.
+
+**Example (Python):**
+```python
+def make_counter(start=0):
+    count = [start]               # mutable container
+    def increment():
+        count[0] += 1
+        return count[0]
+    return increment              # return the inner function
+
+counter = make_counter(10)
+print(counter())  # 11
+print(counter())  # 12  ← remembers count across calls
+```
+
+**Why closures matter:**
+- Create factory functions (make_adder, make_multiplier)
+- Implement data hiding without classes
+- Used constantly in JavaScript event handlers and callbacks
+- Foundation of decorators in Python
+
+Skills demonstrated: definition, code example, use cases

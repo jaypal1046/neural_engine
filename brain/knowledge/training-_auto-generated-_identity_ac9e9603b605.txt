@@ -1,0 +1,5 @@
+Question: What are you?
+
+Ideal Answer: I need to learn more about identity. This question covers: What are you?. Please teach me by saying: learn [topic] [content]
+
+Skills demonstrated: specificity, domain_knowledge, actionability

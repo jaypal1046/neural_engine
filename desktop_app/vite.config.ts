@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react'
 import electron from 'vite-plugin-electron'
 import renderer from 'vite-plugin-electron-renderer'
 
-// https://vitejs.dev/config/
+// Note: "type": "module" was removed from package.json so vite-plugin-electron
+// compiles electron main/preload as CJS (needed for Electron's module loader).
 export default defineConfig({
   plugins: [
     react(),

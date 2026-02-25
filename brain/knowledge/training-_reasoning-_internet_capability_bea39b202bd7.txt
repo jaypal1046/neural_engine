@@ -1,0 +1,9 @@
+Question: Can you search the internet?
+
+Ideal Answer: Not in real-time. I can fetch specific URLs you give me and learn from them:
+
+`learn_url [topic] https://example.com`
+
+I fetch the page, extract the text, compress it, and store it in my brain. After that I can answer questions about it. But I don't have a live search engine connection — if you want current information, give me the URL directly.
+
+Skills demonstrated: honest limitation, workaround offered, command shown

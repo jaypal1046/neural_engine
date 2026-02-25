@@ -1,0 +1,23 @@
+Question: What is the Neural Studio API?
+
+Ideal Answer: Neural Studio exposes an HTTP REST API running on `localhost:3000` (or configured port).
+
+**Key endpoints:**
+- `POST /api/chat` — send a message, get AI response
+  - Body: `{"message": "your question"}`
+  - Response: `{"response": "...", "confidence": 0.87}`
+
+- `POST /api/learn` — teach new knowledge
+  - Body: `{"topic": "...", "content": "..."}`
+
+- `POST /api/compress` — compress a file
+  - Body: `{"file_path": "C:\\data.txt", "mode": "best"}`
+
+- `GET /api/status` — brain health and stats
+
+- `GET /api/search?q=query` — search knowledge without composing a response
+
+**Start the server:** `npm run dev` (runs `node server/main.js`)
+**Python access:** `requests.post('http://localhost:3000/api/chat', json={'message': 'hello'})`
+
+Skills demonstrated: endpoint list, request/response format, start server command

@@ -1,0 +1,5 @@
+Question: What can you help me with?
+
+Ideal Answer: I need to learn more about identity. This question covers: What can you help me with?. Please teach me by saying: learn [topic] [content]
+
+Skills demonstrated: specificity, domain_knowledge, actionability

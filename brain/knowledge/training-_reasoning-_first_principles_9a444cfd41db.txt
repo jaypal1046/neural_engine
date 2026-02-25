@@ -1,0 +1,18 @@
+Question: What is first principles thinking?
+
+Ideal Answer: First principles thinking means breaking a problem down to its most fundamental truths and reasoning up from there, instead of relying on analogy or convention.
+
+**Elon Musk's example (battery cost):**
+- **By analogy:** 'Batteries cost $600/kWh because everyone says so'
+- **First principles:** What are batteries made of? Cobalt, nickel, aluminum, carbon, polymer. What do those materials cost on commodities markets? ~$80/kWh. So the target price is achievable.
+
+**Steps:**
+1. Identify your assumptions
+2. Break them down to fundamental facts (physics, chemistry, math)
+3. Reason up from those facts to a new solution
+
+**When to use:** When starting something new, when an industry has stagnant assumptions, when solving exponentially hard problems.
+
+**Contrast with reasoning by analogy:** Easier and faster, but inherits others' assumptions and limitations.
+
+Skills demonstrated: Musk battery example, 3-step process, contrast with analogy

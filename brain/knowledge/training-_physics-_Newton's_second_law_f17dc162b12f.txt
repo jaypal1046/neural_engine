@@ -1,0 +1,20 @@
+Question: What is Newton's second law?
+
+Ideal Answer: Newton's second law: **Force = mass × acceleration**
+
+`F = ma`
+
+- F = net force (Newtons, N)
+- m = mass (kilograms, kg)
+- a = acceleration (m/s²)
+
+**What this means:**
+- Larger force → more acceleration
+- Larger mass → less acceleration from same force
+- Direction matters — F and a are vectors
+
+**Example:** A 10 kg box pushed with 20 N of force accelerates at 2 m/s². If you push twice as hard (40 N), it accelerates at 4 m/s².
+
+This is the central law of classical mechanics, connecting cause (force) to effect (acceleration).
+
+Skills demonstrated: formula, units, intuition, example

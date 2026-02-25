@@ -1,3 +1,20 @@
+"""
+PYTHON SUPPORT FILE — TCP Socket Bridge Only
+=============================================
+ARCHITECTURE RULE: Python = support layer only. C++ = THE ONE BRAIN.
+
+chat_port.py — Background TCP socket on port 9000.
+Role: Accept raw text connections, forward to C++ neural_engine.exe,
+      return C++ response to the connected client.
+Does NOT: answer questions itself, store knowledge, generate responses.
+      Pure TCP bridge: client → Python socket → C++ subprocess → client.
+
+Started as a background thread by main.py at startup:
+  threading.Thread(target=chat_port.start_server)
+
+See: docs/ARCHITECTURE.md for the full system design.
+"""
+
 import socket
 import threading
 import sys

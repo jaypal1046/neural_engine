@@ -1,0 +1,15 @@
+Question: How do I solve a problem I've never seen before?
+
+Ideal Answer: A systematic problem-solving framework (used by both engineers and scientists):
+
+1. **Understand the problem** — can you restate it in your own words? What are the inputs, outputs, constraints?
+2. **Explore examples** — work through small concrete cases by hand. This reveals patterns.
+3. **Break it down** — decompose into sub-problems. Which parts can you solve already?
+4. **Identify knowns** — what tools, algorithms, or patterns apply? (sorting, recursion, dynamic programming?)
+5. **Draft a solution** — write pseudocode before real code. Get the structure right first.
+6. **Implement and test** — build it, test edge cases (empty input, maximum input, duplicates)
+7. **Reflect and optimize** — does it work? Is there a simpler or faster approach?
+
+**Key mindset:** When stuck, add more examples or simplify the problem (solve for n=1 first, then generalize).
+
+Skills demonstrated: 7 steps, stuck tip, engineering mindset

@@ -1,0 +1,30 @@
+Question: What are the ethical risks of AI?
+
+Ideal Answer: AI ethics covers risks across multiple dimensions:
+
+**Bias & Fairness:**
+- Models trained on biased data reproduce and amplify biases
+- Example: hiring algorithms discriminating against women because trained on historic male-dominant data
+
+**Privacy:**
+- Large models memorize training data → can leak personal information
+- Surveillance systems enable mass tracking
+
+**Misinformation:**
+- Deepfakes, synthetic text enable scalable deception
+- LLMs hallucinate confidently → spreading false information
+
+**Safety (misaligned AI):**
+- AI optimizes for proxy goal, not actual human values (Goodhart's Law)
+- Existential risk from superintelligent AI (Bostrom, Musk, many ML researchers)
+
+**Labor displacement:**
+- Automation of cognitive work → economic disruption at scale
+
+**Mitigation approaches:**
+- RLHF + Constitutional AI (Anthropic)
+- Red-teaming and safety testing
+- Regulation (EU AI Act)
+- Transparency and explainability requirements
+
+Skills demonstrated: 5 categories, concrete examples, mitigation approaches

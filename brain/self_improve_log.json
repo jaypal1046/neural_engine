@@ -1,0 +1,281 @@
+[
+  {
+    "cycle": 1,
+    "timestamp": "2026-02-25T12:04:39.398752",
+    "score_before": 0.574,
+    "score_after": 0.573,
+    "improvement": -0.001,
+    "articles_learned": 8,
+    "answers_rewritten": 1
+  },
+  {
+    "cycle": 2,
+    "timestamp": "2026-02-25T12:08:56.268147",
+    "score_before": 0.573,
+    "score_after": 0.573,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 1
+  },
+  {
+    "cycle": 3,
+    "timestamp": "2026-02-25T12:13:05.548306",
+    "score_before": 0.573,
+    "score_after": 0.573,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 1
+  },
+  {
+    "cycle": 1,
+    "timestamp": "2026-02-25T12:35:52.540040",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 2,
+    "timestamp": "2026-02-25T12:40:51.911129",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 3,
+    "timestamp": "2026-02-25T12:46:29.958511",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 4,
+    "timestamp": "2026-02-25T12:52:40.603967",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 5,
+    "timestamp": "2026-02-25T12:57:37.987071",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 6,
+    "timestamp": "2026-02-25T13:02:17.410091",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 7,
+    "timestamp": "2026-02-25T13:06:55.476228",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 8,
+    "timestamp": "2026-02-25T13:11:37.372825",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 9,
+    "timestamp": "2026-02-25T13:16:26.684718",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 10,
+    "timestamp": "2026-02-25T13:20:55.922513",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 11,
+    "timestamp": "2026-02-25T13:25:44.039251",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 12,
+    "timestamp": "2026-02-25T13:30:41.777288",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 13,
+    "timestamp": "2026-02-25T13:35:36.138130",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 14,
+    "timestamp": "2026-02-25T13:40:29.963257",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 15,
+    "timestamp": "2026-02-25T13:45:08.260728",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 16,
+    "timestamp": "2026-02-25T13:50:02.843535",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 17,
+    "timestamp": "2026-02-25T13:55:21.959780",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 18,
+    "timestamp": "2026-02-25T14:01:00.046182",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 19,
+    "timestamp": "2026-02-25T14:05:43.539239",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 20,
+    "timestamp": "2026-02-25T14:10:21.303968",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 21,
+    "timestamp": "2026-02-25T14:14:48.779385",
+    "score_before": 0.571,
+    "score_after": 0.571,
+    "improvement": 0.0,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 22,
+    "timestamp": "2026-02-25T14:20:18.316839",
+    "score_before": 0.571,
+    "score_after": 0.568,
+    "improvement": -0.003,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 1,
+    "timestamp": "2026-02-25T14:22:27.134831",
+    "score_before": 0.619,
+    "score_after": 0.619,
+    "improvement": 0.001,
+    "articles_learned": 0,
+    "answers_rewritten": 2
+  },
+  {
+    "cycle": 23,
+    "timestamp": "2026-02-25T14:25:49.193017",
+    "score_before": 0.571,
+    "score_after": 0.57,
+    "improvement": -0.001,
+    "articles_learned": 8,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 2,
+    "timestamp": "2026-02-25T14:26:36.235684",
+    "score_before": 0.616,
+    "score_after": 0.619,
+    "improvement": 0.004,
+    "articles_learned": 0,
+    "answers_rewritten": 2
+  },
+  {
+    "cycle": 3,
+    "timestamp": "2026-02-25T14:30:57.880666",
+    "score_before": 0.615,
+    "score_after": 0.612,
+    "improvement": -0.002,
+    "articles_learned": 4,
+    "answers_rewritten": 2
+  },
+  {
+    "cycle": 24,
+    "timestamp": "2026-02-25T14:31:26.047573",
+    "score_before": 0.571,
+    "score_after": 0.566,
+    "improvement": -0.005,
+    "articles_learned": 6,
+    "answers_rewritten": 0
+  },
+  {
+    "cycle": 25,
+    "timestamp": "2026-02-25T14:37:15.635241",
+    "score_before": 0.557,
+    "score_after": 0.571,
+    "improvement": 0.014,
+    "articles_learned": 18,
+    "answers_rewritten": 20
+  }
+]

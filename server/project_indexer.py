@@ -1,6 +1,20 @@
 """
-Project-Wide File Indexer
-Automatically scans and indexes ALL files in the project for AI awareness
+PYTHON SUPPORT FILE — Project File Discovery Only
+==================================================
+ARCHITECTURE RULE: Python = support layer only. C++ = THE ONE BRAIN.
+
+project_indexer.py — Scans project files and triggers C++ learning on startup.
+Role: Find all source files in the project on server startup.
+      For each file: call neural_engine.exe learn <file> so C++ indexes it.
+Does NOT: learn anything itself, store knowledge, answer questions.
+      Python just walks the directory tree and calls C++ for the actual work.
+
+Called by main.py at startup:
+  project_indexer.load_project_files_into_ai()
+  → for each file → neural_engine.exe learn <file>
+  → C++ reads, compresses, indexes into brain/knowledge/
+
+See: docs/ARCHITECTURE.md for the full system design.
 """
 
 import os

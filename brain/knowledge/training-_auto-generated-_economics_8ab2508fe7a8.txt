@@ -1,0 +1,5 @@
+Question: What is inflation?
+
+Ideal Answer: I need to learn more about economics. This question covers: What is inflation?. Please teach me by saying: learn [topic] [content]
+
+Skills demonstrated: specificity, structure, domain_knowledge, actionability

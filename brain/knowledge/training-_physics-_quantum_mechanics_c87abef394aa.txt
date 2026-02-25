@@ -1,0 +1,12 @@
+Question: What is quantum mechanics?
+
+Ideal Answer: Quantum mechanics refers to the fundamental theory describing nature at atomic and subatomic scales.
+
+1. Wave-particle duality: particles like electrons exhibit both wave and particle behavior.
+2. Superposition: a quantum particle can exist in multiple states simultaneously until measured.
+3. Heisenberg uncertainty principle: you cannot simultaneously know a particle's exact position and momentum.
+4. Quantization: energy comes in discrete packets called quanta (photons for light).
+
+Schrodinger's equation describes how quantum states evolve over time. Quantum mechanics explains atomic structure, chemical bonds, lasers, semiconductors, and MRI machines. Quantum computing exploits superposition to solve problems exponentially faster than classical computers.
+
+Skills demonstrated: wave-particle duality, superposition, uncertainty, applications

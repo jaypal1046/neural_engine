@@ -1,0 +1,819 @@
+Stoicism - Wikipedia 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+ Jump to content 
+
+ Search 
+
+ Search 
+
+- Donate 
+
+- Create account 
+
+- Log in 
+
+ Personal tools 
+
+- Donate 
+- Create account 
+- Log in 
+
+ Stoicism 
+
+ 99 languages 
+
+- Afrikaans 
+- Alemannisch 
+- Aragonés 
+- العربية 
+- مصرى 
+- Asturianu 
+- Azərbaycanca 
+- Bikol Central 
+- Беларуская 
+- Български 
+- বাংলা 
+- Brezhoneg 
+- Bosanski 
+- Català 
+- کوردی 
+- Čeština 
+- Dansk 
+- Deutsch 
+- Ελληνικά 
+- Esperanto 
+- Español 
+- Eesti 
+- Euskara 
+- فارسی 
+- Suomi 
+- Français 
+- Gaeilge 
+- Gàidhlig 
+- Galego 
+- עברית 
+- हिन्दी 
+- Hrvatski 
+- Magyar 
+- Հայերեն 
+- Interlingua 
+- Bahasa Indonesia 
+- Ido 
+- Íslenska 
+- Italiano 
+- 日本語 
+- Jawa 
+- ქართული 
+- Қазақша 
+- 한국어 
+- Кыргызча 
+- Latina 
+- Lingua Franca Nova 
+- Limburgs 
+- Lombard 
+- Lietuvių 
+- Latviešu 
+- Мокшень 
+- Malagasy 
+- Македонски 
+- മലയാളം 
+- मराठी 
+- Bahasa Melayu 
+- Malti 
+- Mirandés 
+- مازِرونی 
+- Nederlands 
+- Norsk nynorsk 
+- Norsk bokmål 
+- Novial 
+- Occitan 
+- ਪੰਜਾਬੀ 
+- Polski 
+- Piemontèis 
+- پنجابی 
+- Português 
+- Română 
+- Русский 
+- Srpskohrvatski / српскохрватски 
+- Simple English 
+- Slovenčina 
+- Slovenščina 
+- Soomaaliga 
+- Shqip 
+- Српски / srpski 
+- Seeltersk 
+- Svenska 
+- தமிழ் 
+- తెలుగు 
+- ไทย 
+- Tagalog 
+- Türkçe 
+- Татарча / tatarça 
+- Українська 
+- اردو 
+- Oʻzbekcha / ўзбекча 
+- Tiếng Việt 
+- Winaray 
+- 吴语 
+- მარგალური 
+- ⵜⴰⵎⴰⵣⵉⵖⵜ ⵜⴰⵏⴰⵡⴰⵢⵜ 
+- 文言 
+- 閩南語 / Bân-lâm-gí 
+- 粵語 
+- 中文 
+
+ Edit links 
+
+ From Wikipedia, the free encyclopedia 
+
+ Ancient philosophy founded by Zeno of Citium 
+ "Stoic" redirects here. For other uses, see Stoic (disambiguation) . 
+
+ A bust of Zeno of Citium , considered the founder of Stoicism 
+
+ Stoicism is an ancient Greek and then Roman philosophy of the Hellenistic and Roman Imperial periods . &#91; 1 &#93; The Stoics believed that the universe operated according to reason, or logos , &#91; 2 &#93; providing a unified account of the world, constructed from ideals of rational discourse, monistic physics, and naturalistic ethics. &#91; 3 &#93; These three ideals constitute virtue, which is necessary for the Stoic goal of 'living a well-reasoned life'. &#91; 4 &#93; 
+
+Stoic logic focuses on highly intentional reasoning through propositions , arguments , and the differentiation between truth and falsehood. Philosophical discourse is paramount in Stoicism, including the view that the mind is in rational dialogue with itself. &#91; 4 &#93; Stoic ethics centers on virtue as the highest good, cultivating emotional self-control , a calm problem-solving state of mind, and rational judgment to attain lifelong flourishing ( eudaimonia ). At the same time, passions, anxieties, and insecurities are viewed as misguided reactions that ought to be controlled through self-disciplined practice. Of all the schools of ancient Western philosophy, Stoicism made the greatest claim to being utterly systematic. &#91; 5 &#93; 
+
+Stoicism was founded in the ancient Agora of Athens by Zeno of Citium around 300 BCE, and flourished throughout the Greco-Roman world until the 3rd century CE. Stoicism emerged from the Cynic tradition and was popularized through public teaching at the Stoa Poikile , a painted colonnade . Among its adherents was Roman Emperor Marcus Aurelius . 
+
+Along with Aristotelian term logic , the system of propositional logic developed by the Stoics was one of the two great systems of logic in the classical world. It was largely built and shaped by Chrysippus , the third head of the Stoic school in the 3rd century&#160;BCE. Chrysippus's logic differed from term logic because it was based on the analysis of propositions rather than terms. Stoicism experienced a decline after Christianity became the state religion in the 4th century CE, although Gnosticism lingered and incorporated pure elements of Stoicism and Platonism .
+
+Since then, it has seen revivals, notably in the Renaissance ( Neostoicism ) and in the contemporary era. &#91; 6 &#93; Its influence extended to Roman thinkers like Seneca and Epictetus and later influenced Christianity and the Renaissance Neostoicism movement. Stoicism shaped subsequent developments in logic and inspired modern cognitive therapies .
+
+History [ edit ] 
+
+- See also: List of Stoic philosophers 
+
+The name Stoicism derives from the Stoa Poikile ( Ancient Greek : ἡ ποικίλη στοά), or "painted porch", a colonnade decorated with mythic and historical battle scenes on the north side of the Agora in Athens where Zeno of Citium and his followers gathered to discuss their ideas, near the end of the fourth century BCE. &#91; 7 &#93; Unlike the Epicureans , Zeno chose to teach his philosophy in a public space. Stoicism was originally known as Zenonism. However, this name was soon dropped, probably because the Stoics did not consider their founders to be perfectly wise and to avoid the risk of the philosophy becoming a cult of personality . &#91; 8 &#93; 
+
+Zeno's ideas developed from those of the Cynics (brought to him by Crates of Thebes ), whose founding father, Antisthenes , had been a disciple of Socrates . Zeno's most influential successor was Chrysippus , who followed Cleanthes as leader of the school, and was responsible for molding what is now called Stoicism. &#91; 9 &#93; Stoicism became the foremost popular philosophy among the educated elite in the Hellenistic world and the Roman Empire &#91; 10 &#93; to the point where, in the words of Gilbert Murray , "nearly all the successors of Alexander [...] professed themselves Stoics". &#91; 11 &#93; Later Roman Stoics focused on promoting a life in harmony within the universe, within which we are active participants.
+
+Scholars &#91; 12 &#93; usually divide the history of Stoicism into three phases: the Early Stoa, from Zeno's founding to Antipater ; the Middle Stoa, including Panaetius and Posidonius ; and the Late Stoa, including Musonius Rufus , Seneca , Epictetus , and Marcus Aurelius . No complete works survived from the first two phases of Stoicism. Only Roman texts from the Late Stoa survived. &#91; 13 &#93; 
+
+Logic [ edit ] 
+
+- See also: History of logic 
+ Chrysippus , the third leader of the Stoic school, wrote more than 300 books on logic. His works were lost, but an outline of his logical system may be reconstructed from fragments and testimony. 
+
+For the Stoics, logic ( logike ) was the part of philosophy which examined reason ( logos ). &#91; 14 &#93; To achieve a happy life—a life worth living—requires logical thought. &#91; 2 &#93; The Stoics held that an understanding of ethics was impossible without logic. &#91; 15 &#93; In the words of Inwood, the Stoics believed that: &#91; 16 &#93; 
+
+Logic helps a person see what is the case, reason effectively about practical affairs, stand his or her ground amid confusion, differentiate the certain from the probable, and so forth. 
+
+To the Stoics, logic was a wide field of knowledge which included the study of language , grammar , rhetoric and epistemology . &#91; 14 &#93; However, all of these fields were interrelated, and the Stoics developed their logic (or "dialectic") within the context of their theory of language and epistemology. &#91; 17 &#93; 
+
+The Stoic tradition of logic originated in the 4th-century BCE in a different school of philosophy known as the Megarian school . &#91; 18 &#93; It was two dialecticians of this school, Diodorus Cronus and his pupil Philo , who developed their own theories of modalities and of conditional propositions . &#91; 18 &#93; The founder of Stoicism, Zeno of Citium, studied under the Megarians, and he was said to have been a fellow pupil with Philo. &#91; 19 &#93; 
+
+However, the outstanding figure in the development of Stoic logic was Chrysippus of Soli (c. 279 – c. 206 BCE), the third head of the Stoic school. &#91; 18 &#93; Chrysippus shaped much of Stoic logic as we know it, creating a system of propositional logic. &#91; 20 &#93; The logical writings by Chrysippus are, however, almost entirely lost, &#91; 18 &#93; instead his system has to be reconstructed from the partial and incomplete accounts preserved in the works of later authors. &#91; 19 &#93; 
+
+Assertibles [ edit ] 
+
+The smallest unit in Stoic logic is an assertible ( axiomata ), a proposition which is either true or false and which either affirms or denies. &#91; 21 &#93; Examples of assertibles include "it is night", "it is raining this afternoon", and "no one is walking." &#91; 22 &#93; &#91; 23 &#93; Assertibles have a truth-value such that they are only true or false depending on when it was expressed (e.g. the assertible "it is night" will only be true if it is true that it is night). &#91; 24 &#93; The Stoics catalogued these simple assertibles according to whether they are affirmative or negative, and whether they are definite or indefinite (or both). &#91; 25 &#93; 
+
+Compound assertibles [ edit ] 
+
+Logical connectives
+
+ Name
+
+ Example
+
+ Conditional 
+
+ if it is day, it is light
+
+ Conjunction 
+
+ it is day and light
+
+ Disjunction 
+
+ either it is day or night
+
+ Pseudo-conditional
+
+ since it is day, it is light
+
+ Causal 
+
+ because it is day, it is light
+
+ Comparative
+
+ more likely it is day than night
+
+Compound assertibles can be built up from simple ones through the use of logical connectives , which examine choice and consequence such as "if ... then", "either ... or", and "not both". &#91; 15 &#93; &#91; 26 &#93; Chrysippus seems to have been responsible for introducing the three main types of connectives: the conditional ( if ), conjunctive ( and ), and disjunctive ( or ). &#91; 27 &#93; A typical conditional takes the form of "if p then q"; &#91; 28 &#93; whereas a conjunction takes the form of "both p and q"; &#91; 28 &#93; and a disjunction takes the form of "either p or q". &#91; 29 &#93; The or they used is exclusive , unlike the inclusive or generally used in modern formal logic. &#91; 30 &#93; These connectives are combined with the use of not for negation. &#91; 31 &#93; Thus the conditional can take the following four forms: &#91; 32 &#93; 1) "If p, then q" 2) "If not p, then q" 3) "If p, then not q" 4) "If not p, then not q." Later Stoics added more connectives: the pseudo-conditional took the form of "since p then q"; and the causal assertible took the form of "because p then q". [a] There was also a comparative (or dissertive): "more/less (likely) p than q". &#91; 33 &#93; 
+
+Modal assertibles [ edit ] 
+
+Assertibles can also be distinguished by their modal properties 
+- [b] —whether they are possible, impossible, necessary, or non-necessary. &#91; 34 &#93; In this, the Stoics were building on an earlier Megarian debate initiated by Diodorus Cronus. &#91; 34 &#93; Diodorus had defined possibility in a way which seemed to adopt a form of fatalism . &#91; 35 &#93; Diodorus defined possible as "that which either is or will be true". &#91; 36 &#93; Thus, there are no forever unrealised possibilities, whatever is possible is or one day will be true. &#91; 35 &#93; His pupil Philo, rejecting this, defined possible as "that which is capable of being true by the proposition's own nature", &#91; 36 &#93; thus a statement like "this piece of wood can burn" is possible , even if it spent its entire existence on the bottom of the ocean. &#91; 37 &#93; Chrysippus, on the other hand, was a causal determinist: he thought that true causes inevitably give rise to their effects and that all things arise in this way. &#91; 38 &#93; But he was not a logical determinist or fatalist: he wanted to distinguish between possible and necessary truths. &#91; 38 &#93; Thus, he took a middle position between Diodorus and Philo, combining elements of both their modal systems. &#91; 39 &#93; Chrysippus's set of Stoic modal definitions was as follows: &#91; 40 &#93; 
+
+ Modal definitions
+
+ Name
+
+ Definition
+
+ possible 
+
+ An assertible which can become true and is not hindered by external things from becoming true
+
+ impossible 
+
+ An assertible which cannot become true or which can become true but is hindered by external things from becoming true
+
+ necessary 
+
+ An assertible which (when true) cannot become false or which can become false but is hindered by external things from becoming false
+
+ non-necessary 
+
+ An assertible which can become false and is not hindered by external things from becoming false
+
+Arguments [ edit ] 
+
+In Stoic logic, an argument is defined as a compound or system of premises and a conclusion. &#91; 41 &#93; A typical Stoic syllogism is: "If it is day, it is light; It is day; Therefore it is light". &#91; 41 &#93; It has a non-simple assertible for the first premise ("If it is day, it is light") and a simple assertible for the second premise ("It is day"). &#91; 41 &#93; Stoic logic also uses variables that stand for propositions to generalize arguments of the same form. &#91; 42 &#93; In more general terms this argument would be: &#91; 21 &#93; "If p, then q; p; Therefore q."
+
+Indemonstrable arguments [ edit ] 
+
+Chrysippus listed five basic argument forms, called indemonstrables, &#91; 43 &#93; 
+- [c] which all other arguments are reducible to: &#91; 44 &#93; 
+
+ Indemonstrable arguments
+
+ Name
+- [d] 
+
+ Description
+
+ Example
+
+ Modus ponens 
+
+ If p, then q.&#160; p.&#160; Therefore, q.
+
+ If it is day, it is light. It is day. Therefore, it is light. 
+
+ Modus tollens 
+
+ If p, then q.&#160; Not q.&#160; Therefore, not p.
+
+ If it is day, it is light. It is not light. Therefore, it is not day. 
+
+ Modus ponendo tollens 
+
+ Not both p and q.&#160; p.&#160; Therefore, not q.&#160;
+
+ It is not both day and night. It is day. Therefore, it is not night. &#160;
+
+ Strong modus tollendo ponens 
+
+ Either p or q.&#160; Not p.&#160; Therefore, q.
+
+ It is either day or night. It is not day. Therefore, it is night. 
+
+ Strong modus ponendo tollens 
+
+ Either p or q.&#160; p.&#160; Therefore, not q.
+
+ It is either day or night. It is day. Therefore, it is not night. 
+
+There can be many variations of these five indemonstrable arguments. &#91; 45 &#93; For example the assertibles in the premises can be more complex, and the following syllogism is a valid example of the second indemonstrable ( modus tollens ): &#91; 32 &#93; "if both p and q, then r; not r; therefore not: both p and q" Similarly one can incorporate negation into these arguments. &#91; 32 &#93; A valid example of the fourth indemonstrable (strong modus tollendo ponens or exclusive disjunctive syllogism) is: &#91; 46 &#93; "either [not p] or q; not [not p]; therefore q" which, incorporating the principle of double negation , is equivalent to: &#91; 46 &#93; "either [not p] or q; p; therefore q."
+
+Complex arguments [ edit ] 
+
+However, many other arguments are not expressed in the form of the five indemonstrables, and the task is to show how they can be reduced to one of the five types. &#91; 31 &#93; A simple example of Stoic reduction is reported by Sextus Empiricus : &#91; 47 &#93; "if both p and q, then r; not r; but also p; Therefore not q" This can be reduced to two separate indemonstrable arguments of the second and third type: &#91; 48 &#93; "if both p and q, then r; not r; therefore not: both p and q; not: both p and q; p; therefore not q"
+
+The Stoics stated that complex syllogisms could be reduced to the indemonstrables through the use of four ground rules or themata . &#91; 49 &#93; Of these four themata , only two have survived. &#91; 50 &#93; &#91; 36 &#93; One, the so-called first thema , was a rule of antilogism : "When from two [assertibles] a third follows, then from either of them together with the contradictory of the conclusion the contradictory of the other follows." &#91; 51 &#93; &#91; 36 &#93; The other, the third thema , was a cut rule by which chain syllogisms could be reduced to simple syllogisms.
+- [e] The importance of these rules is not altogether clear. &#91; 52 &#93; In the 2nd-century BCE, Antipater of Tarsus is said to have introduced a simpler method involving the use of fewer themata , although few details survive concerning this. &#91; 52 &#93; 
+
+Paradoxes [ edit ] 
+
+Why should not the philosopher develop his own reason? You turn to vessels of crystal, I to the syllogism called The Liar ; you to myrrhine glassware, I to the syllogism called The Denyer .
+
+ – Epictetus , Discourses , iii.9.20 
+
+In addition to describing which inferences are valid ones, part of a Stoic's logical training was the enumeration and refutation of false arguments, including the identification of paradoxes, &#91; 53 &#93; which represented a challenge to the basic logical notions of the Stoics, such as truth or falsehood. &#91; 54 &#93; One paradox studied by Chrysippus, known as the Liar paradox , asked "A man says he is lying; is what he says true or false?"—if the man says something true then it seems he is lying, but if he is lying then he is not saying something true, and so on. Another, known as the Sorites paradox or "Heap", asked "How many grains of wheat do you need before you get a heap?" &#91; 55 &#93; It was said to challenge the idea of true or false by offering up the possibility of vagueness. &#91; 55 &#93; In mastering these paradoxes, the Stoics hoped to cultivate their rational powers, &#91; 56 &#93; to more easily enable ethical reflection, permit secure and confident arguing, and lead themselves to truth. &#91; 57 &#93; 
+
+Categories [ edit ] 
+
+The Stoics held that all beings ( ὄντα )—although not all things (τινά)—are material . &#91; 58 &#93; Besides the existing beings, they admitted four incorporeals (asomata): time, place, void, and sayable. &#91; 59 &#93; They were held to be just 'subsisting' while such a status was denied to universals. &#91; 60 &#93; Thus, they accepted Anaxagoras 's idea (as did Aristotle) that if an object is hot, it is because some part of a universal heat body had entered the object. But, unlike Aristotle, they extended the idea to cover all chance incidents . Thus, if an object is red, it would be because some part of a universal red body had entered the object.
+
+They held that there were four categories :
+
+- Substance ( ὑποκείμενον ): The primary matter, formless substance, ( ousia ) that things are made of 
+
+- Quality ( ποιόν ): The way matter is organized to form an individual object; in Stoic physics, a physical ingredient ( pneuma : air or breath), which informs the matter 
+
+- Somehow disposed ( πως ἔχον ): Particular characteristics, not present within the object, such as size, shape, action, and posture 
+
+- Somehow disposed in relation to something ( πρός τί πως ἔχον ): Characteristics related to other phenomena, such as the position of an object within time and space relative to other objects 
+
+A simple example of the Stoic categories in use is provided by Jacques Brunschwig:
+
+- 
+
+I am a certain lump of matter, and thereby a substance, an existent something (and thus far that is all); I am a man, and this individual man that I am, and thereby qualified by a common quality and a peculiar one; I am sitting or standing, disposed in a certain way; I am the father of my children, the fellow citizen of my fellow citizens, disposed in a certain way in relation to something else. &#91; 61 &#93; 
+
+Epistemology [ edit ] 
+
+- Main article: Epistemology 
+
+According to the Stoics, knowledge can be attained through the application of reason to the impressions ( phantasiai ) received by the mind through the senses. The mind can judge (συγκατάθεσις, synkatathesis )—approve or reject—an impression, enabling it to distinguish a true representation of reality from one that is false. Some impressions can be assented to immediately, but others can achieve only varying degrees of hesitant approval, which can be labeled belief or opinion ( doxa ). It is only through reason that we gain clear comprehension and conviction ( katalepsis ). Certainty and true knowledge ( episteme ), achievable by the Stoic sage, can be attained only by verifying the conviction with the expertise of one's peers and the collective judgment of humankind.
+
+Physics [ edit ] 
+
+According to the Stoics, the Universe is a material reasoning substance ( logos ), which was divided into two classes: the active and the passive. &#91; 62 &#93; The passive substance is matter itself, while the active substance is an intelligent aether or primordial fire , which acts on the passive matter, the logos or anima mundi pervading and animating the entire Universe. It was conceived as material and is usually identified with God or Nature. The Stoics also referred to the seminal reason (" logos spermatikos "), or the law of generation in the Universe, which was the principle of the active reason working in inanimate matter . Humans, too, each possess a portion of the divine logos , which is the primordial Fire and reason that controls and sustains the Universe. &#91; 63 &#93; Everything is subject to the laws of Fate, for the Universe acts according to its own nature, and the nature of the passive matter it governs. 
+
+Stoicism does not posit a beginning or end to the Universe. &#91; 64 &#93; The current Universe is a phase in the present cycle, preceded by an infinite number of Universes, doomed to be destroyed ("Ekpyrosis", conflagration ) and re-created again , &#91; 65 &#93; and to be followed by another infinite number of Universes.
+
+Ethics [ edit ] 
+ A bust of Seneca , a Stoic philosopher from the Roman Empire who served as an adviser to Nero 
+
+Alongside Aristotle's ethics , the Stoic tradition forms one of the major founding approaches to virtue ethics . &#91; 66 &#93; The Stoics believed that the practice of virtue is enough to achieve eudaimonia : a well-lived life. The Stoics identified the path to achieving it with a life spent practicing the four cardinal virtues in everyday life — prudence , fortitude , temperance , and justice — as well as living in accordance with nature. 
+
+The Stoics are especially known for teaching that "virtue is the only good" for human beings, and that external things, such as health, wealth, and pleasure, are not good or bad in themselves ( adiaphora ) but have value as "material for virtue to act upon". Many Stoics —such as Seneca and Epictetus — emphasized that because "virtue is sufficient for happiness ", a sage would be emotionally resilient to misfortune. The Stoics also believed that certain destructive emotions resulted from errors of judgment, and people should aim to maintain a will (called prohairesis ) that is "in accordance with nature ". Because of this, the Stoics thought the best indication of an individual's philosophy was not what a person said but how the person behaved. &#91; 67 &#93; 
+
+The Stoics outlined that our own actions, thoughts, and reactions are within our control. These suggest a space that is up to us or within our power. Stoic ethics involves improving the individual's ethical and moral well-being: " Virtue consists in a will that is in agreement with Nature." &#91; 68 &#93; The foundation of Stoic ethics is that good lies in the state of the soul itself, in wisdom and self-control. For the Stoics, reason meant using logic and understanding the processes of nature—the logos or universal reason, inherent in all things, as a means of overcoming destructive emotions . &#91; 69 &#93; This principle also applies to the realm of interpersonal relationships; "to be free from anger, envy, and jealousy", &#91; 70 &#93; and even to accept slaves as equals of others because all are products of nature. &#91; 71 &#93; The Stoic ethic espouses a deterministic perspective; in regard to those who lack Stoic virtue, Cleanthes once opined that the wicked person is "like a dog tied to a cart, and compelled to go wherever it goes". &#91; 68 &#93; A Stoic of virtue, by contrast, would amend one's will to suit the world and remain, in the words of Epictetus, "sick and yet happy, in peril and yet happy, dying and yet happy, in exile and happy, in disgrace and happy", &#91; 70 &#93; thus positing a "completely autonomous" individual will, and at the same time a universe that is "a rigidly deterministic single whole".
+
+Passions [ edit ] 
+
+For the Stoic Chrysippus , the passions are evaluative judgements. &#91; 72 &#93; A passion is a disturbing and misleading force in the mind which occurs because of a failure to reason correctly. &#91; 73 &#93; The Stoics used the word to discuss many common emotions such as anger, fear and excessive joy. &#91; 73 &#93; Incorrect judgment as to a present good gives rise to delight, while lust is a wrong estimate about the future. &#91; 73 &#93; Unreal imaginings of evil cause distress about the present, or fear for the future. &#91; 74 &#93; The ideal Stoic would instead measure things at their real value, &#91; 74 &#93; and see that the passions are not natural. &#91; 74 &#93; To be free of the passions is to have a happiness which is self-contained. &#91; 74 &#93; There would be nothing to fear—for unreason is the only evil; no cause for anger—for others cannot harm you. &#91; 74 &#93; 
+
+The Stoics arranged the passions under four headings: distress, pleasure, fear, and lust. &#91; 75 &#93; One report of the Stoic definitions of these passions appears in the treatise On Passions by Chrysippus (trans. Long & Sedley, pg. 411, modified):
+
+- Distress ( lupē ): Distress is an irrational contraction, or a fresh opinion that something bad is present, at which people think it right to be depressed . 
+
+- Fear ( phobos ): Fear is an irrational aversion , or avoidance of an expected danger . 
+
+- Lust ( epithumia ): Lust is an irrational desire, or pursuit of an expected good but in reality bad. 
+
+- Delight ( hēdonē ): Delight is an irrational swelling, or a fresh opinion that something good is present, at which people think it right to be elated . 
+
+ &#160; 
+ Present 
+ Future 
+
+ Good 
+ Delight 
+ Lust
+
+ Evil 
+ Distress 
+ Fear
+
+Two of these passions (distress and delight) refer to emotions currently present, and two of these (fear and lust) refer to emotions directed at the future. &#91; 75 &#93; Thus there are just two states directed at the prospect of good and evil, but subdivided as to whether they are present or future: &#91; 76 &#93; Numerous subdivisions of the same class were brought under the head of the separate passions: &#91; 77 &#93; 
+
+- Distress : Envy , Rivalry , Jealousy , Compassion , Anxiety , Mourning , Sadness , Troubling, Grief , Lamenting, Depression , Vexation, Despondency. 
+
+- Fear : Sluggishness, Shame , Fright , Timidity , Consternation, Pusillanimity, Bewilderment, and Faintheartedness. 
+
+- Lust : Anger , Rage , Hatred , Enmity, Wrath , Greed , and Longing. 
+
+- Delight : Malice, Rapture , and Ostentation. 
+
+The wise person ( sophos ) is someone who is free from the passions ( apatheia or impassivity &#91; 78 &#93; &#91; 79 &#93; ). Instead, the sage experiences good feelings ( eupatheia ) which are clear-headed. &#91; 80 &#93; These emotional impulses are not excessive, but nor are they diminished emotions. &#91; 81 &#93; &#91; 82 &#93; Instead they are the correct rational emotions. &#91; 82 &#93; The Stoics listed the good-feelings under the headings of joy ( chara ), wish ( boulesis ), and caution ( eulabeia ). &#91; 83 &#93; Thus if something is present which is a genuine good, then the wise person experiences an uplift in the soul—joy ( chara ). &#91; 84 &#93; The Stoics also subdivided the good-feelings: &#91; 85 &#93; 
+
+- Joy: Enjoyment, Cheerfulness, Good spirits 
+
+- Wish: Good intent, Goodwill, Welcoming, Cherishing, Love 
+
+- Caution: Moral shame, Reverence 
+
+Suicide [ edit ] 
+
+The Stoics considered suicide permissible for the wise person in circumstances that might prevent them from living a virtuous life, &#91; 86 &#93; such as if they fell victim to severe pain or disease, &#91; 86 &#93; but otherwise, suicide would usually be seen as a rejection of one's social duty. &#91; 87 &#93; For example, Plutarch reports that accepting life under tyranny would have compromised Cato 's self-consistency ( constantia ) as a Stoic and impaired his freedom to make the honorable moral choices. &#91; 88 &#93; 
+
+Legacy [ edit ] 
+ Marcus Aurelius , the Stoic Roman emperor 
+
+For around five hundred years, Stoic logic was one of the two great systems of logic. &#91; 89 &#93; The logic of Chrysippus was discussed alongside that of Aristotle, and it may well have been more prominent since Stoicism was the dominant philosophical school. &#91; 90 &#93; From a modern perspective, Aristotle's term logic and the Stoic logic of propositions appear complementary, but they were sometimes regarded as rival systems. &#91; 31 &#93; 
+
+Neoplatonism [ edit ] 
+
+In late antiquity, the Stoic school fell into decline, and the last pagan philosophical school, the Neoplatonists , adopted Aristotle's logic for their own. &#91; 91 &#93; Plotinus had criticized both Aristotle's Categories and those of the Stoics; his student Porphyry , however, defended Aristotle's scheme. He justified this by arguing that they should be interpreted strictly as expressions, rather than as metaphysical realities. The approach can be justified, at least in part, by Aristotle's own words in The Categories. Boethius ' acceptance of Porphyry's interpretation led to their being accepted by Scholastic philosophy. &#91; 92 &#93; As a result the Stoic writings on logic did not survive, and only elements of Stoic logic made their way into the logical writings Boethius and other later commentators, transmitting confused parts of Stoic logic to the Middle Ages. &#91; 90 &#93; Propositional logic was redeveloped by Peter Abelard in the 12th century, but by the mid-15th century the only logic which was being studied was a simplified version of Aristotle's. &#91; 93 &#93; Knowledge about Stoic logic as a system was lost until the 20th century, when logicians familiar with the modern propositional calculus reappraised the ancient accounts of it.
+
+Christianity [ edit ] 
+
+The Fathers of the Church regarded Stoicism as a "pagan philosophy"; &#91; 94 &#93; &#91; 95 &#93; nonetheless, early Christian writers used some of the central philosophical concepts of Stoicism. Examples include the terms " logos ", " virtue ", "Spirit", and " conscience ". &#91; 64 &#93; Like Stoicism, Christianity asserts an inner freedom in the face of the external world, a belief in human kinship with Nature or God, a sense of the innate depravity—or "persistent evil"—of humankind, &#91; 64 &#93; and the futility and temporary nature of worldly possessions and attachments. Both encourage equanimity with respect to the passions and inferior emotions, such as lust and envy, so that the higher possibilities of one's humanity can be awakened and developed. Stoic influence can also be seen in the works of Ambrose of Milan , Marcus Minucius Felix , and Tertullian . &#91; 96 &#93; 
+
+Neostoicism [ edit ] 
+
+- Main article: Neostoicism 
+
+ Neostoicism was a philosophical movement that arose in the late 16th century from the works of the Renaissance humanist Justus Lipsius , who sought to combine the beliefs of Stoicism and Christianity. &#91; 78 &#93; The project of neostoicism has been described as an attempt by Lipsius to construct "a secular ethics based on Roman Stoic philosophy." He did not endorse religious toleration in an unqualified way: hence the importance of a morality not tied to religion. &#91; 97 &#93; The work of Guillaume du Vair , Traité de la Constance (1594), was another important influence in the neo-stoic movement. Where Lipsius had mainly based his work on the writings of Seneca, du Vair emphasized Epictetus. &#91; 78 &#93; Pierre Charron came to a neo-stoic position through the impact of the French Wars of Religion . He made a complete separation of morality and religion. &#91; 98 &#93; 
+
+Reappraisal of Stoic logic [ edit ] 
+
+In the 18th century, Immanuel Kant declared that "since Aristotle ... logic has not been able to advance a single step, and is thus to all appearance a closed and complete body of doctrine." &#91; 99 &#93; To 19th-century historians, who believed that Hellenistic philosophy represented a decline from that of Plato and Aristotle, Stoic logic was seen with contempt. &#91; 100 &#93; Carl Prantl thought that Stoic logic was "dullness, triviality, and scholastic quibbling" and he welcomed the fact that the works of Chrysippus were no longer extant. &#91; 101 &#93; 
+
+Although developments in modern logic that parallel Stoic logic began in the middle of the 19th century with the work of George Boole and Augustus De Morgan , &#91; 93 &#93; Stoic logic itself was only reappraised in the 20th-century, &#91; 101 &#93; beginning with the work of Polish logician Jan Łukasiewicz &#91; 101 &#93; and Benson Mates . &#91; 101 &#93; According to Susanne Bobzien , "The many close similarities between Chrysippus' philosophical logic and that of Gottlob Frege are especially striking". &#91; 102 &#93; 
+
+- 
+
+What we see as a result is a close similarity between [these] methods of reasoning and the behaviour of digital computers. ... The code happens to come from the nineteenth-century logician and mathematician George Boole, whose aim was to codify the relations studied much earlier by Chrysippus (albeit with greater abstraction and sophistication). Later generations built on Boole's insights ... but the logic that made it all possible was the interconnected logic of an interconnected universe, discovered by the ancient Chrysippus, who labored long ago under an old Athenian stoa. &#91; 103 &#93; 
+
+Contemporary stoicism [ edit ] 
+
+Contemporary usage defines a stoic as a "person who represses feelings or endures patiently". &#91; 104 &#93; The Stanford Encyclopedia of Philosophy ' s entry on Stoicism notes: "the sense of the English adjective 'stoical' is not utterly misleading with regard to its philosophical origins". &#91; 105 &#93; 
+
+Contemporary Stoicism draws from the late 20th- and early 21st-century spike in publications of scholarly works on ancient Stoicism. The revival of Stoicism in the 20th century can be traced to the publication of Problems in Stoicism by A. A. Long in 1971. &#91; 106 &#93; 
+
+According to philosopher Pierre Hadot , philosophy for a Stoic is not just a set of beliefs or ethical claims; it is a way of life involving constant practice and training (or " askēsis "), an active process of constant practice and self-reminder. Epictetus, in his Discourses , distinguished between three types of act: judgment, desire, and inclination, &#91; 107 &#93; which Hadot identifies these three acts with logic, physics, and ethics, respectively. &#91; 108 &#93; Hadot writes that in the Meditations , "Each maxim develops either one of these very characteristic topoi [i.e., acts], or two of them or three of them." &#91; 109 &#93; 
+
+Psychology and psychotherapy [ edit ] 
+
+Stoic philosophy was the original philosophical inspiration for modern cognitive psychotherapy , particularly as mediated by Albert Ellis ' rational emotive behavior therapy (REBT), &#91; 110 &#93; the major precursor of cognitive behavioral therapy (CBT). The original cognitive therapy treatment manual for depression by Aaron T. Beck et al. states, "The philosophical origins of cognitive therapy can be traced back to the Stoic philosophers". &#91; 111 &#93; A well-known quotation from Enchiridion of Epictetus was taught to most clients during the initial session of traditional REBT by Ellis and his followers: "It's not the events that upset us, but our judgments about the events." &#91; 112 &#93; 
+
+See also [ edit ] 
+
+- Amor fati &#160;– Latin phrase meaning "love of fate" 
+
+Notes [ edit ] 
+
+ a. 
+- ^ The minimum requirement for a conditional is that the consequent follows from the antecedent. &#91; 28 &#93; The pseudo-conditional adds that the antecedent must also be true. The causal assertible adds an asymmetry rule such that if p is the cause/reason for q, then q cannot be the cause/reason for p. Bobzien 1999 , p.&#160;109
+
+ b. 
+- ^ "Stoic modal logic is not a logic of modal propositions (e.g., propositions of the type 'It is possible that it is day' ...) ... instead, their modal theory was about non-modalized propositions like 'It is day', insofar as they are possible, necessary, and so forth." Bobzien 1999 , p.&#160;117
+
+ c. 
+- ^ Most of these argument forms had already been discussed by Theophrastus, but: "It is plain that even if Theophrastus discussed (1)–(5), he did not anticipate Chrysippus' achievement. ... his Aristotelian approach to the study and organization of argument-forms would have given his discussion of mixed hypothetical syllogisms an utterly unStoical aspect." Barnes 1999 , p.&#160;83
+
+ d. 
+- ^ These Latin names date from the Middle Ages. Shenefelt & White 2013 , p.&#160;288
+
+ e. 
+- ^ For a brief summary of these themata see Susanne Bobzien's Ancient Logic article for the Stanford Encyclopedia of Philosophy. For a detailed (and technical) analysis of the themata , including a tentative reconstruction of the two lost ones, see Bobzien 1999 , pp.&#160;137–148, Long & Sedley 1987 , §36 HIJ.
+
+Citations [ edit ] 
+
+- ^ Jason Lewis Saunders. "Stoicism" . Britannica . Archived from the original on 28 June 2023 . Retrieved 2 January 2022 . 
+
+- ^ a b Shenefelt & White 2013 , p.&#160;74 
+
+- ^ Aetius, Stoicorum Veterum Fragmenta, 2.35 
+
+- ^ a b Long & Sedley 1987 , p.&#160;161. 
+
+- ^ Long & Sedley 1987 , p.&#160;160. 
+
+- ^ 
+- Becker, Lawrence C. (2001). A New Stoicism . Princeton: Princeton University Press . ISBN &#160; 978-1400822447 . Archived from the original on 8 July 2023 . Retrieved 10 August 2017 . 
+
+- ^ 
+- Becker, Lawrence (2003). A History of Western Ethics . New York: Routledge. p.&#160;27. ISBN &#160; 978-0415968256 . 
+
+- ^ 
+- Robertson, Donald (2018). Stoicism and the Art of Happiness . Great Britain: John Murray . 
+
+- ^ 
+- "Chrysippus | Internet Encyclopedia of Philosophy" . Archived from the original on 9 October 2023 . Retrieved 31 August 2023 . 
+
+- ^ 
+- Amos, H. (1982). These Were the Greeks . Chester Springs: Dufour Editions. ISBN &#160; 978-0802312754 . OCLC &#160; 9048254 . 
+
+- ^ Gilbert Murray, The Stoic Philosophy (1915), p. 25. In Bertrand Russell, A History of Western Philosophy (1946). 
+
+- ^ Sedley, D. (2003) The School, from Zeno to Arius Didymus. In: B. Inwood (ed.) The Cambridge Companion to the Stoics. Cambridge University Press. 
+
+- ^ A.A.Long, Hellenistic Philosophy , p. 115. 
+
+- ^ a b Sellars 2006 , p.&#160;55 
+
+- ^ a b Shenefelt & White 2013 , p.&#160;78 
+
+- ^ Inwood 2003 , p.&#160;229 
+
+- ^ O'Toole & Jennings 2004 , p.&#160;400 
+
+- ^ a b c d Bobzien 1996a , p.&#160;880 
+
+- ^ a b Sellars 2006 , p.&#160;56 
+
+- ^ Shenefelt & White 2013 , p.&#160;80 
+
+- ^ a b Sellars 2006 , p.&#160;58 
+
+- ^ Sellars 2006 , pp.&#160;58–59 
+
+- ^ Bobzien 1999 , p.&#160;102 
+
+- ^ Bobzien 1999 , pp.&#160;95. 
+
+- ^ Bobzien 1999 , pp.&#160;97–98 
+
+- ^ Shenefelt & White 2013 , p.&#160;79 
+
+- ^ Bobzien 1999 , p.&#160;105 
+
+- ^ a b c Bobzien 1999 , p.&#160;106 
+
+- ^ Bobzien 1999 , p.&#160;109 
+
+- ^ Inwood 2003 , p.&#160;231 
+
+- ^ a b c Sellars 2006 , p.&#160;60 
+
+- ^ a b c Bobzien 1999 , p.&#160;129 
+
+- ^ Bobzien 1999 , pp.&#160;109–111 
+
+- ^ a b Sellars 2006 , p.&#160;59 
+
+- ^ a b Adamson 2015 , p.&#160;136 
+
+- ^ a b c d Bobzien 2020 
+
+- ^ Adamson 2015 , p.&#160;138 
+
+- ^ a b Adamson 2015 , p.&#160;58 
+
+- ^ Bobzien 1999 , p.&#160;120 
+
+- ^ Bobzien 1999 , p.&#160;118 
+
+- ^ a b c Bobzien 1999 , p.&#160;121 
+
+- ^ Bobzien 1996a , p.&#160;881 
+
+- ^ Mates 1953 , pp.&#160;67–73 
+
+- ^ Ierodiakonou 2006 , p.&#160;678 
+
+- ^ Bobzien 1999 , p.&#160;128 
+
+- ^ a b Shenefelt & White 2013 , p.&#160;87 
+
+- ^ Ierodiakonou 2009 , p.&#160;521 
+
+- ^ Ierodiakonou 2009 , p.&#160;522 
+
+- ^ Bobzien 1996b , p.&#160;133 
+
+- ^ Kneale & Kneale 1962 , p.&#160;169 
+
+- ^ Apuleius , De Interpretatione 209. 9–14) 
+
+- ^ a b Barnes 1997 , p.&#160;82 
+
+- ^ Inwood 2003 , p.&#160;232 
+
+- ^ Ierodiakonou 2009 , p.&#160;525 
+
+- ^ a b Ierodiakonou 2009 , p.&#160;526 
+
+- ^ Long 2001 , p.&#160;95 
+
+- ^ Nussbaum 2009 
+
+- ^ Jacques Brunschwig, Stoic Metaphysics in The Cambridge Companion to Stoics , ed. B. Inwood, Cambridge, 2006, pp. 206–232 
+
+- ^ Sextus Empiricus , Adversus Mathematicos 10.218. (chronos, topos, kenon, lekton) 
+
+- ^ Marcelo D. Boeri, The Stoics on Bodies and Incorporeals , The Review of Metaphysics, Vol. 54, No. 4 (Jun., 2001), pp. 723–752 
+
+- ^ Jacques Brunschwig "Stoic Metaphysics", p. 228 in Brad Inwood (ed.), The Cambridge Companion to the Stoics , Cambridge University Press, 2003, pp. 206–232. 
+
+- ^ 
+- Karamanolis, George E. (2013). "Free will and divine providence" . The Philosophy of Early Christianity . Ancient Philosophies (1st&#160;ed.). New York and London : Routledge . p.&#160;151. ISBN &#160; 978-1844655670 . Archived from the original on 8 July 2023 . Retrieved 18 November 2021 . 
+
+- ^ Tripolitis, A., Religions of the Hellenistic-Roman Age , pp. 37–38. Wm. B. Eerdmans Publishing. 
+
+- ^ a b c Ferguson, Everett. Backgrounds of Early Christianity . 2003, p. 368. 
+
+- ^ Michael Lapidge , Stoic Cosmology , in: John M. Rist, The Stoics , Cambridge University Press , 1978, pp. 182–183. 
+
+- ^ Sharpe, Matthew, Stoic Virtue Ethics Archived 13 November 2018 at the Wayback Machine , Handbook of Virtue Ethics , 2013, 28–41 
+
+- ^ John Sellars. Stoicism , 2006, p. 32. 
+
+- ^ a b Russell, Bertrand. A History of Western Philosophy, p. 254 
+
+- ^ 
+- Graver, Margaret (2009). Stoicism and Emotion . Chicago: University of Chicago Press . ISBN &#160; 978-0226305585 . OCLC &#160; 430497127 . 
+
+- ^ a b Russell, Bertrand. A History of Western Philosophy , p. 264 
+
+- ^ Russell, Bertrand. A History of Western Philosophy , p. 253. 
+
+- ^ 
+- Groenendijk, L.F.; de Ruyter, D.J. (2009). "Learning from Seneca: A Stoic perspective on the art of living and education" . Ethics and Education . 4 : 81– 92. doi : 10.1080/17449640902816277 . ISSN &#160; 1744-9642 . S2CID &#160; 143758851 . Archived from the original on 2 December 2022 . Retrieved 5 July 2023 . 
+
+- ^ a b c Annas 1994 , pp.&#160;103–104. 
+
+- ^ a b c d e Capes 1880 , pp.&#160;47–48. 
+
+- ^ a b Sorabji 2000 , p.&#160;29 
+
+- ^ Graver 2007 , p.&#160;54 
+
+- ^ Cicero's Tusculan Disputations by J. E. King. 
+
+- ^ a b c 
+- Sellars, John. "Neostoicism" . In Fieser, James; Dowden, Bradley (eds.). Internet Encyclopedia of Philosophy . ISSN &#160; 2161-0002 . OCLC &#160; 37741658 . 
+
+- ^ 
+- "Definition of IMPASSIVITY" . www.merriam-webster.com . 4 November 2025 . Retrieved 5 December 2025 . 
+
+- ^ Inwood 1999 , p.&#160;705 
+
+- ^ Annas 1994 , p.&#160;115 
+
+- ^ a b Graver 2007 , p.&#160;52 
+
+- ^ Annas 1994 , pp.&#160;114. 
+
+- ^ Inwood 1999 , p.&#160;701 
+
+- ^ Graver 2007 , p.&#160;58 
+
+- ^ a b 
+- Marietta, Don E. (1998). Introduction to Ancient Philosophy . Armonk, N.Y.: M.E. Sharpe. pp.&#160; 153– 154. ISBN &#160; 9780765602152 . OCLC &#160; 37935252 . 
+
+- ^ William Braxton Irvine, (2009), A guide to the good life: the ancient art of Stoic joy , p. 200. Oxford University Press 
+
+- ^ 
+- Zadorojnyi, Alexei V. (2007). "Cato's suicide in Plutarch AV Zadorojnyi". The Classical Quarterly . 57 (1): 216– 230. doi : 10.1017/S0009838807000195 . S2CID &#160; 170834913 . 
+
+- ^ Kneale & Kneale 1962 , p.&#160;113 
+
+- ^ a b Kneale & Kneale 1962 , p.&#160;177 
+
+- ^ Sharples 2003 , p.&#160;156 
+
+- ^ 
+- "Boethius" . Stanford Encyclopedia of Philosophy . Retrieved 9 January 2026 . 
+
+- ^ a b Hurley 2011 , p.&#160;6 
+
+- ^ Agathias . Histories, 2.31. 
+
+- ^ 
+- David, Sedley. "Ancient philosophy" . In E. Craig (ed.). Routledge Encyclopedia of Philosophy . Archived from the original on 11 October 2014 . Retrieved 18 October 2008 . 
+
+- ^ 
+- "Stoicism &#124; Definition, History, & Influence &#124; Britannica" . www.britannica.com . Archived from the original on 28 June 2023 . Retrieved 2 January 2022 . 
+
+- ^ 
+- Israel, Jonathan Irvine (1998). The Dutch Republic: Its Rise, Greatness and Fall, 1477–1806 . Clarendon Press. p.&#160;372. ISBN &#160; 978-0-19-820734-4 . 
+
+- ^ 
+- Schmitt, C. B.; Kraye, Jill; Kessler, Eckhard; Skinner, Quentin (1990). The Cambridge History of Renaissance Philosophy . Cambridge University Press. p.&#160;374. ISBN &#160; 978-0-521-39748-3 . 
+
+- ^ O'Toole & Jennings 2004 , p.&#160;403 quoting Kant's Critique of Pure Reason . 
+
+- ^ O'Toole & Jennings 2004 , p.&#160;403 
+
+- ^ a b c d O'Toole & Jennings 2004 , p.&#160;397 
+
+- ^ Bobzien 2020 . 
+
+- ^ Shenefelt & White 2013 , pp.&#160;96–97 
+
+- ^ 
+- Harper, Douglas (November 2001). "Stoic" . etymonline.com, Online Etymology Dictionary . Archived from the original on 19 November 2016 . Retrieved 2 September 2006 . 
+
+- ^ Baltzly . 
+
+- ^ Long 1971 . 
+
+- ^ Hadot 1995 , pp.&#160;9–10. 
+
+- ^ Hadot 1998 , pp.&#160;106–115. 
+
+- ^ Hadot, P. (1987) Exercices spirituels et philosophie antique . Paris, 2nd ed., p. 135. 
+
+- ^ 
+- "REBT Network: Albert Ellis &#124; Rational Emotive Behavior Therapy" . www.rebtnetwork.org . Archived from the original on 14 November 2020 . Retrieved 13 January 2023 . 
+
+- ^ Beck, Rush, Shaw, & Emery (1979) Cognitive Therapy of Depression , p. 8. 
+
+- ^ Robertson 2010 . 
+
+Fragment collections [ edit ] 
+
+ Stoicorum Veterum Fragmenta (SVF) is a collection by Hans von Arnim of fragments and testimonia of the earlier Stoics, published in 1903–1905 as part of the Bibliotheca Teubneriana . It includes the fragments and testimonia of Zeno of Citium , Chrysippus and their immediate followers. At first, the work consisted of three volumes, to which Maximilian Adler in 1924 added a fourth, containing general indices. Teubner reprinted the whole work in 1964.
+
+- Volume 1 – Fragments of Zeno and his followers 
+
+- Volume 2 – Logical and physical fragments of Chrysippus 
+
+- Volume 3 – Ethical fragments of Chrysippus and some fragments of his pupils 
+
+- Volume 4 – Indices of words, proper names and sources 
+
+References [ edit ] 
+
+- 
+- Adamson, Peter (2015), Philosophy in the Hellenistic and Roman Worlds , Oxford University Press, ISBN &#160; 978-0-19-872802-3 
+
+- 
+- Annas, Julia (1994). Hellenistic Philosophy of Mind . University of California Press. ISBN &#160; 978-0520076594 . 
+
+- 
+- Barnes, Johnathan (1997), Logic and the Imperial Stoa , Brill, ISBN &#160; 90-04-10828-9 
+
+- 
+- Barnes, Johnathan (1999), "Logic: The Peripatetics", in Algra, Keimpe (ed.), The Cambridge History of Hellenistic Philosophy , Cambridge University Press, ISBN &#160; 0-521-25028-5 
+
+- Becker, Lawrence C. , A New Stoicism (Princeton: Princeton Univ. Press, 1998) 
+- ISBN &#160; 0691016607 
+
+- 
+- Bobzien, Susanne (1996a), "Logic", in Hornblower, Simon; Spawforth, Antony (eds.), The Oxford Classical Dictionary , Oxford University Press, ISBN &#160; 978-0-1986-6172-6 
+
+- 
+- Bobzien, Susanne (1996b), "Stoic Syllogistic", Oxford Studies in Ancient Philosophy 14 , Oxford University Press, ISBN &#160; 978-0-1982-3670-2 
+
+- 
+- Bobzien, Susanne (1999), "Logic: The Stoics", in Algra, Keimpe (ed.), The Cambridge History of Hellenistic Philosophy , Cambridge University Press, ISBN &#160; 0-521-25028-5 
+
+- 
+- Bobzien, Susanne (2020). "Ancient Logic" . In Zalta, Edward N. (ed.). Stanford Encyclopedia of Philosophy . ISSN &#160; 1095-5054 . OCLC &#160; 429049174 . 
+
+- Brooke, Christopher. Philosophic Pride: Stoicism and Political Thought from Lipsius to Rousseau (Princeton UP, 2012) excerpts Archived 29 April 2014 at the Wayback Machine 
+
+- 
+- Capes, William Wolfe (1880). Stoicism . Pott, Young, & Co. OCLC &#160; 1240350 . 
+
+- 
+- Graver, Margaret (2007). Stoicism and Emotion . University of Chicago Press. ISBN &#160; 978-0226305578 . 
+
+- 
+- Hadot, Pierre (3 August 1995). Philosophy as a Way of Life: Spiritual Exercises from Socrates to Foucault . Wiley. ISBN &#160; 978-0-631-18033-3 . Retrieved 21 May 2025 . 
+
+- 
+- Hadot, Pierre (1998). The Inner Citadel: The Meditations of Marcus Aurelius . Harvard University Press. ISBN &#160; 978-0-674-46171-0 . Retrieved 21 May 2025 . 
+
+- 
+- Hadot, Pierre (2002), What is Ancient Philosophy? , Harvard University Press, ISBN &#160; 0-674-00733-6 
+
+- 
+- Hurley, Patrick J. (2011), A Concise Introduction to Logic , Wadsworth, ISBN &#160; 978-0-8400-3417-5 
+
+- 
+- Ierodiakonou, Katerina (2006), "Stoicism", in Wilson, Nigel (ed.), Encyclopedia of Ancient Greece , Psychology Press, ISBN &#160; 978-0-4158-7396-3 
+
+- 
+- Ierodiakonou, Katerina (2009), "Stoic Logic", in Gill, Mary Louise; Pellegrin, Pierre (eds.), A Companion to Ancient Philosophy , Wiley-Blackwell, ISBN &#160; 978-1-4051-8834-0 
+
+- 
+- Inwood, Brad (1999), "Stoic Ethics", in Algra, Keimpe; Barnes, Johnathan; Mansfield, Jaap; Schofield, Malcolm (eds.), The Cambridge History of Hellenistic Philosophy , Cambridge University Press, ISBN &#160; 978-0521250283 
+
+- 
+- Inwood, Brad (2003), "Stoicism", in Furley, David (ed.), Routledge History of Philosophy Volume II: Aristotle to Augustine , Routledge, ISBN &#160; 978-0-4153-0874-8 
+
+- 
+- Kneale, William; Kneale, Martha (1962), The Development of Logic , Clarendon Press 
+
+- 
+- Karamanolis, George E. (2013). "Free will and divine providence" . The Philosophy of Early Christianity . Ancient Philosophies (1st&#160;ed.). New York and London: Routledge. p.&#160;151. ISBN &#160; 9781844655670 . 
+
+- 
+- Long, A A (1971). Problems in Stoicism . London: Athlone Press. ISBN &#160; 0485111187 . Archived from the original on 28 March 2023 . Retrieved 13 January 2023 . 
+
+- 
+- Long, A. A.; Sedley, D. N., eds. (1987). The Hellenistic Philosophers . Cambridge University Press. 
+
+- 
+- Long, A. A. (2001), "Dialectic and the Stoic Sage", Stoic Studies , University of California Press, ISBN &#160; 0-520-22974-6 
+
+- 
+- Mates, Benson (1953), Stoic Logic , University of California Press 
+
+- 
+- Nussbaum, Martha C. (2009), The Therapy of Desire: Theory and Practice in Hellenistic Ethics , Princeton University Press, ISBN &#160; 978-0-691-14131-2 
+
+- 
+- O'Toole, Robert R.; Jennings, Raymond E. (2004), "The Megarians and the Stoics", in Gabbay, Dov M.; Woods, John (eds.), Handbook of the History of Logic , vol.&#160;1, Elsevier, ISBN &#160; 0-444-51596-8 
+
+- 
+- Robertson, Donald (2010). The Philosophy

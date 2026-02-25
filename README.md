@@ -351,7 +351,8 @@ bin\neural_engine.exe knowledge_query capabilities "What can you do?"
 - **[docs/COMPLETE_SYSTEM.md](docs/COMPLETE_SYSTEM.md)** - Full system overview
 - **[docs/AI_CAPABILITIES.md](docs/AI_CAPABILITIES.md)** - All 40+ AI commands
 - **[docs/AI_SELF_AWARENESS.md](docs/AI_SELF_AWARENESS.md)** - Self-awareness implementation
-- **[MIGRATION_TO_AIZ.md](MIGRATION_TO_AIZ.md)** - .aiz extension migration guide
+- **[docs/HANDOVER.md](docs/HANDOVER.md)** - Project handover and design decisions
+- **[docs/v8_BWT.md](docs/v8_BWT.md)** - BWT v8 format details
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture
 - **[phases/](phases/)** - Phase-by-phase development documentation
 

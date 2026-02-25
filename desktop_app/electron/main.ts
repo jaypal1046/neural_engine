@@ -98,7 +98,7 @@ function createWindow() {
         minHeight: 600,
         icon: path.join(process.env.VITE_PUBLIC || '', 'electron-vite.svg'),
         webPreferences: {
-            preload: path.join(__dirname, 'preload.mjs'),
+            preload: path.join(__dirname, 'preload.js'),
         },
         autoHideMenuBar: true,
         title: 'Neural Studio V10',

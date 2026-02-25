@@ -1,0 +1,19 @@
+Question: How do I think about tradeoffs?
+
+Ideal Answer: Every decision involves tradeoffs — gaining one thing at the cost of another. Clear tradeoff thinking:
+
+1. **Identify the tradeoffs explicitly** — what do you gain? What do you give up?
+2. **Understand your constraints** — time, money, correctness, simplicity?
+3. **Think in reversibility** — prefer reversible decisions when uncertain. Hard to reverse = extra caution.
+4. **Consider the 2nd order effects** — what happens AFTER the first consequence?
+5. **Check your biases** — are you drawn to the option that feels familiar or comfortable?
+
+**Classic CS tradeoffs:**
+- Speed vs memory (cache more, compute less OR compute more, store less)
+- Consistency vs availability (CAP theorem)
+- Simplicity vs flexibility (hard-coding vs config files)
+- Accuracy vs speed (approximate algorithms)
+
+**Jeff Bezos rule:** Prioritize being 'roughly right quickly' over 'precisely right slowly' for reversible decisions.
+
+Skills demonstrated: 5 step framework, CS examples, reversibility rule, Bezos quote

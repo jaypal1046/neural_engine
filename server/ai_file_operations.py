@@ -1,6 +1,24 @@
 """
-AI File Operations - Dynamic Task Execution
-Allows AI to search, read, analyze project files on-demand
+PYTHON SUPPORT FILE — File System Operations Only
+==================================================
+ARCHITECTURE RULE: Python = support layer only. C++ = THE ONE BRAIN.
+
+ai_file_operations.py — File search, read, and listing support.
+Role: Provide file system operations to the React UI via main.py API.
+      Search files, read file content, list folders, analyze code structure.
+Does NOT: answer questions, store knowledge, generate AI responses.
+      These are pure file I/O helper functions.
+
+API endpoints that use this file (in main.py):
+  POST /api/ai/search_files    → cmd_search_files(query)
+  POST /api/ai/list_by_type    → cmd_list_by_type(query)
+  POST /api/ai/list_folder     → cmd_list_folder(query)
+  POST /api/ai/read_file       → cmd_read_file(path)
+  POST /api/ai/analyze_file    → cmd_analyze_file(path)
+  POST /api/ai/find_text       → cmd_find_text(text)
+  GET  /api/ai/project_stats   → cmd_project_stats()
+
+See: docs/ARCHITECTURE.md for the full system design.
 """
 
 import os

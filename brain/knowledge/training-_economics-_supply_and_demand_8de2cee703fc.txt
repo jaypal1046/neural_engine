@@ -1,0 +1,18 @@
+Question: What is supply and demand?
+
+Ideal Answer: Supply and demand is the fundamental mechanism that determines prices in a free market.
+
+**Demand:** As price rises, quantity demanded falls (inverse relationship). Demand shifts right if: income rises, population grows, preferences change.
+
+**Supply:** As price rises, quantity supplied rises (direct relationship). Supply shifts right if: production costs fall, technology improves.
+
+**Equilibrium:** The price where supply = demand. At this price, the market 'clears' — no surplus, no shortage.
+
+**Key shifts:**
+- Demand surges (COVID hand sanitizer) → price rises until new equilibrium
+- Supply crashes (drought destroying wheat crop) → price rises
+- New technology (solar panels) → supply increases → price falls
+
+**Elasticity:** How sensitive demand/supply is to price changes. Gasoline = inelastic (you still buy it). Luxury goods = elastic (price hike kills demand).
+
+Skills demonstrated: two curves, equilibrium, real examples, elasticity defined

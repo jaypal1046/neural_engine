@@ -1,0 +1,16 @@
+Question: What is a logical fallacy?
+
+Ideal Answer: A logical fallacy is an error in reasoning that makes an argument invalid even if its conclusion might happen to be true.
+
+**Common fallacies:**
+- **Ad hominem** — attack the person, not the argument ('You can't trust his climate data — he's unpopular')
+- **Straw man** — misrepresent opponent's position to more easily attack it
+- **False dichotomy** — present only 2 options when more exist ('You're either with us or against us')
+- **Appeal to authority** — 'X is true because famous person Y said so'
+- **Slippery slope** — if A happens, then Z will inevitably follow (without showing steps)
+- **Post hoc** — 'A happened before B, therefore A caused B' (classic correlation ≠ causation)
+- **Hasty generalization** — draw broad conclusion from small sample
+
+**Why it matters:** Recognizing fallacies protects you from bad arguments in politics, advertising, and everyday debate.
+
+Skills demonstrated: 7 named fallacies, examples per fallacy, practical importance

@@ -1,0 +1,14 @@
+Question: What is entropy?
+
+Ideal Answer: Entropy (Shannon entropy) measures how unpredictable or random data is, in bits per byte.
+
+Formula: `H = -Σ p(x) * log₂(p(x))`
+
+Practical scale:
+- **~8.0 bits/byte** → Perfectly random (encrypted, already compressed) → incompressible
+- **4.0–7.0 bits/byte** → Structured data like text or source code → compresses 30–60%
+- **< 2.0 bits/byte** → Highly repetitive → can compress 80%+ with BWT or CMIX
+
+Low entropy = predictable patterns = more compressible. CMIX's 1,046 advisors work by minimizing prediction error, which directly exploits low entropy.
+
+Skills demonstrated: formula shown, three-tier scale, link to CMIX

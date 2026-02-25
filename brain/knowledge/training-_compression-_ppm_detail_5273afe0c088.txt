@@ -1,0 +1,13 @@
+Question: What is PPM?
+
+Ideal Answer: PPM (Prediction by Partial Matching) is a statistical compression model that predicts the next symbol based on the last N characters of context.
+
+**How it works:**
+- Maintains probability tables for context lengths 0, 1, 2, ... up to order-N
+- For each new byte, tries the longest matching context first
+- If context not seen before, 'escapes' to a shorter context (the exclusion trick)
+- Uses range coding to encode the predictions
+
+PPM excels at structured text and code patterns. In our engine it powers `--ultra` mode. It's slower than BWT but can beat it on highly structured data.
+
+Skills demonstrated: numbered mechanism, escape explanation, use case

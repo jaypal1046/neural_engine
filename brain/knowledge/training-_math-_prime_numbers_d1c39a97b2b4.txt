@@ -1,0 +1,15 @@
+Question: What is a prime number?
+
+Ideal Answer: A prime number is a natural number greater than 1 that has no positive divisors other than 1 and itself.
+
+**Examples:** 2, 3, 5, 7, 11, 13, 17, 19, 23...
+
+**Not prime (composite):** 4 (=2×2), 6 (=2×3), 9 (=3×3)
+
+**Fun facts:**
+- 2 is the only even prime
+- There are infinitely many primes (Euclid's proof, ~300 BCE)
+- The largest known prime (as of 2024) has 41 million digits
+- Used in RSA encryption: multiplying two large primes is easy; factoring the product is computationally hard
+
+Skills demonstrated: definition, examples, applications

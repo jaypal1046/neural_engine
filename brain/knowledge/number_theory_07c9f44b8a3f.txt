@@ -1,0 +1,1717 @@
+Number theory - Wikipedia 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+- 
+
+ Jump to content 
+
+ Search 
+
+ Search 
+
+- Donate 
+
+- Create account 
+
+- Log in 
+
+ Personal tools 
+
+- Donate 
+- Create account 
+- Log in 
+
+ Number theory 
+
+ 117 languages 
+
+- Afrikaans 
+- Alemannisch 
+- Aragonés 
+- العربية 
+- الدارجة 
+- مصرى 
+- অসমীয়া 
+- Asturianu 
+- Azərbaycanca 
+- Башҡортса 
+- Žemaitėška 
+- Bikol Central 
+- Беларуская (тарашкевіца) 
+- Беларуская 
+- Български 
+- বাংলা 
+- Brezhoneg 
+- Bosanski 
+- Català 
+- کوردی 
+- Čeština 
+- Чӑвашла 
+- Cymraeg 
+- Dansk 
+- Deutsch 
+- Ελληνικά 
+- Esperanto 
+- Español 
+- Eesti 
+- Euskara 
+- فارسی 
+- Suomi 
+- Võro 
+- Na Vosa Vakaviti 
+- Français 
+- Nordfriisk 
+- Gaeilge 
+- 贛語 
+- Kriyòl gwiyannen 
+- Galego 
+- ગુજરાતી 
+- עברית 
+- हिन्दी 
+- Fiji Hindi 
+- Hrvatski 
+- Magyar 
+- Հայերեն 
+- Interlingua 
+- Bahasa Indonesia 
+- Ido 
+- Íslenska 
+- Italiano 
+- 日本語 
+- Patois 
+- La .lojban. 
+- Jawa 
+- ქართული 
+- Қазақша 
+- ಕನ್ನಡ 
+- 한국어 
+- Kurdî 
+- Latina 
+- Lëtzebuergesch 
+- Lombard 
+- Lietuvių 
+- Latviešu 
+- Македонски 
+- മലയാളം 
+- Монгол 
+- मराठी 
+- Bahasa Melayu 
+- Malti 
+- မြန်မာဘာသာ 
+- Plattdüütsch 
+- नेपाल भाषा 
+- Nederlands 
+- Norsk nynorsk 
+- Norsk bokmål 
+- Occitan 
+- ਪੰਜਾਬੀ 
+- Polski 
+- Piemontèis 
+- پنجابی 
+- Português 
+- ရခိုင် 
+- Română 
+- Русский 
+- संस्कृतम् 
+- Саха тыла 
+- Sicilianu 
+- Scots 
+- سنڌي 
+- Srpskohrvatski / српскохрватски 
+- Simple English 
+- Slovenčina 
+- Slovenščina 
+- Shqip 
+- Српски / srpski 
+- Svenska 
+- Kiswahili 
+- தமிழ் 
+- ไทย 
+- Türkmençe 
+- Tagalog 
+- Türkçe 
+- Українська 
+- اردو 
+- Oʻzbekcha / ўзбекча 
+- Tiếng Việt 
+- Volapük 
+- Winaray 
+- 吴语 
+- მარგალური 
+- ייִדיש 
+- 閩南語 / Bân-lâm-gí 
+- 粵語 
+- 中文 
+
+ Edit links 
+
+ From Wikipedia, the free encyclopedia 
+
+ Branch of pure mathematics 
+ Not to be confused with Number Theory (book) or Numerology . 
+ The distribution of prime numbers , a central point of study in number theory, illustrated by an Ulam spiral . It shows the conditional independence between being prime and being a value of certain quadratic polynomials. 
+
+- Part of a series on Mathematics 
+
+- History 
+
+- Index 
+
+ Areas 
+
+- Number theory 
+
+- Geometry 
+
+- Algebra 
+
+- Calculus and Analysis 
+
+- Discrete mathematics 
+
+- Logic 
+
+- Probability and Statistics 
+
+- Decision theory 
+
+ Relationship with sciences 
+
+- Physics 
+
+- Chemistry 
+
+- Geosciences 
+
+- Computation 
+
+- Biology 
+
+- Linguistics 
+
+- Economics 
+
+- Philosophy 
+
+- Education 
+
+ Mathematics Portal 
+- 
+- v 
+- t 
+- e 
+
+ Number theory is a branch of pure mathematics devoted primarily to the study of the integers and arithmetic functions . Number theorists study prime numbers as well as the properties of mathematical objects constructed from integers (for example, rational numbers ), or defined as generalizations of the integers (for example, algebraic integers ). 
+
+Integers can be considered either in themselves or as solutions to equations ( Diophantine geometry ). Questions in number theory can often be understood through the study of analytical objects, such as the Riemann zeta function , that encode properties of the integers, primes or other number-theoretic objects in some fashion ( analytic number theory ). One may also study real numbers in relation to rational numbers, as for instance how irrational numbers can be approximated by fractions ( Diophantine approximation ).
+
+Number theory is one of the oldest branches of mathematics alongside geometry. One quirk of number theory is that it deals with statements that are simple to understand but are very difficult to solve. Examples of this are Fermat's Last Theorem , which was proved 358 years after the original formulation, and Goldbach's conjecture , which remains unsolved since the 18th century. German mathematician Carl Friedrich Gauss (1777–1855) once remarked, "Mathematics is the queen of the sciences—and number theory is the queen of mathematics." &#91; 1 &#93; It was regarded as the epitome of pure mathematics, with no applications outside mathematics, until the 1970s, when prime numbers became the basis for the creation of public-key cryptography algorithms, such as the RSA cryptosystem .
+
+Definition [ edit ] 
+
+Number theory is the branch of mathematics that studies integers and their properties and relations. &#91; 2 &#93; The integers comprise a set that extends the set of natural numbers 
+
+ { 
+ 1 
+ , 
+ 2 
+ , 
+ 3 
+ , 
+ &#x2026; 
+ } 
+
+ {\displaystyle \{1,2,3,\dots \}} 
+
+ to include number 
+
+ 0 
+
+ {\displaystyle 0} 
+
+ and the negation of natural numbers 
+
+ { 
+ &#x2212; 
+ 1 
+ , 
+ &#x2212; 
+ 2 
+ , 
+ &#x2212; 
+ 3 
+ , 
+ &#x2026; 
+ } 
+
+ {\displaystyle \{-1,-2,-3,\dots \}} 
+
+ . Number theorists study prime numbers as well as the properties of mathematical objects constructed from integers (for example, rational numbers ), or defined as generalizations of the integers (for example, algebraic integers ). &#91; 3 &#93; &#91; 4 &#93; 
+
+Number theory is closely related to arithmetic and some authors use the terms as synonyms. &#91; 5 &#93; However, the word "arithmetic" is used today to mean the study of numerical operations and extends to the real numbers . &#91; 6 &#93; In a more specific sense, number theory is restricted to the study of integers and focuses on their properties and relationships. &#91; 7 &#93; Traditionally, it is known as higher arithmetic. &#91; 8 &#93; By the early twentieth century, the term number theory had been widely adopted. &#91; note 1 &#93; The term number means whole numbers, which refers to either the natural numbers or the integers. &#91; 9 &#93; &#91; 10 &#93; &#91; 11 &#93; 
+
+ Elementary number theory studies aspects of integers that can be investigated using elementary methods such as elementary proofs . &#91; 12 &#93; Analytic number theory , by contrast, relies on complex numbers and techniques from analysis and calculus. &#91; 13 &#93; Algebraic number theory employs algebraic structures such as fields and rings to analyze the properties of and relations between numbers. Geometric number theory uses concepts from geometry to study numbers. &#91; 14 &#93; Further branches of number theory are probabilistic number theory , &#91; 15 &#93; combinatorial number theory , &#91; 16 &#93; computational number theory , &#91; 17 &#93; and applied number theory, which examines the application of number theory to science and technology. &#91; 18 &#93; 
+
+History [ edit ] 
+ The Babylonians demonstrated an early understanding of Pythagorean triples. 
+
+In recorded history, knowledge of numbers existed in the ancient civilisations of Mesopotamia, Egypt, China, and India. &#91; 19 &#93; The earliest historical find of an arithmetical nature is the Plimpton 322 , dated c.&#160;1800&#160;BC. It is a broken clay tablet that contains a list of Pythagorean triples , that is, integers 
+
+ ( 
+ a 
+ , 
+ b 
+ , 
+ c 
+ ) 
+
+ {\displaystyle (a,b,c)} 
+
+ such that 
+
+ a 
+
+ 2 
+
+ + 
+
+ b 
+
+ 2 
+
+ = 
+
+ c 
+
+ 2 
+
+ {\displaystyle a^{2}+b^{2}=c^{2}} 
+
+ . The triples are too numerous and too large to have been obtained by brute force . &#91; 20 &#93; The table's layout suggests that it was constructed by means of what amounts, in modern language, to the identity &#91; 21 &#93; 
+
+ ( 
+
+ 1 
+ 2 
+
+ ( 
+
+ x 
+ &#x2212; 
+
+ 1 
+ x 
+
+ ) 
+
+ ) 
+
+ 2 
+
+ + 
+ 1 
+ = 
+
+ ( 
+
+ 1 
+ 2 
+
+ ( 
+
+ x 
+ + 
+
+ 1 
+ x 
+
+ ) 
+
+ ) 
+
+ 2 
+
+ , 
+
+ {\displaystyle \left({\frac {1}{2}}\left(x-{\frac {1}{x}}\right)\right)^{2}+1=\left({\frac {1}{2}}\left(x+{\frac {1}{x}}\right)\right)^{2},} 
+
+ which is implicit in routine Old Babylonian exercises. &#91; 22 &#93; It has been suggested instead that the table was a source of numerical examples for school problems. &#91; 23 &#93; &#91; note 2 &#93; Plimpton 322 tablet is the only surviving evidence of what today would be called number theory within Babylonian mathematics, though a kind of Babylonian algebra was much more developed. &#91; 24 &#93; 
+
+Although other civilizations probably influenced Greek mathematics at the beginning, &#91; 25 &#93; all evidence of such borrowings appear relatively late, &#91; 26 &#93; &#91; 27 &#93; and it is likely that Greek arithmētikḗ (the theoretical or philosophical study of numbers) is an indigenous tradition. &#91; 28 &#93; The ancient Greeks developed a keen interest in divisibility . The Pythagoreans attributed mystical quality to perfect and amicable numbers . The Pythagorean tradition also spoke of so-called polygonal or figurate numbers . &#91; 29 &#93; Euclid devoted part of his Elements to topics that belong to elementary number theory, including prime numbers and divisibility . &#91; 30 &#93; He gave the Euclidean algorithm for computing the greatest common divisor of two numbers and a proof implying the infinitude of primes . The foremost authority in arithmētikḗ in Late Antiquity was Diophantus of Alexandria , who probably lived in the 3rd century&#160;AD. He wrote Arithmetica , a collection of worked-out problems where the task is invariably to find rational solutions to a system of polynomial equations, usually of the form 
+
+ f 
+ ( 
+ x 
+ , 
+ y 
+ ) 
+ = 
+
+ z 
+
+ 2 
+
+ {\displaystyle f(x,y)=z^{2}} 
+
+ or 
+
+ f 
+ ( 
+ x 
+ , 
+ y 
+ , 
+ z 
+ ) 
+ = 
+
+ w 
+
+ 2 
+
+ {\displaystyle f(x,y,z)=w^{2}} 
+
+ . In modern parlance, Diophantine equations are polynomial equations to which rational or integer solutions are sought.
+
+After the fall of Rome, development shifted to Asia, albeit intermittently. The Chinese remainder theorem appears as an exercise &#91; 31 &#93; in Sunzi Suanjing (between the third and fifth centuries). &#91; 32 &#93; The result was later generalized with a complete solution called Da-yan-shu ( 大衍術 ) in Qin Jiushao 's 1247 Mathematical Treatise in Nine Sections . &#91; 33 &#93; &#91; 34 &#93; There is also some numerical mysticism in Chinese mathematics, &#91; note 3 &#93; but, unlike that of the Pythagoreans, it seems to have led nowhere. While Greek astronomy probably influenced Indian learning &#91; 35 &#93; it seems to be the case that Indian mathematics is otherwise an autochthonous tradition. &#91; 36 &#93; &#91; 37 &#93; Āryabhaṭa (476–550&#160;AD) showed that pairs of simultaneous congruences 
+
+ n 
+ &#x2261; 
+
+ a 
+
+ 1 
+
+ mod 
+
+ m 
+
+ 1 
+
+ {\displaystyle n\equiv a_{1}{\bmod {m}}_{1}} 
+
+ , 
+
+ n 
+ &#x2261; 
+
+ a 
+
+ 2 
+
+ mod 
+
+ m 
+
+ 2 
+
+ {\displaystyle n\equiv a_{2}{\bmod {m}}_{2}} 
+
+ could be solved by a method he called kuṭṭaka , or pulveriser ; &#91; 38 &#93; this is a procedure close to the Euclidean algorithm. &#91; 39 &#93; Āryabhaṭa seems to have had in mind applications to astronomical calculations. &#91; 35 &#93; Brahmagupta (628&#160;AD) started the systematic study of indefinite quadratic equations—in particular, the Pell equation . A general procedure for solving Pell's equation was probably found by Jayadeva ; the earliest surviving exposition appears in Bhāskara II 's Bīja-gaṇita (twelfth century). &#91; 40 &#93; 
+
+In the early ninth century, the caliph al-Ma'mun ordered translations of many Greek mathematical works and at least one Sanskrit work. &#91; 41 &#93; &#91; 42 &#93; 
+Diophantus's main work, the Arithmetica , was translated into Arabic by Qusta ibn Luqa (820–912).
+Part of the treatise al-Fakhri (by al-Karajī , 953&#160;– c.&#160;1029) builds on it to some extent. According to Rashed Roshdi, Al-Karajī's contemporary Ibn al-Haytham knew &#91; 43 &#93; what would later be called Wilson's theorem . Other than a treatise on squares in arithmetic progression by Fibonacci no number theory to speak of was done in western Europe during the Middle Ages. Matters started to change in Europe in the late Renaissance , thanks to a renewed study of the works of Greek antiquity. A catalyst was the textual emendation and translation into Latin of Diophantus' Arithmetica . &#91; 44 &#93; 
+
+ Fermat is sometimes considered the founder of modern number theory. 
+
+French mathematician Pierre de Fermat (1607–1665) never published his writings but communicated through correspondence and wrote in marginal notes instead. &#91; 45 &#93; His contributions to number theory brought renewed interest in the field in Europe. He conjectured Fermat's little theorem , a basic result in modular arithmetic, and Fermat's Last Theorem , as well as proved Fermat's right triangle theorem . &#91; 2 &#93; &#91; 46 &#93; He also studied prime numbers, the four-square theorem , and Pell's equations . &#91; 47 &#93; &#91; 48 &#93; 
+
+The interest of Leonhard Euler (1707–1783) in number theory was first spurred in 1729, when a friend of his, the amateur &#91; note 4 &#93; Christian Goldbach , pointed him towards some of Fermat's work on the subject. &#91; 49 &#93; &#91; 50 &#93; This has been called the "rebirth" of modern number theory, &#91; 51 &#93; after Fermat's relative lack of success in getting his contemporaries' attention for the subject. &#91; 52 &#93; He proved Fermat's assertions, including Fermat's little theorem ; made initial work towards a proof that every integer is the sum of four squares; &#91; 53 &#93; and specific cases of Fermat's Last Theorem. &#91; 54 &#93; He wrote on the link between continued fractions and Pell's equation. &#91; 55 &#93; &#91; 56 &#93; He made the first steps towards analytic number theory. &#91; 57 &#93; 
+
+Three European contemporaries continued the work in elementary number theory. Joseph-Louis Lagrange (1736–1813) gave full proofs of the four-square theorem , Wilson's theorem , and developed the basic theory of Pell's equations. Adrien-Marie Legendre (1752–1833) stated the law of quadratic reciprocity. He also conjectured what amounts to the prime number theorem and Dirichlet's theorem on arithmetic progressions . He gave a full treatment of the equation 
+
+ a 
+
+ x 
+
+ 2 
+
+ + 
+ b 
+
+ y 
+
+ 2 
+
+ + 
+ c 
+
+ z 
+
+ 2 
+
+ = 
+ 0 
+
+ {\displaystyle ax^{2}+by^{2}+cz^{2}=0} 
+
+ . &#91; 58 &#93; In his old age, he was the first to prove Fermat's Last Theorem for 
+
+ n 
+ = 
+ 5 
+
+ {\displaystyle n=5} 
+
+ . &#91; 59 &#93; Carl Friedrich Gauss (1777–1855) wrote Disquisitiones Arithmeticae (1801), which had an immense influence in the area of number theory and set its agenda for much of the 19th century. Gauss proved in this work the law of quadratic reciprocity &#91; 60 &#93; and developed the theory of quadratic forms. He also introduced some basic notation to congruences and devoted a section to computational matters, including primality tests. &#91; 61 &#93; He established a link between roots of unity and number theory. &#91; 62 &#93; In this way, Gauss arguably made forays towards Évariste Galois 's work and the area algebraic number theory .
+
+ The Riemann hypothesis is of interest in analytic number theory. 
+
+Starting early in the nineteenth century, the following developments gradually took place:
+
+- The rise to self-consciousness of number theory (or higher arithmetic ) as a field of study. &#91; 63 &#93; 
+
+- The development of much of modern mathematics necessary for basic modern number theory: complex analysis , group theory , Galois theory —accompanied by greater rigor in analysis and abstraction in algebra. 
+
+- The rough subdivision of number theory into its modern subfields—in particular, analytic and algebraic number theory. 
+
+Algebraic number theory may be said to start with the study of reciprocity and cyclotomy , but truly came into its own with the development of abstract algebra and early ideal theory and valuation theory; see below. A conventional starting point for analytic number theory is Dirichlet's theorem on arithmetic progressions (1837), &#91; 64 &#93; &#91; 65 &#93; whose proof introduced L-functions and involved some asymptotic analysis and a limiting process on a real variable. &#91; 66 &#93; The first use of analytic ideas in number theory actually goes back to Euler (1730s), &#91; 67 &#93; &#91; 68 &#93; who used formal power series and non-rigorous (or implicit) limiting arguments. The use of complex analysis in number theory comes later: the work of Bernhard Riemann (1859) on the zeta function is the canonical starting point; &#91; 69 &#93; Jacobi's four-square theorem (1839), which predates it, belongs to an initially different strand that has by now taken a leading role in analytic number theory ( modular forms ). &#91; 70 &#93; 
+
+The American Mathematical Society awards the Cole Prize in Number Theory . Moreover, number theory is one of the three mathematical subdisciplines rewarded by the Fermat Prize .
+
+Main subdivisions [ edit ] 
+
+Elementary number theory [ edit ] 
+ Number theorists Paul Erdős and Terence Tao in 1985, when Erdős was 72 and Tao was 10 
+
+Elementary number theory deals with the topics in number theory by means of basic methods in arithmetic. &#91; 4 &#93; Its primary subjects of study are divisibility , factorization , and primality , as well as congruences in modular arithmetic . &#91; 71 &#93; &#91; 12 &#93; Other topics in elementary number theory include Diophantine equations , continued fractions , integer partitions , and Diophantine approximations . &#91; 72 &#93; 
+
+Arithmetic is the study of numerical operations and investigates how numbers are combined and transformed using the arithmetic operations of addition , subtraction , multiplication , division , exponentiation , extraction of roots , and logarithms . Multiplication, for instance, is an operation that combines two numbers, referred to as factors, to form a single number, termed the product , such as 
+
+ 2 
+ &#x00D7; 
+ 3 
+ = 
+ 6 
+
+ {\displaystyle 2\times 3=6} 
+
+ . &#91; 73 &#93; 
+
+Divisibility is a property between two nonzero integers related to division. An integer 
+
+ a 
+
+ {\displaystyle a} 
+
+ is said to be divisible by a nonzero integer 
+
+ b 
+
+ {\displaystyle b} 
+
+ if 
+
+ a 
+
+ {\displaystyle a} 
+
+ is a multiple of 
+
+ b 
+
+ {\displaystyle b} 
+
+ ; that is, if there exists an integer 
+
+ q 
+
+ {\displaystyle q} 
+
+ such that 
+
+ a 
+ = 
+ b 
+ q 
+
+ {\displaystyle a=bq} 
+
+ . An equivalent formulation is that 
+
+ b 
+
+ {\displaystyle b} 
+
+ divides 
+
+ a 
+
+ {\displaystyle a} 
+
+ and is denoted by a vertical bar, which in this case is 
+
+ b 
+
+ | 
+
+ a 
+
+ {\displaystyle b|a} 
+
+ . Conversely, if this were not the case, then 
+
+ a 
+
+ {\displaystyle a} 
+
+ would not be divided evenly by 
+
+ b 
+
+ {\displaystyle b} 
+
+ , resulting in a remainder. Euclid's division lemma asserts that 
+
+ a 
+
+ {\displaystyle a} 
+
+ and 
+
+ b 
+
+ {\displaystyle b} 
+
+ can generally be written as 
+
+ a 
+ = 
+ b 
+ q 
+ + 
+ r 
+
+ {\displaystyle a=bq+r} 
+
+ , where the remainder 
+
+ r 
+
+ {\displaystyle r} 
+
+ accounts for the smallest positive leftover quantity. Elementary number theory studies divisibility rules in order to quickly identify if a given integer is divisible by a fixed divisor. For instance, it is known that any integer is divisible by 3 if its decimal digit sum is divisible by 3. &#91; 74 &#93; &#91; 9 &#93; &#91; 75 &#93; 
+
+ Example of a continued fraction. 
+
+A common divisor of several nonzero integers is an integer that divides all of them. The greatest common divisor (gcd) is the largest of such divisors. Two integers are said to be coprime or relatively prime to one another if their greatest common divisor, and simultaneously their only divisor, is 1. The Euclidean algorithm computes the greatest common divisor of two integers 
+
+ a 
+ , 
+ b 
+
+ {\displaystyle a,b} 
+
+ by means of repeatedly applying the division lemma and shifting the divisor and remainder after every step. The algorithm can be extended to solve a special case of linear Diophantine equations 
+
+ a 
+ x 
+ + 
+ b 
+ y 
+ = 
+ 1 
+
+ {\displaystyle ax+by=1} 
+
+ . A Diophantine equation has several unknowns and integer coefficients. Another kind of Diophantine equation is described in the Pythagorean theorem , 
+
+ x 
+
+ 2 
+
+ + 
+
+ y 
+
+ 2 
+
+ = 
+
+ z 
+
+ 2 
+
+ {\displaystyle x^{2}+y^{2}=z^{2}} 
+
+ , whose solutions are called Pythagorean triples if they are all integers. &#91; 9 &#93; &#91; 10 &#93; Another kind of expression is the continued fraction , which writes a sum of an integer and a fraction whose denominator is another such sum. &#91; 76 &#93; 
+
+Elementary number theory studies the divisibility properties of integers such as parity (even and odd numbers), prime numbers , and perfect numbers . Important number-theoretic functions include the divisor-counting function , the divisor summatory function and its modifications, and Euler's totient function . A prime number is an integer greater than 1 whose only positive divisors are 1 and the prime itself. A positive integer greater than 1 that is not prime is called a composite number. Euclid's theorem demonstrates that there are infinitely many prime numbers that comprise the set 
+
+ { 
+ 2 
+ , 
+ 3 
+ , 
+ 5 
+ , 
+ 7 
+ , 
+ 11 
+ , 
+ &#x22EF; 
+ } 
+
+ {\displaystyle \{2,3,5,7,11,\cdots \}} 
+
+ . The sieve of Eratosthenes was devised as an efficient algorithm for identifying all primes up to a given natural number by eliminating all composite numbers. &#91; 77 &#93; 
+
+ Factorization is a method of expressing a number as a product . Specifically in number theory, integer factorization is the decomposition of an integer into a product of integers. The process of repeatedly applying this procedure until all factors are prime is known as prime factorization . A fundamental property of primes is shown in Euclid's lemma . It is a consequence of the lemma that if a prime divides a product of integers, then that prime divides at least one of the factors in the product. The unique factorization theorem is the fundamental theorem of arithmetic that relates to prime factorization. The theorem states that every integer greater than 1 can be factorised into a product of prime numbers and that this factorisation is unique up to the order of the factors. For example, 
+
+ 120 
+
+ {\displaystyle 120} 
+
+ is expressed uniquely as 
+
+ 2 
+ &#x00D7; 
+ 2 
+ &#x00D7; 
+ 2 
+ &#x00D7; 
+ 3 
+ &#x00D7; 
+ 5 
+
+ {\displaystyle 2\times 2\times 2\times 3\times 5} 
+
+ or simply 
+
+ 2 
+
+ 3 
+
+ &#x00D7; 
+ 3 
+ &#x00D7; 
+ 5 
+
+ {\displaystyle 2^{3}\times 3\times 5} 
+
+ . &#91; 78 &#93; &#91; 9 &#93; 
+
+ Modular arithmetic works with finite sets of integers and introduces the concepts of congruence and residue classes. A congruence of two integers 
+
+ a 
+ , 
+ b 
+
+ {\displaystyle a,b} 
+
+ modulo 
+
+ n 
+
+ {\displaystyle n} 
+
+ (a positive integer called the modulus) is an equivalence relation whereby 
+
+ n 
+
+ | 
+
+ ( 
+ a 
+ &#x2212; 
+ b 
+ ) 
+
+ {\displaystyle n|(a-b)} 
+
+ is true. Performing Euclidean division on both 
+
+ a 
+
+ {\displaystyle a} 
+
+ and 
+
+ n 
+
+ {\displaystyle n} 
+
+ , and on 
+
+ b 
+
+ {\displaystyle b} 
+
+ and 
+
+ n 
+
+ {\displaystyle n} 
+
+ , yields the same remainder. This written as 
+
+ a 
+ &#x2261; 
+ b 
+
+ ( 
+ mod 
+
+ n 
+ ) 
+
+ {\textstyle a\equiv b{\pmod {n}}} 
+
+ . In a manner analogous to the 12-hour clock, the sum of 4 and 9 is equal to 13, yet congruent to 1. A residue class modulo 
+
+ n 
+
+ {\displaystyle n} 
+
+ is a set that contains all integers congruent to a specified 
+
+ r 
+
+ {\displaystyle r} 
+
+ modulo 
+
+ n 
+
+ {\displaystyle n} 
+
+ . For example, 
+
+ 6 
+
+ Z 
+
+ + 
+ 1 
+
+ {\displaystyle 6\mathbb {Z} +1} 
+
+ contains all multiples of 6 incremented by 1. Modular arithmetic provides a range of formulas for rapidly solving congruences of very large powers. An influential theorem is Fermat's little theorem , which states that if a prime 
+
+ p 
+
+ {\displaystyle p} 
+
+ is coprime to some integer 
+
+ a 
+
+ {\displaystyle a} 
+
+ , then 
+
+ a 
+
+ p 
+ &#x2212; 
+ 1 
+
+ &#x2261; 
+ 1 
+
+ ( 
+ mod 
+
+ p 
+ ) 
+
+ {\textstyle a^{p-1}\equiv 1{\pmod {p}}} 
+
+ is true. Euler's theorem extends this to assert that every integer 
+
+ n 
+
+ {\displaystyle n} 
+
+ satisfies the congruence 
+
+ a 
+
+ &#x03C6; 
+ ( 
+ n 
+ ) 
+
+ &#x2261; 
+ 1 
+
+ ( 
+ mod 
+
+ n 
+ ) 
+
+ , 
+
+ {\displaystyle a^{\varphi (n)}\equiv 1{\pmod {n}},} 
+
+ where Euler's totient function 
+
+ &#x03C6; 
+
+ {\displaystyle \varphi } 
+
+ counts all positive integers up to 
+
+ n 
+
+ {\displaystyle n} 
+
+ that are coprime to 
+
+ n 
+
+ {\displaystyle n} 
+
+ . Modular arithmetic also provides formulas that are used to solve congruences with unknowns in a similar vein to equation solving in algebra, such as the Chinese remainder theorem . &#91; 79 &#93; 
+
+Analytic number theory [ edit ] 
+
+- Main article: Analytic number theory 
+ Riemann zeta function ζ( s ) in the complex plane . The color of a point s gives the value of ζ( s ): dark colors denote values close to zero and hue gives the value's argument . 
+ The action of the modular group on the upper half plane . The region in grey is the standard fundamental domain . 
+
+Analytic number theory, in contrast to elementary number theory, relies on complex numbers and techniques from analysis and calculus. Analytic number theory may be defined
+
+- in terms of its tools, as the study of the integers by means of tools from real and complex analysis; &#91; 64 &#93; or 
+
+- in terms of its concerns, as the study within number theory of estimates on the size and density of certain numbers (e.g., primes), as opposed to identities. &#91; 80 &#93; 
+
+It studies the distribution of primes, behavior of number-theoretic functions, and irrational numbers. &#91; 81 &#93; 
+
+Number theory has the reputation of being a field many of whose results can be stated to the layperson. At the same time, many of the proofs of these results are not particularly accessible, in part because the range of tools they use is, if anything, unusually broad within mathematics. &#91; 82 &#93; The following are examples of problems in analytic number theory: the prime number theorem , the Goldbach conjecture , the twin prime conjecture , the Hardy–Littlewood conjectures , the Waring problem and the Riemann hypothesis . Some of the most important tools of analytic number theory are the circle method , sieve methods and L-functions (or, rather, the study of their properties). The theory of modular forms (and, more generally, automorphic forms ) also occupies an increasingly central place in the toolbox of analytic number theory. &#91; 83 &#93; 
+
+ Analysis is the branch of mathematics that studies the limit , defined as the value to which a sequence or function tends as the argument (or index) approaches a specific value. For example, the limit of the sequence 0.9, 0.99, 0.999, ... is 1. In the context of functions, the limit of 
+
+ 1 
+ x 
+
+ {\textstyle {\frac {1}{x}}} 
+
+ as 
+
+ x 
+
+ {\displaystyle x} 
+
+ approaches infinity is 0. &#91; 84 &#93; The complex numbers extend the real numbers with the imaginary unit 
+
+ i 
+
+ {\displaystyle i} 
+
+ defined as the solution to 
+
+ i 
+
+ 2 
+
+ = 
+ &#x2212; 
+ 1 
+
+ {\displaystyle i^{2}=-1} 
+
+ . Every complex number can be expressed as 
+
+ x 
+ + 
+ i 
+ y 
+
+ {\displaystyle x+iy} 
+
+ , where 
+
+ x 
+
+ {\displaystyle x} 
+
+ is called the real part and 
+
+ y 
+
+ {\displaystyle y} 
+
+ is called the imaginary part. &#91; 85 &#93; 
+
+The distribution of primes , described by the function 
+
+ &#x03C0; 
+
+ {\displaystyle \pi } 
+
+ that counts all primes up to a given real number, is unpredictable and is a major subject of study in number theory. Elementary formulas for a partial sequence of primes, including Euler's prime-generating polynomials have been developed. However, these cease to function as the primes become too large. The prime number theorem in analytic number theory provides a formalisation of the notion that prime numbers appear less commonly as their numerical value increases. One distribution states, informally, that the function 
+
+ x 
+
+ log 
+ &#x2061; 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle {\frac {x}{\log(x)}}} 
+
+ approximates 
+
+ &#x03C0; 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle \pi (x)} 
+
+ . Another distribution involves an offset logarithmic integral which converges to 
+
+ &#x03C0; 
+ ( 
+ x 
+ ) 
+
+ {\displaystyle \pi (x)} 
+
+ more quickly. &#91; 3 &#93; 
+
+ Corrections to an estimate of the prime-counting function using zeros of the zeta function 
+
+The zeta function has been demonstrated to be connected to the distribution of primes. It is defined as the series 
+
+ &#x03B6; 
+ ( 
+ s 
+ ) 
+ = 
+
+ &#x2211; 
+
+ n 
+ = 
+ 1 
+
+ &#x221E; 
+
+ 1 
+
+ n 
+
+ s 
+
+ = 
+
+ 1 
+
+ 1 
+
+ s 
+
+ + 
+
+ 1 
+
+ 2 
+
+ s 
+
+ + 
+
+ 1 
+
+ 3 
+
+ s 
+
+ + 
+ &#x22EF; 
+
+ {\displaystyle \zeta (s)=\sum _{n=1}^{\infty }{\frac {1}{n^{s}}}={\frac {1}{1^{s}}}+{\frac {1}{2^{s}}}+{\frac {1}{3^{s}}}+\cdots } 
+
+ that converges if 
+
+ s 
+
+ {\displaystyle s} 
+
+ is greater than 1. Euler demonstrated a link involving the infinite product over all prime numbers, expressed as the identity 
+
+ &#x03B6; 
+ ( 
+ s 
+ ) 
+ = 
+
+ &#x220F; 
+
+ p 
+
+ &#xA0;prime 
+
+ ( 
+
+ 1 
+ &#x2212; 
+
+ 1 
+
+ p 
+
+ s 
+
+ ) 
+
+ &#x2212; 
+ 1 
+
+ . 
+
+ {\displaystyle \zeta (s)=\prod _{p{\text{ prime}}}\left(1-{\frac {1}{p^{s}}}\right)^{-1}.} 
+
+ Riemann extended the definition to a complex variable and conjectured that all nontrivial cases ( 
+
+ 0 
+ < 
+ &#x211C; 
+ ( 
+ s 
+ ) 
+ < 
+ 1 
+
+ {\displaystyle 0<\Re (s)<1} 
+
+ ) where the function returns a zero are those in which the real part of 
+
+ s 
+
+ {\displaystyle s} 
+
+ is equal to 
+
+ 1 
+ 2 
+
+ {\textstyle {\frac {1}{2}}} 
+
+ . He established a connection between the nontrivial zeroes and the prime-counting function. In what is now recognised as the unsolved Riemann hypothesis , a solution to it would imply direct consequences for understanding the distribution of primes. &#91; 86 &#93; 
+
+One may ask analytic questions about algebraic numbers , and use analytic means to answer such questions; it is thus that algebraic and analytic number theory intersect. For example, one may define prime ideals (generalizations of prime numbers in the field of algebraic numbers) and ask how many prime ideals there are up to a certain size. This question can be answered by means of an examination of Dedekind zeta functions , which are generalizations of the Riemann zeta function , a key analytic object at the roots of the subject. &#91; 87 &#93; This is an example of a general procedure in analytic number theory: deriving information about the distribution of a sequence (here, prime ideals or prime numbers) from the analytic behavior of an appropriately constructed complex-valued function. &#91; 88 &#93; 
+
+Elementary number theory works with elementary proofs , a term that excludes the use of complex numbers but may include basic analysis. &#91; 72 &#93; For example, the prime number theorem was first proven using complex analysis in 1896, but an elementary proof was found only in 1949 by Erdős and Selberg . &#91; 89 &#93; The term is somewhat ambiguous. For example, proofs based on complex Tauberian theorems , such as Wiener–Ikehara , are often seen as quite enlightening but not elementary despite using Fourier analysis , not complex analysis. Here as elsewhere, an elementary proof may be longer and more difficult for most readers than a more advanced proof.
+
+Some subjects generally considered to be part of analytic number theory (e.g., sieve theory ) are better covered by the second rather than the first definition. &#91; note 5 &#93; Small sieves, for instance, use little analysis and yet still belong to analytic number theory. &#91; note 6 &#93; 
+
+Algebraic number theory [ edit ] 
+
+- Main article: Algebraic number theory 
+
+An algebraic number is any complex number that is a solution to some polynomial equation 
+
+ f 
+ ( 
+ x 
+ ) 
+ = 
+ 0 
+
+ {\displaystyle f(x)=0} 
+
+ with rational coefficients; for example, every solution 
+
+ x 
+
+ {\displaystyle x} 
+
+ of 
+
+ x 
+
+ 5 
+
+ + 
+ ( 
+ 11 
+
+ / 
+
+ 2 
+ ) 
+
+ x 
+
+ 3 
+
+ &#x2212; 
+ 7 
+
+ x 
+
+ 2 
+
+ + 
+ 9 
+ = 
+ 0 
+
+ {\displaystyle x^{5}+(11/2)x^{3}-7x^{2}+9=0} 
+
+ is an algebraic number. Fields of algebraic numbers are also called algebraic number fields , or shortly number fields . Algebraic number theory studies algebraic number fields. &#91; 90 &#93; 
+
+It could be argued that the simplest kind of number fields, namely quadratic fields , were already studied by Gauss, as the discussion of quadratic forms in Disquisitiones Arithmeticae can be restated in terms of ideals and
+ norms in quadratic fields. (A quadratic field consists of all
+numbers of the form 
+
+ a 
+ + 
+ b 
+
+ d 
+
+ {\displaystyle a+b{\sqrt {d}}} 
+
+ , where
+
+ a 
+
+ {\displaystyle a} 
+
+ and 
+
+ b 
+
+ {\displaystyle b} 
+
+ are rational numbers and 
+
+ d 
+
+ {\displaystyle d} 
+
+is a fixed rational number whose square root is not rational.)
+For that matter, the eleventh-century chakravala method amounts—in modern terms—to an algorithm for finding the units of a real quadratic number field. However, neither Bhāskara nor Gauss knew of number fields as such.
+
+The grounds of the subject were set in the late nineteenth century, when ideal numbers , the theory of ideals and valuation theory were introduced; these are three complementary ways of dealing with the lack of unique factorization in algebraic number fields. (For example, in the field generated by the rationals
+and 
+
+ &#x2212; 
+ 5 
+
+ {\displaystyle {\sqrt {-5}}} 
+
+ , the number 
+
+ 6 
+
+ {\displaystyle 6} 
+
+ can be factorised both as 
+
+ 6 
+ = 
+ 2 
+ &#x22C5; 
+ 3 
+
+ {\displaystyle 6=2\cdot 3} 
+
+ and
+
+ 6 
+ = 
+ ( 
+ 1 
+ + 
+
+ &#x2212; 
+ 5 
+
+ ) 
+ ( 
+ 1 
+ &#x2212; 
+
+ &#x2212; 
+ 5 
+
+ ) 
+
+ {\displaystyle 6=(1+{\sqrt {-5}})(1-{\sqrt {-5}})} 
+
+ ; all of 
+
+ 2 
+
+ {\displaystyle 2} 
+
+ , 
+
+ 3 
+
+ {\displaystyle 3} 
+
+ , 
+
+ 1 
+ + 
+
+ &#x2212; 
+ 5 
+
+ {\displaystyle 1+{\sqrt {-5}}} 
+
+ and
+
+ 1 
+ &#x2212; 
+
+ &#x2212; 
+ 5 
+
+ {\displaystyle 1-{\sqrt {-5}}} 
+
+are irreducible, and thus, in a naïve sense, analogous to primes among the integers.) The initial impetus for the development of ideal numbers (by Kummer ) seems to have come from the study of higher reciprocity laws, &#91; 91 &#93; that is, generalizations of quadratic reciprocity .
+
+Number fields are often studied as extensions of smaller number fields: a field L is said to be an extension of a field K if L contains K .
+(For example, the complex numbers C are an extension of the reals R , and the reals R are an extension of the rationals Q .)
+Classifying the possible extensions of a given number field is a difficult and partially open problem. Abelian extensions—that is, extensions L of K such that the Galois group &#91; note 7 &#93; Gal( L / K ) of L over K is an abelian group —are relatively well understood.
+Their classification was the object of the programme of class field theory , which was initiated in the late nineteenth century (partly by Kronecker and Eisenstein ) and carried out largely in 1900–1950.
+
+An example of an active area of research in algebraic number theory is Iwasawa theory . The Langlands program , one of the main current large-scale research plans in mathematics, is sometimes described as an attempt to generalise class field theory to non-abelian extensions of number fields.
+
+Diophantine geometry [ edit ] 
+
+- Main article: Diophantine geometry 
+
+The central problem of Diophantine geometry is to determine when a Diophantine equation has integer or rational solutions, and if it does, how many. The approach taken is to think of the solutions of an equation as a geometric object.
+
+For example, an equation in two variables defines a curve in the plane. More generally, an equation or system of equations in two or more variables defines a curve , a surface , or some other such object in n -dimensional space. In Diophantine geometry, one asks whether there are any rational points (points all of whose coordinates are rationals) or
+ integral points (points all of whose coordinates are integers) on the curve or surface. If there are any such points, the next step is to ask how many there are and how they are distributed. A basic question in this direction is whether there are finitely
+or infinitely many rational points on a given curve or surface.
+
+Consider, for instance, the Pythagorean equation 
+
+ x 
+
+ 2 
+
+ + 
+
+ y 
+
+ 2 
+
+ = 
+ 1 
+
+ {\displaystyle x^{2}+y^{2}=1} 
+
+ . One would like to know its rational solutions, namely 
+
+ ( 
+ x 
+ , 
+ y 
+ ) 
+
+ {\displaystyle (x,y)} 
+
+ such that x and y are both rational. This is the same as asking for all integer solutions
+to 
+
+ a 
+
+ 2 
+
+ + 
+
+ b 
+
+ 2 
+
+ = 
+
+ c 
+
+ 2 
+
+ {\displaystyle a^{2}+b^{2}=c^{2}} 
+
+ ; any solution to the latter equation gives us a solution 
+
+ x 
+ = 
+ a 
+
+ / 
+
+ c 
+
+ {\displaystyle x=a/c} 
+
+ , 
+
+ y 
+ = 
+ b 
+
+ / 
+
+ c 
+
+ {\displaystyle y=b/c} 
+
+ to the former. It is also the
+same as asking for all points with rational coordinates on the curve described by 
+
+ x 
+
+ 2 
+
+ + 
+
+ y 
+
+ 2 
+
+ = 
+ 1 
+
+ {\displaystyle x^{2}+y^{2}=1} 
+
+ (a circle of radius 1 centered on the origin).
+
+ Two examples of elliptic curves , that is, curves of genus 1 having at least one rational point 
+
+The rephrasing of questions on equations in terms of points on curves is felicitous. The finiteness or not of the number of rational or integer points on an algebraic curve (that is, rational or integer solutions to an equation 
+
+ f 
+ ( 
+ x 
+ , 
+ y 
+ ) 
+ = 
+ 0 
+
+ {\displaystyle f(x,y)=0} 
+
+ , where 
+
+ f 
+
+ {\displaystyle f} 
+
+ is a polynomial in two variables) depends crucially on the genus of the curve. &#91; note 8 &#93; A major achievement of this approach is Wiles's proof of Fermat's Last Theorem , for which other geometrical notions are just as crucial.
+
+There is also the closely linked area of Diophantine approximations : given a number 
+
+ x 
+
+ {\displaystyle x} 
+
+ , determine how well it can be approximated by rational numbers. One seeks approximations that are good relative to the amount of space required to write the rational number: call 
+
+ a 
+
+ / 
+
+ q 
+
+ {\displaystyle a/q} 
+
+ (with 
+
+ gcd 
+ ( 
+ a 
+ , 
+ q 
+ ) 
+ = 
+ 1 
+
+ {\displaystyle \gcd(a,q)=1} 
+
+ ) a good approximation to 
+
+ x 
+
+ {\displaystyle x} 
+
+ if 
+
+ | 
+
+ x 
+ &#x2212; 
+ a 
+
+ / 
+
+ q 
+
+ | 
+
+ < 
+
+ 1 
+
+ q 
+
+ c 
+
+ {\displaystyle |x-a/q|<{\frac {1}{q^{c}}}} 
+
+ , where 
+
+ c 
+
+ {\displaystyle c} 
+
+ is large. This question is of special interest if 
+
+ x 
+
+ {\displaystyle x} 
+
+ is an algebraic number. If 
+
+ x 
+
+ {\displaystyle x} 
+
+ cannot be approximated well, then some equations do not have integer or rational solutions. Moreover, several concepts (especially that of height ) are critical both in Diophantine geometry and in the study of Diophantine approximations. This question is also of special interest in transcendental number theory : if a number can be approximated better than any algebraic number, then it is a transcendental number . It is by this argument that π and e have been shown to be transcendental.
+
+Diophantine geometry should not be confused with the geometry of numbers , which is a collection of graphical methods for answering certain questions in algebraic number theory. Arithmetic geometry is a contemporary term for the same domain covered by Diophantine geometry, particularly when one wishes to emphasize the connections to modern algebraic geometry (for example, in Faltings's theorem ) rather than to techniques in Diophantine approximations.
+
+Other subfields [ edit ] 
+
+- Main article: Probabilistic number theory 
+
+Probabilistic number theory starts with questions such as the following: Take an integer n at random between one and a million. How likely is it to be prime? (this is just another way of asking how many primes there are between one and a million). How many prime divisors will n have on average? What is the probability that it will have many more or many fewer divisors or prime divisors than the average?
+- Main articles: Arithmetic combinatorics and Additive number theory 
+
+Combinatorics in number theory starts with questions like the following: Does a fairly "thick" infinite set 
+
+ A 
+
+ {\displaystyle A} 
+
+ contain many elements in arithmetic progression: 
+
+ a 
+
+ {\displaystyle a} 
+
+ ,
+
+ a 
+ + 
+ b 
+ , 
+ a 
+ + 
+ 2 
+ b 
+ , 
+ a 
+ + 
+ 3 
+ b 
+ , 
+ &#x2026; 
+ , 
+ a 
+ + 
+ 10 
+ b 
+
+ {\displaystyle a+b,a+2b,a+3b,\ldots ,a+10b} 
+
+ ? Should it be possible to write large integers as sums of elements of 
+
+ A 
+
+ {\displaystyle A} 
+
+ ?
+- Main article: Computational number theory A Lehmer sieve , a primitive digital computer used to find primes and solve simple Diophantine equations 
+
+There are two main questions: "Can this be computed?" and "Can it be computed rapidly?" Anyone can test whether a number is prime or, if it is not, split it into prime factors; doing so rapidly is another matter. Fast algorithms for testing primality are now known, but, in spite of much work (both theoretical and practical), no truly fast algorithm for factoring.
+
+Applications [ edit ] 
+
+For a long time, number theory in general, and the study of prime numbers in particular, was seen as the canonical example of pure mathematics, with no applications outside of mathematics other than the use of prime numbered gear teeth to distribute wear evenly. &#91; 92 &#93; In particular, number theorists such as British mathematician G. H. Hardy prided themselves on doing work that had absolutely no military significance. &#91; 93 &#93; The number-theorist Leonard Dickson (1874–1954) said "Thank God that number theory is unsullied by any application". Such a view is no longer applicable to number theory. &#91; 94 &#93; 
+
+This vision of the purity of number theory was shattered in the 1970s, when it was publicly announced that prime numbers could be used as the basis for the creation of public-key cryptography algorithms. &#91; 95 &#93; Schemes such as RSA are based on the difficulty of factoring large composite numbers into their prime factors. &#91; 96 &#93; These applications have led to significant study of algorithms for computing with prime numbers, and in particular of primality testing , methods for determining whether a given number is prime. Prime numbers are also used in computing for checksums , hash tables , and pseudorandom number generators .
+
+In 1974, Donald Knuth said "virtually every theorem in elementary number theory arises in a natural, motivated way in connection with the problem of making computers do high-speed numerical calculations". &#91; 97 &#93; 
+Elementary number theory is taught in discrete mathematics courses for computer scientists . It also has applications to the continuous in numerical analysis . &#91; 98 &#93; 
+
+Number theory has now several modern applications spanning diverse areas such as:
+
+- Computer science : The fast Fourier transform (FFT) algorithm, which is used to efficiently compute the discrete Fourier transform, has important applications in signal processing and data analysis. &#91; 99 &#93; 
+
+- Physics : The Riemann hypothesis has connections to the distribution of prime numbers and has been studied for its potential implications in physics. &#91; 100 &#93; 
+
+- Error correction codes : The theory of finite fields and algebraic geometry have been used to construct efficient error-correcting codes. &#91; 101 &#93; 
+
+- Study of musical scales: the concept of " equal temperament ", which is the basis for most modern Western music, involves dividing the octave into 12 equal parts. &#91; 102 &#93; This has been studied using number theory and in particular the properties of the 12th root of 2. 
+
+See also [ edit ] 
+
+- Mathematics portal 
+
+- Arithmetic dynamics 
+
+- Algebraic function field 
+
+- Arithmetic topology 
+
+- Finite field 
+
+- p-adic number 
+
+- List of number theoretic algorithms 
+
+Notes [ edit ] 
+
+- ^ The term 'arithmetic' may have regained some ground, arguably due to French influence. Take, for example, Serre 1996 . In 1952, Davenport still had to specify that he meant The Higher Arithmetic . Hardy and Wright wrote in the introduction to An Introduction to the Theory of Numbers (1938): "We proposed at one time to change [the title] to An introduction to arithmetic , a more novel and in some ways a more appropriate title; but it was pointed out that this might lead to misunderstandings about the content of the book." ( Hardy & Wright 2008 ) 
+
+- ^ Robson 2001 , p.&#160;201. This is controversial. See Plimpton 322 . Robson's article is written polemically ( Robson 2001 , p.&#160;202) with a view to "perhaps [...] knocking [Plimpton 322] off its pedestal" ( Robson 2001 , p.&#160;167); at the same time, it settles to the conclusion that
+
+[...] the question "how was the tablet calculated?" does not have to have the same answer as the question "what problems does the tablet set?" The first can be answered most satisfactorily by reciprocal pairs, as first suggested half a century ago, and the second by some sort of right-triangle problems ( Robson 2001 , p.&#160;202). 
+
+Robson takes issue with the notion that the scribe who produced Plimpton 322 (who had to "work for a living", and would not have belonged to a "leisured middle class") could have been motivated by his own "idle curiosity" in the absence of a "market for new mathematics".( Robson 2001 , pp.&#160;199–200)
+
+- ^ See, for example, Sunzi Suanjing , Ch. 3, Problem 36, in Lam & Ang 2004 , pp.&#160;223–224: 
+
+[36] Now there is a pregnant woman whose age is 29. If the gestation period is 9 months, determine the sex of the unborn child. Answer : Male.
+
+ Method : Put down 49, add the gestation period and subtract the age. From the remainder take away 1 representing the heaven, 2 the earth, 3 the man, 4 the four seasons, 5 the five phases, 6 the six pitch-pipes, 7 the seven stars [of the Dipper], 8 the eight winds, and 9 the nine divisions [of China under Yu the Great]. If the remainder is odd, [the sex] is male and if the remainder is even, [the sex] is female. 
+
+This is the last problem in Sunzi's otherwise matter-of-fact treatise.
+
+- ^ Up to the second half of the seventeenth century, academic positions were very rare, and most mathematicians and scientists earned their living in some other way ( Weil 1984 , pp.&#160;159, 161). (There were already some recognisable features of professional practice , viz., seeking correspondents, visiting foreign colleagues, building private libraries ( Weil 1984 , pp.&#160;160–161). Matters started to shift in the late seventeenth century ( Weil 1984 , p.&#160;161); scientific academies were founded in England (the Royal Society , 1662) and France (the Académie des sciences , 1666) and Russia (1724). Euler was offered a position at this last one in 1726; he accepted, arriving in St. Petersburg in 1727 ( Weil 1984 , p.&#160;163 and
+ Varadarajan 2006 , p.&#160;7).
+In this context, the term amateur usually applied to Goldbach is well-defined and makes some sense: he has been described as a man of letters who earned a living as a spy ( Truesdell 1984 , p.&#160;xv); cited in Varadarajan 2006 , p.&#160;9). Notice, however, that Goldbach published some works on mathematics and sometimes held academic positions. 
+
+- ^ Sieve theory figures as one of the main subareas of analytic number theory in many standard treatments; see, for instance, Iwaniec & Kowalski 2004 or Montgomery & Vaughan 2007 
+
+- ^ This is the case for some combinatorial sieves such as the Brun sieve , rather than for large sieves . The study of the latter now includes ideas from harmonic and functional analysis . 
+
+- ^ The Galois group of an extension L/K consists of the operations ( isomorphisms ) that send elements of L to other elements of L while leaving all elements of K fixed.
+Thus, for instance, Gal(C/R) consists of two elements: the identity element
+(taking every element x &#160;+&#160; iy of C to itself) and complex conjugation
+(the map taking each element x &#160;+&#160; iy to x &#160;−&#160; iy ).
+The Galois group of an extension tells us many of its crucial properties. The study of Galois groups started with Évariste Galois ; in modern language, the main outcome of his work is that an equation f ( x )&#160;=&#160;0 can be solved by radicals
+(that is, x can be expressed in terms of the four basic operations together
+with square roots, cubic roots, etc.) if and only if the extension of the rationals by the roots of the equation f ( x )&#160;=&#160;0 has a Galois group that is solvable 
+in the sense of group theory. ("Solvable", in the sense of group theory, is a simple property that can be checked easily for finite groups.) 
+
+- ^ The genus can be defined as follows: allow the variables in 
+
+ f 
+ ( 
+ x 
+ , 
+ y 
+ ) 
+ = 
+ 0 
+
+ {\displaystyle f(x,y)=0} 
+
+ to be complex numbers; then 
+
+ f 
+ ( 
+ x 
+ , 
+ y 
+ ) 
+ = 
+ 0 
+
+ {\displaystyle f(x,y)=0} 
+
+ defines a 2-dimensional surface in (projective) 4-dimensional space (since two complex variables can be decomposed into four real variables; that is, four dimensions). The number of doughnut-like holes in the surface is called the genus of the curve of equation 
+
+ f 
+ ( 
+ x 
+ , 
+ y 
+ ) 
+ = 
+ 0 
+
+ {\displaystyle f(x,y)=0} 
+
+ . 
+
+References [ edit ] 
+
+- 
+
+- ^ Long 1972 , p.&#160;1. 
+
+- ^ a b Karatsuba, A.A. (2020). "Number theory" . Encyclopedia of Mathematics . Springer . Retrieved 2025-05-03 . 
+
+- ^ a b 
+- Moore, Patrick (2004). "Number theory". In Lerner, K. Lee; Lerner, Brenda Wilmoth (eds.). The Gale Encyclopedia of Science . Vol.&#160;4 (3rd&#160;ed.). Gale. ISBN &#160; 0-7876-7559-8 . 
+
+- ^ a b 
+- Tanton, James (2005). "Number theory". Encyclopedia of Mathematics . New York: Facts On File. pp.&#160; 359– 60. ISBN &#160; 0-8160-5124-0 . 
+
+- ^ 
+- Lozano-Robledo 2019 , p.&#160; xiii harvnb error: no target: CITEREFLozano-Robledo2019 ( help ) 
+- Nagel & Newman 2008 , p.&#160; 4 harvnb error: no target: CITEREFNagelNewman2008 ( help ) 
+
+- ^ 
+- 
+- Romanowski 2008 , pp.&#160;302–303 harvnb error: no target: CITEREFRomanowski2008 ( help ) 
+- HC staff 2022b harvnb error: no target: CITEREFHC_staff2022b ( help ) 
+- MW staff 2023 harvnb error: no target: CITEREFMW_staff2023 ( help ) 
+- Bukhshtab & Pechaev 2020 harvnb error: no target: CITEREFBukhshtabPechaev2020 ( help ) 
+
+- ^ 
+- 
+- Wilson 2020 , pp.&#160; 1–2 harvnb error: no target: CITEREFWilson2020 ( help ) 
+- Karatsuba 2020 
+- Campbell 2012 , p.&#160; 33 harvnb error: no target: CITEREFCampbell2012 ( help ) 
+- Robbins 2006 , p.&#160; 1 harvnb error: no target: CITEREFRobbins2006 ( help ) 
+
+- ^ 
+- 
+- Duverney 2010 , p.&#160; v harvnb error: no target: CITEREFDuverney2010 ( help ) 
+- Robbins 2006 , p.&#160; 1 harvnb error: no target: CITEREFRobbins2006 ( help ) 
+
+- ^ a b c d 
+- Effinger, Gove; Mullen, Gary L. (2022). Elementary Number Theory . Boca Raton: CRC Press. ISBN &#160; 978-1-003-19311-1 . 
+
+- ^ a b 
+- Weisstein, Eric W. (2003). CRC Concise Encyclopedia of Mathematics (2nd&#160;ed.).

@@ -1,0 +1,5 @@
+Question: How does CMIX work?
+
+Ideal Answer: I need to learn more about compression. This question covers: How does CMIX work?. Please teach me by saying: learn [topic] [content]
+
+Skills demonstrated: length, specificity, domain_knowledge, actionability

@@ -1,0 +1,19 @@
+Question: How can I make you smarter?
+
+Ideal Answer: Four proven ways to make me smarter:
+
+1. **Teach me directly:** `learn [topic]: [fact or explanation]`
+   Every new item adds to my compressed knowledge and vocabulary.
+
+2. **Feed me URLs:** `learn_url [topic] [url]`
+   I'll read whole web pages and compress the knowledge.
+
+3. **Run full training:** `python server/rlhf_trainer.py --full`
+   This runs SFT pairs, Constitutional AI critique, and reward scoring.
+
+4. **Give feedback:** Record good/bad answers → `record_feedback(q, a, rating)`
+   This tunes which answer styles score higher.
+
+The more diverse knowledge I get, the better my TF-IDF retrieval works.
+
+Skills demonstrated: numbered improvements, commands shown, explanation of why

@@ -1,0 +1,23 @@
+Question: What is Git and how does version control work?
+
+Ideal Answer: Git is a distributed version control system that tracks changes to files over time.
+
+**Core concepts:**
+- **Repository (repo):** folder tracked by Git
+- **Commit:** snapshot of your files at a point in time
+- **Branch:** independent line of development
+- **Merge:** combine two branches
+- **Remote:** version on GitHub/GitLab/etc.
+
+**Basic workflow:**
+```bash
+git init              # Start tracking
+git add file.txt      # Stage changes
+git commit -m 'fix'   # Save snapshot
+git push origin main  # Send to remote
+git pull              # Get latest changes
+```
+
+**Why it matters:** Multiple people can work simultaneously. You can roll back to any commit if something breaks.
+
+Skills demonstrated: core concepts, workflow commands, benefit explanation

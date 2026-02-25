@@ -1,0 +1,16 @@
+Question: What is a derivative?
+
+Ideal Answer: A derivative measures the instantaneous rate of change of a function. Formally:
+
+`f'(x) = lim(h→0) [f(x+h) - f(x)] / h`
+
+Intuitively: the slope of the tangent line to the curve at point x.
+
+**Key rules:**
+- Power rule: d/dx(xⁿ) = n·xⁿ⁻¹
+- Product rule: d/dx(f·g) = f'g + fg'
+- Chain rule: d/dx(f(g(x))) = f'(g(x))·g'(x)
+
+**Example:** d/dx(x³) = 3x². At x=2, the slope is 3×4 = 12.
+
+Skills demonstrated: formula, rules, example

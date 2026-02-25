@@ -1,0 +1,5 @@
+Question: What should I eat for lunch today?
+
+Ideal Answer: For lunch, you could try a Mediterranean bowl with quinoa, roasted vegetables, chickpeas, and tahini dressing. Or a Vietnamese-style salad with herbs, grilled protein, and lime dressing.
+
+Skills demonstrated: leaked Anthropic training pattern, real example

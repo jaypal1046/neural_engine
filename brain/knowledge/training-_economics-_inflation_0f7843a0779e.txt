@@ -1,0 +1,12 @@
+Question: What is inflation?
+
+Ideal Answer: Inflation refers to the general increase in prices across an economy over time, reducing the purchasing power of money.
+
+1. Measured by CPI (Consumer Price Index) — tracks price changes in a basket of goods.
+2. Demand-pull inflation: too much money chasing too few goods (economy overheating).
+3. Cost-push inflation: production costs rise (e.g., oil prices) → prices increase.
+4. Hyperinflation: extreme rapid inflation (e.g., Zimbabwe 2008, Germany 1923) destroys savings.
+
+Central banks (e.g., Federal Reserve) fight inflation by raising interest rates, which reduces borrowing and spending. Target inflation: 2% per year in most developed economies.
+
+Skills demonstrated: CPI, causes, types, central bank response, examples

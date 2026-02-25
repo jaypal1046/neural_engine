@@ -1,6 +1,19 @@
 """
-Dynamic Project Indexer with File Watching
-Automatically re-indexes when files change
+PYTHON SUPPORT FILE — File System Watcher Only
+===============================================
+ARCHITECTURE RULE: Python = support layer only. C++ = THE ONE BRAIN.
+
+dynamic_indexer.py — Watch for file changes and re-trigger C++ learning.
+Role: Monitor project directory for new/modified/deleted files.
+      When a file changes: call neural_engine.exe learn <file>
+      so C++ re-indexes the updated content automatically.
+Does NOT: learn anything itself, store knowledge, answer questions.
+      Python only watches the filesystem and calls C++ when needed.
+
+Runs as a background daemon thread started by main.py at startup:
+  threading.Thread(target=dynamic_indexer.start_dynamic_indexing)
+
+See: docs/ARCHITECTURE.md for the full system design.
 """
 
 import os

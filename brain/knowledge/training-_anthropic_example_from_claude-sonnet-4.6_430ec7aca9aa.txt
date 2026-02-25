@@ -1,0 +1,7 @@
+Question: Who is the current California Secretary of State?
+
+Ideal Answer: [web_search: California Secretary of State]  
+
+Shirley Weber is the current California Secretary of State.
+
+Skills demonstrated: leaked Anthropic training pattern, real example
