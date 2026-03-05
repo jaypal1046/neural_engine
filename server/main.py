@@ -92,6 +92,11 @@ class AIInsightRequest(BaseModel):
 class AskRequest(BaseModel):
     question: str
 
+class ChatRequest(BaseModel):
+    message: str
+    history: list = []
+    web_search: bool = False
+
 class LearnFileRequest(BaseModel):
     file_path: str
 
@@ -1463,6 +1468,37 @@ async def brain_ask(req: AskRequest):
         return {"error": "no_output", "stderr": result.stderr[:500]}
     except Exception as e:
         return {"error": str(e)}
+
+@app.post("/api/chat")
+async def chat(req: ChatRequest):
+    """
+    Main chat endpoint — routes to C++ Neural Engine brain.
+    Accepts: { message, history, web_search }
+    Returns: { response, source }
+    """
+    if not os.path.exists(NEURAL_ENGINE_EXE):
+        return {"response": "Neural engine not built. Run build_unified.bat first."}
+
+    try:
+        import json, re
+        result = subprocess.run(
+            [NEURAL_ENGINE_EXE, "ai_ask", req.message],
+            capture_output=True, text=True, timeout=30, cwd=BASE_DIR
+        )
+        if result.stdout:
+            cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]', '', result.stdout).strip()
+            json_match = re.search(r'\{.*\}', cleaned, re.DOTALL)
+            if json_match:
+                br = json.loads(json_match.group())
+                answer = br.get("answer", "") or br.get("response", "") or br.get("generated", "")
+                if answer:
+                    return {"response": answer, "source": "C++ Neural Engine"}
+        # Fallback: return raw stdout if JSON parse fails
+        if result.stdout.strip():
+            return {"response": result.stdout.strip(), "source": "C++ Neural Engine (raw)"}
+        return {"response": "The brain is thinking... (no output returned)", "source": "error"}
+    except Exception as e:
+        return {"response": f"Error: {str(e)}", "source": "error"}
 
 @app.get("/api/brain/status")
 async def brain_status():

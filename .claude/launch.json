@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "python-server",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["server/main.py"],
+      "port": 8001
+    },
+    {
+      "name": "desktop-app",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["run-desktop.js"],
+      "port": 5173
+    }
+  ]
+}
