@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Activity, Zap, ChevronRight, Cpu } from 'lucide-react';
 
 const API = 'http://127.0.0.1:8001';

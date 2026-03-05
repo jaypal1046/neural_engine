@@ -1,6 +1,6 @@
 import {
     FolderOpen, Search, GitBranch, Puzzle, BrainCircuit, Globe,
-    Settings, Server, PlaySquare
+    Settings, Server, PlaySquare, TrendingUp
 } from 'lucide-react'
 
 interface Props {
@@ -17,6 +17,7 @@ const TOP_ITEMS = [
     { id: 'run', icon: PlaySquare, tooltip: 'Run and Debug' },
     { id: 'extensions', icon: Puzzle, tooltip: 'Extensions' },
     { id: 'mcp', icon: Server, tooltip: 'MCP Servers' },
+    { id: 'ai-stats', icon: TrendingUp, tooltip: 'AI Training Stats' },
 ]
 
 const BOTTOM_ITEMS = [

@@ -1,0 +1,324 @@
+# Instruction-Following Training Corpus
+# Format: <|user|>prompt<|assistant|>code<|end|>
+
+<|user|>Write a bubble sort function<|assistant|>
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr
+<|end|>
+
+<|user|>Write a quick sort function<|assistant|>
+def quick_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quick_sort(left) + middle + quick_sort(right)
+<|end|>
+
+<|user|>Write a binary search function<|assistant|>
+def binary_search(arr, target):
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1
+<|end|>
+
+<|user|>Write a fibonacci function<|assistant|>
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+<|end|>
+
+<|user|>Write a factorial function<|assistant|>
+def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n-1)
+<|end|>
+
+<|user|>Reverse a string<|assistant|>
+def reverse_string(s):
+    return s[::-1]
+<|end|>
+
+<|user|>Check if string is palindrome<|assistant|>
+def is_palindrome(s):
+    s = s.lower().replace(" ", "")
+    return s == s[::-1]
+<|end|>
+
+<|user|>Count vowels in string<|assistant|>
+def count_vowels(s):
+    vowels = "aeiouAEIOU"
+    return sum(1 for char in s if char in vowels)
+<|end|>
+
+<|user|>Find maximum in array<|assistant|>
+def find_max(arr):
+    if not arr:
+        return None
+    max_val = arr[0]
+    for num in arr[1:]:
+        if num > max_val:
+            max_val = num
+    return max_val
+<|end|>
+
+<|user|>Check if number is prime<|assistant|>
+def is_prime(n):
+    if n < 2:
+        return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
+    for i in range(3, int(n ** 0.5) + 1, 2):
+        if n % i == 0:
+            return False
+    return True
+<|end|>
+
+<|user|>Calculate GCD of two numbers<|assistant|>
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+<|end|>
+
+<|user|>Write a Stack class<|assistant|>
+class Stack:
+    def __init__(self):
+        self.items = []
+
+    def push(self, item):
+        self.items.append(item)
+
+    def pop(self):
+        if not self.is_empty():
+            return self.items.pop()
+        return None
+
+    def is_empty(self):
+        return len(self.items) == 0
+<|end|>
+
+<|user|>Write a Queue class<|assistant|>
+class Queue:
+    def __init__(self):
+        self.items = []
+
+    def enqueue(self, item):
+        self.items.insert(0, item)
+
+    def dequeue(self):
+        if not self.is_empty():
+            return self.items.pop()
+        return None
+
+    def is_empty(self):
+        return len(self.items) == 0
+<|end|>
+
+<|user|>Write a Rectangle class with area method<|assistant|>
+class Rectangle:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+
+    def area(self):
+        return self.width * self.height
+
+    def perimeter(self):
+        return 2 * (self.width + self.height)
+<|end|>
+
+<|user|>Write a function with error handling to divide two numbers<|assistant|>
+def safe_divide(a, b):
+    try:
+        result = a / b
+        return result
+    except ZeroDivisionError:
+        return None
+    except TypeError:
+        return None
+<|end|>
+
+<|user|>Generate squares from 1 to n using list comprehension<|assistant|>
+def squares(n):
+    return [i**2 for i in range(1, n+1)]
+<|end|>
+
+<|user|>Filter even numbers from a list<|assistant|>
+def evens(lst):
+    return [x for x in lst if x % 2 == 0]
+<|end|>
+
+<|user|>Create a Fibonacci generator<|assistant|>
+def fibonacci_generator(n):
+    a, b = 0, 1
+    for _ in range(n):
+        yield a
+        a, b = b, a + b
+<|end|>
+
+<|user|>Fix this code: def add(a,b) return a - b<|assistant|>
+def add(a, b):
+    return a + b
+<|end|>
+
+<|user|>Fix this code: def factorial(n) if n<=1 return 1 else return n*factorial(n-1)<|assistant|>
+def factorial(n):
+    if n <= 1:
+        return 1
+    else:
+        return n * factorial(n-1)
+<|end|>
+
+<|user|>Implement binary search recursively<|assistant|>
+def binary_search_recursive(arr, target, left, right):
+    if left > right:
+        return -1
+    mid = (left + right) // 2
+    if arr[mid] == target:
+        return mid
+    elif arr[mid] < target:
+        return binary_search_recursive(arr, target, mid + 1, right)
+    else:
+        return binary_search_recursive(arr, target, left, mid - 1)
+<|end|>
+
+<|user|>Merge two sorted arrays<|assistant|>
+def merge_sorted_arrays(arr1, arr2):
+    result = []
+    i = j = 0
+    while i < len(arr1) and j < len(arr2):
+        if arr1[i] <= arr2[j]:
+            result.append(arr1[i])
+            i += 1
+        else:
+            result.append(arr2[j])
+            j += 1
+    result.extend(arr1[i:])
+    result.extend(arr2[j:])
+    return result
+<|end|>
+
+<|user|>Find two numbers that sum to target<|assistant|>
+def two_sum(arr, target):
+    seen = {}
+    for i, num in enumerate(arr):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    return []
+<|end|>
+
+<|user|>Rotate array by k positions<|assistant|>
+def rotate_array(arr, k):
+    n = len(arr)
+    k = k % n
+    return arr[-k:] + arr[:-k]
+<|end|>
+
+<|user|>Count frequency of each element in list<|assistant|>
+def frequency_count(lst):
+    freq = {}
+    for item in lst:
+        freq[item] = freq.get(item, 0) + 1
+    return freq
+<|end|>
+
+<|user|>Flatten a nested list<|assistant|>
+def flatten_list(nested_list):
+    result = []
+    for item in nested_list:
+        if isinstance(item, list):
+            result.extend(flatten_list(item))
+        else:
+            result.append(item)
+    return result
+<|end|>
+
+<|user|>Remove duplicates from list preserving order<|assistant|>
+def unique_elements(lst):
+    seen = set()
+    result = []
+    for item in lst:
+        if item not in seen:
+            seen.add(item)
+            result.append(item)
+    return result
+<|end|>
+
+<|user|>Implement merge sort<|assistant|>
+def merge_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    return merge(left, right)
+
+def merge(left, right):
+    result = []
+    i = j = 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+<|end|>
+
+<|user|>Calculate height of binary tree<|assistant|>
+def tree_height(root):
+    if not root:
+        return 0
+    return 1 + max(tree_height(root.left), tree_height(root.right))
+<|end|>
+
+<|user|>Implement DFS for graph<|assistant|>
+def dfs_graph(graph, start, visited=None):
+    if visited is None:
+        visited = set()
+    visited.add(start)
+    result = [start]
+    for neighbor in graph.get(start, []):
+        if neighbor not in visited:
+            result.extend(dfs_graph(graph, neighbor, visited))
+    return result
+<|end|>
+
+<|user|>Implement BFS for graph<|assistant|>
+def bfs_graph(graph, start):
+    visited = set([start])
+    queue = [start]
+    result = []
+    while queue:
+        node = queue.pop(0)
+        result.append(node)
+        for neighbor in graph.get(node, []):
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+    return result
+<|end|>

@@ -21,6 +21,8 @@ import { GitDiffEditor } from './components/GitDiffEditor'
 import { RunPanel } from './components/RunPanel'
 import { QuickOpen } from './components/QuickOpen'
 import { NotificationManager, useNotifications } from './components/NotificationManager'
+import { AIStatsPanel } from './components/AIStatsPanel'
+import { DocumentViewer } from './components/DocumentViewer'
 
 declare global {
   interface Window {
@@ -553,9 +555,20 @@ function App() {
       case 'welcome':
         return <WelcomeScreen openFile={openFile} openWebView={openWebView} openAIChat={openAIChat}
           openCompress={() => openTab({ id: 'compress', label: 'Compress', type: 'compress' })} />
-      case 'file':
+      case 'file': {
+        const ext = activeTab.filePath?.split('.').pop()?.toLowerCase() || ''
+        if (ext === 'pdf' || ext === 'docx' || (ext === 'md' && !activeTab.label.includes('(edit)'))) {
+          return <DocumentViewer
+            filePath={activeTab.filePath!}
+            projectRoot={projectRoot}
+            onEdit={ext === 'md' ? () => {
+              openTab({ ...activeTab, id: `edit:${activeTab.id}`, label: `${activeTab.label} (edit)` })
+            } : undefined}
+          />
+        }
         return <MonacoEditor filePath={activeTab.filePath!} projectRoot={projectRoot}
           onModified={(mod) => setTabs(prev => prev.map(t => t.id === activeTab.id ? { ...t, modified: mod } : t))} />
+      }
       case 'git-diff':
         return <GitDiffEditor projectRoot={projectRoot} filePath={activeTab.filePath!} absolutePath={`${projectRoot}\\${activeTab.filePath}`} onClose={() => closeTab(activeTabId)} />
       case 'webview':
@@ -585,6 +598,8 @@ function App() {
         return <ExtensionsPanel />
       case 'mcp':
         return <MCPPanel serverStatus={serverStatus} />
+      case 'ai-stats':
+        return <AIStatsPanel />
       case 'ai':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

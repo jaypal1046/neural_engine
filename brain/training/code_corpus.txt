@@ -1,0 +1,397 @@
+# Python Code Training Corpus for Mini Transformer
+# Format: Each function on separate lines for autoregressive learning
+
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n-1)
+
+def is_prime(n):
+    if n <= 1:
+        return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
+    for i in range(3, int(n**0.5) + 1, 2):
+        if n % i == 0:
+            return False
+    return True
+
+def reverse_string(s):
+    return s[::-1]
+
+def is_palindrome(s):
+    s = s.lower().replace(' ', '')
+    return s == s[::-1]
+
+def binary_search(arr, target):
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1
+
+def linear_search(arr, target):
+    for i, val in enumerate(arr):
+        if val == target:
+            return i
+    return -1
+
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr
+
+def insertion_sort(arr):
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i-1
+        while j >= 0 and key < arr[j]:
+            arr[j+1] = arr[j]
+            j -= 1
+        arr[j+1] = key
+    return arr
+
+def selection_sort(arr):
+    for i in range(len(arr)):
+        min_idx = i
+        for j in range(i+1, len(arr)):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+        arr[i], arr[min_idx] = arr[min_idx], arr[i]
+    return arr
+
+def merge_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    return merge(left, right)
+
+def merge(left, right):
+    result = []
+    i = j = 0
+    while i < len(left) and j < len(right):
+        if left[i] < right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+
+def quick_sort(arr):
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quick_sort(left) + middle + quick_sort(right)
+
+def count_vowels(s):
+    vowels = 'aeiouAEIOU'
+    return sum(1 for char in s if char in vowels)
+
+def count_consonants(s):
+    vowels = 'aeiouAEIOU'
+    return sum(1 for char in s if char.isalpha() and char not in vowels)
+
+def find_max(numbers):
+    if not numbers:
+        return None
+    return max(numbers)
+
+def find_min(numbers):
+    if not numbers:
+        return None
+    return min(numbers)
+
+def calculate_average(numbers):
+    if not numbers:
+        return 0
+    return sum(numbers) / len(numbers)
+
+def calculate_median(numbers):
+    if not numbers:
+        return 0
+    sorted_nums = sorted(numbers)
+    n = len(sorted_nums)
+    if n % 2 == 0:
+        return (sorted_nums[n//2-1] + sorted_nums[n//2]) / 2
+    return sorted_nums[n//2]
+
+def calculate_mode(numbers):
+    if not numbers:
+        return None
+    counts = {}
+    for num in numbers:
+        counts[num] = counts.get(num, 0) + 1
+    return max(counts, key=counts.get)
+
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+def lcm(a, b):
+    return abs(a * b) // gcd(a, b)
+
+def is_even(n):
+    return n % 2 == 0
+
+def is_odd(n):
+    return n % 2 != 0
+
+def power(base, exp):
+    result = 1
+    for _ in range(exp):
+        result *= base
+    return result
+
+def absolute_value(n):
+    return n if n >= 0 else -n
+
+def sum_list(numbers):
+    return sum(numbers)
+
+def product_list(numbers):
+    result = 1
+    for num in numbers:
+        result *= num
+    return result
+
+def remove_duplicates(arr):
+    return list(set(arr))
+
+def find_duplicates(arr):
+    seen = set()
+    duplicates = set()
+    for item in arr:
+        if item in seen:
+            duplicates.add(item)
+        seen.add(item)
+    return list(duplicates)
+
+def flatten_list(nested_list):
+    result = []
+    for item in nested_list:
+        if isinstance(item, list):
+            result.extend(flatten_list(item))
+        else:
+            result.append(item)
+    return result
+
+def transpose_matrix(matrix):
+    return [[matrix[j][i] for j in range(len(matrix))] for i in range(len(matrix[0]))]
+
+def matrix_multiply(A, B):
+    result = [[0 for _ in range(len(B[0]))] for _ in range(len(A))]
+    for i in range(len(A)):
+        for j in range(len(B[0])):
+            for k in range(len(B)):
+                result[i][j] += A[i][k] * B[k][j]
+    return result
+
+def rotate_array(arr, k):
+    k = k % len(arr)
+    return arr[-k:] + arr[:-k]
+
+def reverse_array(arr):
+    return arr[::-1]
+
+def capitalize_words(s):
+    return ' '.join(word.capitalize() for word in s.split())
+
+def count_words(s):
+    return len(s.split())
+
+def count_characters(s):
+    return len(s)
+
+def remove_whitespace(s):
+    return s.replace(' ', '')
+
+def is_anagram(s1, s2):
+    return sorted(s1.lower()) == sorted(s2.lower())
+
+def longest_common_prefix(strs):
+    if not strs:
+        return ""
+    prefix = strs[0]
+    for s in strs[1:]:
+        while not s.startswith(prefix):
+            prefix = prefix[:-1]
+            if not prefix:
+                return ""
+    return prefix
+
+def contains_substring(s, substr):
+    return substr in s
+
+def replace_substring(s, old, new):
+    return s.replace(old, new)
+
+def split_string(s, delimiter):
+    return s.split(delimiter)
+
+def join_strings(arr, delimiter):
+    return delimiter.join(arr)
+
+def to_uppercase(s):
+    return s.upper()
+
+def to_lowercase(s):
+    return s.lower()
+
+def trim_string(s):
+    return s.strip()
+
+def pad_left(s, length, char):
+    return s.rjust(length, char)
+
+def pad_right(s, length, char):
+    return s.ljust(length, char)
+
+def is_digit(s):
+    return s.isdigit()
+
+def is_alpha(s):
+    return s.isalpha()
+
+def is_alphanumeric(s):
+    return s.isalnum()
+
+def convert_to_int(s):
+    try:
+        return int(s)
+    except ValueError:
+        return None
+
+def convert_to_float(s):
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+def range_sum(start, end):
+    return sum(range(start, end + 1))
+
+def range_product(start, end):
+    result = 1
+    for i in range(start, end + 1):
+        result *= i
+    return result
+
+def prime_factors(n):
+    factors = []
+    d = 2
+    while d * d <= n:
+        while n % d == 0:
+            factors.append(d)
+            n //= d
+        d += 1
+    if n > 1:
+        factors.append(n)
+    return factors
+
+def is_perfect_square(n):
+    root = int(n ** 0.5)
+    return root * root == n
+
+def nth_root(n, root):
+    return n ** (1.0 / root)
+
+def celsius_to_fahrenheit(c):
+    return c * 9/5 + 32
+
+def fahrenheit_to_celsius(f):
+    return (f - 32) * 5/9
+
+def kilometers_to_miles(km):
+    return km * 0.621371
+
+def miles_to_kilometers(miles):
+    return miles / 0.621371
+
+def calculate_circle_area(radius):
+    return 3.14159 * radius * radius
+
+def calculate_circle_circumference(radius):
+    return 2 * 3.14159 * radius
+
+def calculate_rectangle_area(width, height):
+    return width * height
+
+def calculate_rectangle_perimeter(width, height):
+    return 2 * (width + height)
+
+def calculate_triangle_area(base, height):
+    return 0.5 * base * height
+
+def pythagorean_theorem(a, b):
+    return (a*a + b*b) ** 0.5
+
+def distance_2d(x1, y1, x2, y2):
+    return ((x2-x1)**2 + (y2-y1)**2) ** 0.5
+
+def midpoint_2d(x1, y1, x2, y2):
+    return ((x1+x2)/2, (y1+y2)/2)
+
+def slope(x1, y1, x2, y2):
+    if x2 - x1 == 0:
+        return None
+    return (y2 - y1) / (x2 - x1)
+
+def compound_interest(principal, rate, time, n):
+    return principal * (1 + rate/n) ** (n*time)
+
+def simple_interest(principal, rate, time):
+    return principal * rate * time
+
+def quadratic_formula(a, b, c):
+    discriminant = b*b - 4*a*c
+    if discriminant < 0:
+        return None
+    root1 = (-b + discriminant**0.5) / (2*a)
+    root2 = (-b - discriminant**0.5) / (2*a)
+    return (root1, root2)
+
+def add(a, b):
+    return a + b
+
+def subtract(a, b):
+    return a - b
+
+def multiply(a, b):
+    return a * b
+
+def divide(a, b):
+    if b == 0:
+        return None
+    return a / b
+
+def modulo(a, b):
+    return a % b
+
+def floor_division(a, b):
+    if b == 0:
+        return None
+    return a // b

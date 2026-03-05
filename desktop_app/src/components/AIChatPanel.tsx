@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import {
     ArrowUp, Paperclip, Globe, BrainCircuit, Zap,
-    Square, Copy, Check, Wand2
+    Square, Copy, Check, Wand2, ThumbsUp, ThumbsDown
 } from 'lucide-react'
 
 const API = 'http://127.0.0.1:8001'
@@ -11,6 +11,8 @@ interface Message {
     content: string
     timestamp: Date
     tool?: string
+    feedback?: 'positive' | 'negative' | null
+    messageId?: string
 }
 
 const QUICK_ACTIONS = [
@@ -126,25 +128,77 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                 const data = await res.json()
                 let replyContent = data.response || data.reply || data.content || JSON.stringify(data)
                 let toolUsed = data.tool
+                let confidence = data.confidence || 100  // Default to high confidence if not provided
 
-                // Intercept Agentic Actions
-                const browseMatch = replyContent.match(/\[ACTION:\s*OPEN_BROWSER\]\s*([^\n]+)/i)
-                if (browseMatch) {
-                    window.dispatchEvent(new CustomEvent('ai-open-browser', { detail: { url: browseMatch[1].trim() } }))
-                    replyContent = replyContent.replace(browseMatch[0], '')
-                    toolUsed = `Opened Browser: ${browseMatch[1].trim()}`
+                // Check if replyContent is a JSON string from C++ neural_engine
+                try {
+                    // Try to extract JSON from the string if it contains any prefix like ">> Loaded..." 
+                    // or other terminal output before the JSON
+                    const jsonMatch = replyContent.match(/\{[\s\S]*\}/);
+                    const jsonString = jsonMatch ? jsonMatch[0] : replyContent;
+
+                    const parsed = JSON.parse(jsonString)
+                    if (parsed.answer) {
+                        // C++ neural_engine returns JSON with {status, question, answer, confidence, ...}
+                        replyContent = parsed.answer
+                        confidence = parsed.confidence !== undefined ? parsed.confidence : confidence
+
+                        // Add sources if available
+                        if (parsed.sources && parsed.sources.length > 0) {
+                            replyContent += '\n\nSources:\n' + parsed.sources.map((s: any) => `- ${s}`).join('\n')
+                        }
+                    } else if (parsed.response) {
+                        replyContent = parsed.response;
+                    }
+                } catch {
+                    // Not JSON, use as-is (plain text response)
                 }
-                const searchMatch = replyContent.match(/\[ACTION:\s*SEARCH\]\s*([^\n]+)/i)
-                if (searchMatch) {
-                    window.dispatchEvent(new CustomEvent('ai-open-browser', { detail: { url: 'https://google.com/search?q=' + encodeURIComponent(searchMatch[1].trim()) } }))
-                    replyContent = replyContent.replace(searchMatch[0], '')
-                    toolUsed = `Searched Web: ${searchMatch[1].trim()}`
+
+                // Only process actions if confidence is high enough and response doesn't contain system prompt artifacts
+                const hasSystemPromptArtifacts = replyContent.includes('[ACTION:') && replyContent.includes('User request:')
+                const shouldProcessActions = !hasSystemPromptArtifacts && confidence >= 70
+
+                if (shouldProcessActions) {
+                    // Intercept Agentic Actions - only if AI explicitly generated them
+                    const browseMatch = replyContent.match(/^\[ACTION:\s*OPEN_BROWSER\]\s*([^\n]+)/im)
+                    if (browseMatch) {
+                        const url = browseMatch[1].trim()
+                        // Validate URL format
+                        if (url.startsWith('http://') || url.startsWith('https://')) {
+                            window.dispatchEvent(new CustomEvent('ai-open-browser', { detail: { url } }))
+                            replyContent = replyContent.replace(browseMatch[0], '')
+                            toolUsed = `Opened Browser: ${url}`
+                        }
+                    }
+                    const searchMatch = replyContent.match(/^\[ACTION:\s*SEARCH\]\s*([^\n]+)/im)
+                    if (searchMatch) {
+                        const query = searchMatch[1].trim()
+                        // Only search if query is not a placeholder
+                        if (query && query !== 'query' && !query.includes('[') && !query.includes(']')) {
+                            window.dispatchEvent(new CustomEvent('ai-open-browser', { detail: { url: 'https://google.com/search?q=' + encodeURIComponent(query) } }))
+                            replyContent = replyContent.replace(searchMatch[0], '')
+                            toolUsed = `Searched Web: ${query}`
+                        }
+                    }
+                    const runMatch = replyContent.match(/^\[ACTION:\s*RUN_COMMAND\]\s*([^\n]+)/im)
+                    if (runMatch) {
+                        const cmd = runMatch[1].trim()
+                        // Only run if command is not a placeholder
+                        if (cmd && cmd !== 'command' && !cmd.includes('[') && !cmd.includes(']')) {
+                            window.dispatchEvent(new CustomEvent('run-terminal-command', { detail: { cmd } }))
+                            replyContent = replyContent.replace(runMatch[0], '')
+                            toolUsed = `Ran Terminal Command: ${cmd}`
+                        }
+                    }
                 }
-                const runMatch = replyContent.match(/\[ACTION:\s*RUN_COMMAND\]\s*([^\n]+)/i)
-                if (runMatch) {
-                    window.dispatchEvent(new CustomEvent('run-terminal-command', { detail: { cmd: runMatch[1].trim() } }))
-                    replyContent = replyContent.replace(runMatch[0], '')
-                    toolUsed = `Ran Terminal Command: ${runMatch[1].trim()}`
+
+                // Clean up any remaining system prompt artifacts
+                replyContent = replyContent.replace(/\[ACTION:\s*(SEARCH|RUN_COMMAND|OPEN_BROWSER)\]\s*[^\n]+/gi, '')
+                replyContent = replyContent.replace(/User request:\n/gi, '')
+
+                // If confidence is low, offer to search online instead of auto-triggering
+                if (confidence < 50 && replyContent.includes("don't have knowledge")) {
+                    replyContent += '\n\nWould you like me to search online for this information?'
                 }
 
                 setMessages(prev => [...prev, {
@@ -152,6 +206,8 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                     content: replyContent.trim(),
                     timestamp: new Date(),
                     tool: toolUsed,
+                    messageId: `msg-${Date.now()}`,
+                    feedback: null,
                 }])
             } else {
                 // Fallback response
@@ -177,6 +233,37 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
     }
 
     const formatTime = (d: Date) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+    const handleFeedback = async (messageIndex: number, feedback: 'positive' | 'negative') => {
+        const msg = messages[messageIndex]
+        if (msg.role !== 'assistant') return
+
+        // Check if feedback collection is enabled
+        const settings = localStorage.getItem('neural-studio-settings')
+        const collectFeedback = settings ? JSON.parse(settings)['collect-feedback'] !== false : true
+        if (!collectFeedback) return
+
+        // Update message with feedback
+        setMessages(prev => prev.map((m, i) => i === messageIndex ? { ...m, feedback } : m))
+
+        // Send feedback to server
+        try {
+            const userMsg = messages[messageIndex - 1] // Previous message should be user
+            await fetch(`${API}/api/feedback`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: userMsg?.content || '',
+                    answer: msg.content,
+                    feedback,
+                    timestamp: msg.timestamp.toISOString(),
+                    messageId: msg.messageId || `msg-${Date.now()}`,
+                }),
+            })
+        } catch (err) {
+            console.error('Failed to send feedback:', err)
+        }
+    }
 
     const formatContent = (text: string) => {
         const blocks = text.split(/(```[\s\S]*?```)/g)
@@ -273,10 +360,45 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                                 <div className={`ai-bubble ${msg.role}`}>
                                     {formatContent(msg.content)}
                                 </div>
-                                <div className="ai-msg-time" style={{
-                                    textAlign: msg.role === 'user' ? 'right' : 'left'
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 8, marginTop: 4,
+                                    justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start'
                                 }}>
-                                    {formatTime(msg.timestamp)}
+                                    <div className="ai-msg-time">
+                                        {formatTime(msg.timestamp)}
+                                    </div>
+                                    {msg.role === 'assistant' && (
+                                        <div style={{ display: 'flex', gap: 4 }}>
+                                            <button
+                                                onClick={() => handleFeedback(i, 'positive')}
+                                                style={{
+                                                    background: msg.feedback === 'positive' ? 'rgba(74,222,128,0.15)' : 'transparent',
+                                                    border: '1px solid',
+                                                    borderColor: msg.feedback === 'positive' ? 'rgba(74,222,128,0.5)' : 'var(--border)',
+                                                    borderRadius: 4, padding: '2px 6px', cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', color: msg.feedback === 'positive' ? '#4ADE80' : 'var(--text-muted)',
+                                                    transition: 'all 0.15s', fontSize: 10
+                                                }}
+                                                title="Good response"
+                                            >
+                                                <ThumbsUp size={11} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleFeedback(i, 'negative')}
+                                                style={{
+                                                    background: msg.feedback === 'negative' ? 'rgba(239,68,68,0.15)' : 'transparent',
+                                                    border: '1px solid',
+                                                    borderColor: msg.feedback === 'negative' ? 'rgba(239,68,68,0.5)' : 'var(--border)',
+                                                    borderRadius: 4, padding: '2px 6px', cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', color: msg.feedback === 'negative' ? '#EF4444' : 'var(--text-muted)',
+                                                    transition: 'all 0.15s', fontSize: 10
+                                                }}
+                                                title="Bad response"
+                                            >
+                                                <ThumbsDown size={11} />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

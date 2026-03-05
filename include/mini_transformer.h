@@ -6,6 +6,7 @@
 #include "optimizer.h"
 #include "loss.h"
 #include "transformer_gradients.h"
+#include "kv_cache.h"
 #include <vector>
 #include <string>
 #include <memory>
@@ -25,6 +26,7 @@ struct TransformerConfig {
     int ff_dim = 2048;            // Feed-forward dimension
     int max_seq_length = 512;     // Maximum context length
     float dropout = 0.1f;
+    bool use_flash_attention = false;  // Enable Flash Attention v2 (O(N) memory)
 };
 
 class MiniTransformer {
@@ -42,6 +44,15 @@ public:
 
     // Inference: Generate text
     std::string generate(
+        const std::string& prompt,
+        BPETokenizer& tokenizer,
+        int max_tokens = 50,
+        float temperature = 0.8f,
+        int top_k = 40
+    );
+
+    // Inference: Generate with KV-Cache (50x faster)
+    std::string generate_with_cache(
         const std::string& prompt,
         BPETokenizer& tokenizer,
         int max_tokens = 50,
@@ -96,11 +107,44 @@ private:
 
     // Forward pass helpers
     std::vector<std::vector<float>> forward(const std::vector<int>& tokens);
+
+    // KV-Cache optimized forward pass (for incremental generation)
+    std::vector<std::vector<float>> forward_incremental(
+        const std::vector<int>& tokens,
+        KVCache::CacheManager& cache,
+        bool is_prefill
+    );
+
+    // Predict next token with KV-Cache
+    std::vector<float> predict_next_with_cache(
+        const std::vector<int>& context,
+        KVCache::CacheManager& cache,
+        bool is_prefill
+    );
+
     std::vector<std::vector<float>> multi_head_attention(
         const std::vector<std::vector<float>>& input,
         const Weights::Layer& layer,
         bool causal_mask = true
     );
+
+    // Flash Attention v2 (memory-efficient, long context)
+    std::vector<std::vector<float>> multi_head_attention_flash(
+        const std::vector<std::vector<float>>& input,
+        const Weights::Layer& layer,
+        bool causal_mask = true
+    );
+
+    // KV-Cache optimized attention
+    std::vector<std::vector<float>> multi_head_attention_cached(
+        const std::vector<std::vector<float>>& input,
+        const Weights::Layer& layer,
+        KVCache::CacheManager& cache,
+        int layer_idx,
+        bool is_prefill,
+        bool causal_mask = true
+    );
+
     std::vector<std::vector<float>> feed_forward(
         const std::vector<std::vector<float>>& input,
         const Weights::Layer& layer

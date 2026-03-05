@@ -316,6 +316,14 @@ app.whenReady().then(() => {
             return { error: e.message }
         }
     })
+    ipcMain.handle('fs:readFileBase64', (_event, filePath: string) => {
+        try {
+            const buffer = readFileSync(filePath)
+            return buffer.toString('base64')
+        } catch (e: any) {
+            return { error: e.message }
+        }
+    })
     ipcMain.handle('fs:writeFile', (_event, filePath: string, content: string) => {
         try {
             writeFileSync(filePath, content, 'utf-8')

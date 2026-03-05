@@ -60,6 +60,21 @@ const SECTIONS: SettingSection[] = [
             { id: 'web-search', label: 'Web Search', description: 'Enable web search in AI responses', type: 'toggle', defaultValue: false },
             { id: 'model', label: 'AI Model', description: 'Neural model for AI responses', type: 'select', defaultValue: 'neural-v10', options: ['neural-v10', 'neural-v9', 'mini-transformer', 'cmix'] },
             { id: 'max-tokens', label: 'Max Response Tokens', description: 'Maximum tokens in AI response', type: 'number', defaultValue: 2048, min: 256, max: 8192 },
+            { id: 'collect-feedback', label: 'Collect User Feedback', description: 'Show 👍👎 buttons on AI responses for training', type: 'toggle', defaultValue: true },
+            { id: 'advanced-reasoning', label: 'Enable Advanced Reasoning', description: 'Use Tree-of-Thought, Debate, and Self-Reflection on complex questions', type: 'toggle', defaultValue: false },
+        ]
+    },
+    {
+        id: 'self-learning', label: 'Self-Learning AI', icon: Zap,
+        settings: [
+            { id: 'auto-learn-enabled', label: 'Enable Auto-Learning', description: 'AI automatically improves from weak responses', type: 'toggle', defaultValue: true },
+            { id: 'weak-threshold', label: 'Weak Response Threshold', description: 'Score below which responses are considered weak (0-100)', type: 'number', defaultValue: 65, min: 0, max: 100 },
+            { id: 'train-threshold', label: 'Training Threshold', description: 'Retrain transformer after N corrections', type: 'number', defaultValue: 10, min: 1, max: 100 },
+            { id: 'monitor-interval', label: 'Monitor Interval (seconds)', description: 'How often to check for weak responses', type: 'number', defaultValue: 60, min: 10, max: 600 },
+            { id: 'enable-cai', label: 'Constitutional AI Critique', description: 'Enable CAI self-critique loop', type: 'toggle', defaultValue: true },
+            { id: 'enable-web-learning', label: 'Web Learning', description: 'Auto-learn from Wikipedia when knowledge gaps detected', type: 'toggle', defaultValue: true },
+            { id: 'reasoning-mode', label: 'Reasoning Mode', description: 'Advanced reasoning technique for hard questions', type: 'select', defaultValue: 'auto', options: ['auto', 'tree_of_thought', 'debate', 'self_reflect', 'combined', 'off'] },
+            { id: 'show-training-stats', label: 'Show Training Stats', description: 'Display real-time training progress in UI', type: 'toggle', defaultValue: true },
         ]
     },
     {

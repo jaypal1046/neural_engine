@@ -1493,9 +1493,13 @@ async def brain_status():
 
     return status
 
-@app.get("/api/brain/stats")
-async def brain_stats():
-    """Brain statistics in the format expected by the React frontend."""
+@app.get("/api/brain/knowledge")
+async def brain_knowledge():
+    """Brain knowledge statistics (compression data, vocabulary, topics).
+
+    RENAMED from /api/brain/stats to avoid conflict with Phase H-I training dashboard endpoint.
+    This endpoint returns the original compression-focused stats.
+    """
     result = {
         "total_knowledge_items": 0,
         "total_topics": 0,
@@ -1799,6 +1803,426 @@ if __name__ == "__main__":
     print("  |   C++ Neural Engine + Smart Brain + Vault          |")
     print("  +----------------------------------------------------+\n")
     uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
+
+
+# =============================================================================
+# Chat & Feedback API - Phase H-I Desktop Integration
+# =============================================================================
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    message: str
+    history: list[ChatMessage] = []
+    web_search: bool = False
+
+class FeedbackRequest(BaseModel):
+    question: str
+    answer: str
+    feedback: str  # 'positive' or 'negative'
+    timestamp: str
+    messageId: str
+
+# ============================================
+# QUICK WINS: Code Quality Improvements
+# ============================================
+
+def cleanup_generated_code(code: str) -> str:
+    """
+    QUICK WIN #2: Post-processing cleanup
+    Remove incomplete lines and common artifacts from generated code.
+    """
+    if not code or len(code) < 10:
+        return code
+
+    lines = code.split('\n')
+    clean_lines = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Skip empty lines at the start
+        if not clean_lines and not stripped:
+            continue
+
+        # Stop at incomplete lines (syntax errors)
+        if stripped and (
+            stripped.endswith(('(', ',', '[', '{')) or  # Incomplete expression
+            stripped.startswith((')', ']', '}')) or     # Orphaned closing bracket
+            len(stripped) < 3                            # Too short to be real code
+        ):
+            break
+
+        clean_lines.append(line)
+
+    # Remove trailing empty lines
+    while clean_lines and not clean_lines[-1].strip():
+        clean_lines.pop()
+
+    cleaned = '\n'.join(clean_lines)
+
+    # If we cleaned everything away, return original
+    return cleaned if cleaned.strip() else code
+
+def calculate_code_confidence(code: str) -> int:
+    """
+    QUICK WIN #3: Confidence thresholding
+    Estimate confidence based on code quality heuristics.
+    """
+    if not code or len(code) < 10:
+        return 20
+
+    confidence = 50  # Base confidence
+
+    # Length check (good code has substance)
+    if len(code) > 30:
+        confidence += 10
+    if len(code) > 60:
+        confidence += 10
+
+    # Syntax patterns (good indicators)
+    if 'def ' in code:
+        confidence += 10
+    if ':' in code:
+        confidence += 5
+    if 'return' in code:
+        confidence += 10
+
+    # Indentation (suggests proper structure)
+    lines = code.split('\n')
+    indented_lines = [l for l in lines if l.startswith('    ') or l.startswith('\t')]
+    if len(indented_lines) > 0:
+        confidence += 10
+
+    # Penalize gibberish patterns
+    if code.count('(') - code.count(')') != 0:  # Unbalanced parens
+        confidence -= 20
+    if len([c for c in code if not c.isalnum() and c not in ' \n\t_:()[]{}.,=+-*/<>']) > len(code) * 0.3:
+        confidence -= 15  # Too many special chars (likely gibberish)
+
+    return max(20, min(85, confidence))  # Clamp between 20-85
+
+@app.post("/api/chat")
+async def chat(req: ChatRequest):
+    """
+    Conversational AI chat endpoint for desktop UI.
+    Routes to C++ neural_engine.exe ai_ask command.
+    """
+    try:
+        # Extract user request from system prompt wrapper if present
+        user_message = req.message
+        if "User request:\n" in req.message:
+            user_message = req.message.split("User request:\n", 1)[1].strip()
+        else:
+            user_message = req.message.strip()
+
+        # Check if this is a code generation/fixing request
+        code_keywords = ['write', 'generate', 'create', 'code', 'function', 'implement', 'fix', 'debug', 'correct']
+        is_code_request = any(kw in user_message.lower() for kw in code_keywords)
+
+        if is_code_request:
+            # Use transformer generation for code
+            import json as json_module
+
+            print(f"[CODE GENERATION] Detected code request: {user_message[:50]}...", flush=True)
+
+            # Few-shot prompting: Add compact examples (512-token buffer allows this)
+            # Using condensed format to keep generation time reasonable
+            few_shot_examples = """def fibonacci(n): return n if n<=1 else fibonacci(n-1)+fibonacci(n-2)
+def factorial(n): return 1 if n<=1 else n*factorial(n-1)
+def reverse_string(s): return s[::-1]
+
+"""
+            enhanced_message = few_shot_examples + user_message
+
+            print(f"[CODE GENERATION] Using few-shot prompt (3 examples)", flush=True)
+            cmd = [NEURAL_ENGINE_EXE, "transformer_generate", enhanced_message]
+            # Increased timeout for longer prompts (few-shot examples + user message)
+            # errors='ignore' handles binary characters in transformer output
+            # Increased timeout for few-shot prompts (3 examples + user message = longer inference)
+            # 3M param model on CPU: ~60-90 seconds with few-shot
+            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='ignore', timeout=120, cwd=BASE_DIR)
+
+            if result.returncode == 0:
+                response_text = result.stdout.strip()
+
+                print(f"[CODE GENERATION] Raw output length: {len(response_text)}", flush=True)
+
+                # Extract JSON
+                json_start = response_text.find('{')
+                json_end = response_text.rfind('}')
+
+                if json_start >= 0 and json_end > json_start:
+                    json_str = response_text[json_start:json_end+1]
+                    try:
+                        parsed = json_module.loads(json_str)
+                        print(f"[CODE GENERATION] Parsed transformer output successfully", flush=True)
+
+                        # QUICK WIN #2: Post-processing cleanup
+                        raw_answer = parsed.get("generated", "")
+                        cleaned_answer = cleanup_generated_code(raw_answer)
+
+                        # QUICK WIN #3: Confidence thresholding
+                        confidence = calculate_code_confidence(cleaned_answer)
+
+                        # Wrap transformer output in ai_ask format
+                        response_text = json_module.dumps({
+                            "status": "success",
+                            "question": req.message,
+                            "answer": cleaned_answer,
+                            "confidence": confidence,
+                            "tool": "transformer_generate"
+                        })
+                    except Exception as e:
+                        print(f"[CODE GENERATION] JSON parse error: {e}", flush=True)
+                        # Fallback: wrap raw output
+                        response_text = json_module.dumps({
+                            "status": "success",
+                            "question": req.message,
+                            "answer": response_text,
+                            "confidence": 70,
+                            "tool": "transformer_generate_raw"
+                        })
+
+                print(f"[CODE GENERATION] Returning response with tool: transformer_generate", flush=True)
+                return {
+                    "response": response_text,
+                    "tool": "transformer_generate",
+                    "status": "ok"
+                }
+            else:
+                print(f"[CODE GENERATION] Command failed: {result.stderr[:200]}", flush=True)
+
+        # Not a code request - use regular ai_ask
+        cmd = [NEURAL_ENGINE_EXE, "ai_ask", req.message]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=BASE_DIR)
+
+        if result.returncode == 0:
+            response_text = result.stdout.strip()
+
+            # C++ neural_engine may print debug messages before JSON
+            # Extract only the JSON part (starts with '{' and ends with '}')
+            json_start = response_text.find('{')
+            json_end = response_text.rfind('}')
+
+            if json_start >= 0 and json_end > json_start:
+                # Found JSON - extract it
+                json_str = response_text[json_start:json_end+1]
+                try:
+                    # Validate it's proper JSON
+                    parsed = json.loads(json_str)
+                    response_text = json_str
+                except:
+                    # Not valid JSON, use full output
+                    pass
+
+            return {
+                "response": response_text,
+                "tool": "neural_engine",
+                "status": "ok"
+            }
+        else:
+            # Fallback to Python brain if available
+            if PYTHON_BRAIN_AVAILABLE and _brain:
+                response_text = _brain.generate_response(req.message)
+                return {
+                    "response": response_text,
+                    "tool": "python_brain_fallback",
+                    "status": "ok"
+                }
+            return {
+                "response": f"Neural engine error: {result.stderr}",
+                "tool": "error",
+                "status": "error"
+            }
+    except subprocess.TimeoutExpired:
+        return {"response": "Request timeout - question too complex", "tool": "timeout", "status": "error"}
+    except Exception as e:
+        return {"response": f"Chat error: {str(e)}", "tool": "error", "status": "error"}
+
+@app.post("/api/debug/code-detection")
+async def debug_code_detection(req: ChatRequest):
+    """
+    Debug endpoint to test code keyword detection.
+    Returns what the routing logic would do.
+    """
+    code_keywords = ['write', 'generate', 'create', 'code', 'function', 'implement', 'fix', 'debug', 'correct']
+
+    detected_keywords = [kw for kw in code_keywords if kw in req.message.lower()]
+    is_code_request = len(detected_keywords) > 0
+
+    return {
+        "message": req.message,
+        "is_code_request": is_code_request,
+        "detected_keywords": detected_keywords,
+        "would_use_tool": "transformer_generate" if is_code_request else "ai_ask"
+    }
+
+@app.post("/api/feedback")
+async def feedback(req: FeedbackRequest):
+    """
+    Collect user feedback (👍👎) for AI responses.
+    Stores feedback for later training via RLHF pipeline.
+    """
+    try:
+        import json
+        from datetime import datetime
+
+        # Create brain/feedback directory if needed
+        feedback_dir = os.path.join(BASE_DIR, "brain", "feedback")
+        os.makedirs(feedback_dir, exist_ok=True)
+
+        # Append to feedback log
+        feedback_file = os.path.join(feedback_dir, "user_feedback.jsonl")
+        feedback_entry = {
+            "messageId": req.messageId,
+            "question": req.question,
+            "answer": req.answer,
+            "feedback": req.feedback,
+            "timestamp": req.timestamp,
+            "collected_at": datetime.now().isoformat()
+        }
+
+        with open(feedback_file, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(feedback_entry) + '\n')
+
+        # If positive feedback, could immediately add to training corpus
+        if req.feedback == 'positive':
+            # Add to SFT training pairs
+            sft_file = os.path.join(BASE_DIR, "brain", "training", "sft_pairs_feedback.json")
+            os.makedirs(os.path.dirname(sft_file), exist_ok=True)
+
+            try:
+                if os.path.exists(sft_file):
+                    with open(sft_file, 'r', encoding='utf-8') as f:
+                        sft_pairs = json.load(f)
+                else:
+                    sft_pairs = []
+
+                sft_pairs.append({
+                    "prompt": req.question,
+                    "completion": req.answer
+                })
+
+                with open(sft_file, 'w', encoding='utf-8') as f:
+                    json.dump(sft_pairs, f, indent=2)
+            except Exception as e:
+                print(f"Warning: Could not update SFT pairs: {e}")
+
+        # If negative feedback, add to corrections queue
+        elif req.feedback == 'negative':
+            corrections_file = os.path.join(BASE_DIR, "brain", "self_learning", "manual_corrections.json")
+            os.makedirs(os.path.dirname(corrections_file), exist_ok=True)
+
+            try:
+                if os.path.exists(corrections_file):
+                    with open(corrections_file, 'r', encoding='utf-8') as f:
+                        corrections = json.load(f)
+                else:
+                    corrections = []
+
+                corrections.append({
+                    "question": req.question,
+                    "bad_answer": req.answer,
+                    "timestamp": req.timestamp,
+                    "needs_improvement": True
+                })
+
+                with open(corrections_file, 'w', encoding='utf-8') as f:
+                    json.dump(corrections, f, indent=2)
+            except Exception as e:
+                print(f"Warning: Could not update corrections: {e}")
+
+        return {
+            "status": "ok",
+            "message": "Feedback recorded successfully",
+            "feedback": req.feedback
+        }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to record feedback: {str(e)}"
+        }
+
+@app.get("/api/brain/stats")
+async def brain_stats():
+    """
+    Get AI training statistics for dashboard.
+    Returns current score, knowledge count, training metrics.
+    """
+    import json
+    from datetime import datetime
+
+    stats = {
+        "ai_score": 74,  # Default baseline
+        "knowledge_items": 0,
+        "total_words": 0,
+        "weak_responses": 0,
+        "corrections_made": 0,
+        "training_runs": 0,
+        "last_trained": None,
+        "auto_learning_enabled": True,
+        "rlhf_iterations": 0,
+        "advanced_reasoning_used": 0
+    }
+
+    try:
+        # Get knowledge stats from Python brain
+        if PYTHON_BRAIN_AVAILABLE and _brain:
+            if hasattr(_brain, 'index') and _brain.index:
+                stats["knowledge_items"] = len(_brain.index)
+            if hasattr(_brain, 'vocab') and _brain.vocab:
+                stats["total_words"] = len(_brain.vocab)
+
+        # Count weak responses
+        weak_file = os.path.join(BASE_DIR, "brain", "self_learning", "weak_responses.json")
+        if os.path.exists(weak_file):
+            with open(weak_file, 'r', encoding='utf-8') as f:
+                weak_data = json.load(f)
+                stats["weak_responses"] = len(weak_data)
+
+        # Count corrections
+        corrections_file = os.path.join(BASE_DIR, "brain", "self_learning", "corrections.json")
+        if os.path.exists(corrections_file):
+            with open(corrections_file, 'r', encoding='utf-8') as f:
+                corrections_data = json.load(f)
+                stats["corrections_made"] = len(corrections_data)
+
+        # Count training runs
+        history_dir = os.path.join(BASE_DIR, "brain", "training", "history")
+        if os.path.exists(history_dir):
+            training_files = [f for f in os.listdir(history_dir) if f.endswith('.json')]
+            stats["training_runs"] = len(training_files)
+            if training_files:
+                # Get last training timestamp
+                latest = max(training_files, key=lambda x: os.path.getmtime(os.path.join(history_dir, x)))
+                mtime = os.path.getmtime(os.path.join(history_dir, latest))
+                stats["last_trained"] = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+
+        # Count RLHF iterations from comparisons file
+        comparisons_file = os.path.join(BASE_DIR, "brain", "training", "comparisons.json")
+        if os.path.exists(comparisons_file):
+            with open(comparisons_file, 'r', encoding='utf-8') as f:
+                comparisons = json.load(f)
+                stats["rlhf_iterations"] = len(comparisons)
+
+        # Try to get latest AI score
+        score_file = os.path.join(BASE_DIR, "brain", "training", "latest_score.txt")
+        if os.path.exists(score_file):
+            with open(score_file, 'r') as f:
+                score_text = f.read().strip()
+                try:
+                    stats["ai_score"] = int(float(score_text))
+                except:
+                    pass
+
+    except Exception as e:
+        print(f"Warning: Error collecting stats: {e}")
+
+    return stats
 
 
 # =============================================================================

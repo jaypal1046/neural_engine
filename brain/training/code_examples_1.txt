@@ -1,0 +1,453 @@
+# Python Code Examples - Collection 1
+# Source: Common algorithms and patterns
+
+# ============================================
+# SORTING ALGORITHMS
+# ============================================
+
+def bubble_sort(arr):
+    """Bubble sort implementation"""
+    n = len(arr)
+    for i in range(n):
+        for j in range(0, n-i-1):
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+    return arr
+
+def quick_sort(arr):
+    """Quick sort implementation"""
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quick_sort(left) + middle + quick_sort(right)
+
+def merge_sort(arr):
+    """Merge sort implementation"""
+    if len(arr) <= 1:
+        return arr
+
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+
+    return merge(left, right)
+
+def merge(left, right):
+    """Merge two sorted arrays"""
+    result = []
+    i = j = 0
+
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+
+def insertion_sort(arr):
+    """Insertion sort implementation"""
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+        while j >= 0 and arr[j] > key:
+            arr[j + 1] = arr[j]
+            j -= 1
+        arr[j + 1] = key
+    return arr
+
+# ============================================
+# SEARCHING ALGORITHMS
+# ============================================
+
+def binary_search(arr, target):
+    """Binary search in sorted array"""
+    left, right = 0, len(arr) - 1
+
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+
+    return -1
+
+def linear_search(arr, target):
+    """Linear search in array"""
+    for i, val in enumerate(arr):
+        if val == target:
+            return i
+    return -1
+
+def jump_search(arr, target):
+    """Jump search in sorted array"""
+    n = len(arr)
+    step = int(n ** 0.5)
+    prev = 0
+
+    while arr[min(step, n) - 1] < target:
+        prev = step
+        step += int(n ** 0.5)
+        if prev >= n:
+            return -1
+
+    while arr[prev] < target:
+        prev += 1
+        if prev == min(step, n):
+            return -1
+
+    if arr[prev] == target:
+        return prev
+
+    return -1
+
+# ============================================
+# STRING MANIPULATION
+# ============================================
+
+def reverse_string(s):
+    """Reverse a string"""
+    return s[::-1]
+
+def is_palindrome(s):
+    """Check if string is palindrome"""
+    s = s.lower().replace(" ", "")
+    return s == s[::-1]
+
+def count_vowels(s):
+    """Count vowels in string"""
+    vowels = "aeiouAEIOU"
+    return sum(1 for char in s if char in vowels)
+
+def remove_duplicates(s):
+    """Remove duplicate characters from string"""
+    seen = set()
+    result = []
+    for char in s:
+        if char not in seen:
+            seen.add(char)
+            result.append(char)
+    return ''.join(result)
+
+def longest_common_substring(s1, s2):
+    """Find longest common substring"""
+    m, n = len(s1), len(s2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    max_len = 0
+    end_pos = 0
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if s1[i-1] == s2[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+                if dp[i][j] > max_len:
+                    max_len = dp[i][j]
+                    end_pos = i
+
+    return s1[end_pos - max_len:end_pos]
+
+# ============================================
+# MATHEMATICAL FUNCTIONS
+# ============================================
+
+def factorial(n):
+    """Calculate factorial recursively"""
+    if n <= 1:
+        return 1
+    return n * factorial(n - 1)
+
+def factorial_iterative(n):
+    """Calculate factorial iteratively"""
+    result = 1
+    for i in range(2, n + 1):
+        result *= i
+    return result
+
+def fibonacci(n):
+    """Calculate nth Fibonacci number"""
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+def fibonacci_iterative(n):
+    """Calculate nth Fibonacci number iteratively"""
+    if n <= 1:
+        return n
+    a, b = 0, 1
+    for _ in range(2, n + 1):
+        a, b = b, a + b
+    return b
+
+def gcd(a, b):
+    """Calculate greatest common divisor"""
+    while b:
+        a, b = b, a % b
+    return a
+
+def lcm(a, b):
+    """Calculate least common multiple"""
+    return abs(a * b) // gcd(a, b)
+
+def is_prime(n):
+    """Check if number is prime"""
+    if n < 2:
+        return False
+    if n == 2:
+        return True
+    if n % 2 == 0:
+        return False
+    for i in range(3, int(n ** 0.5) + 1, 2):
+        if n % i == 0:
+            return False
+    return True
+
+def prime_factors(n):
+    """Get prime factors of a number"""
+    factors = []
+    d = 2
+    while d * d <= n:
+        while n % d == 0:
+            factors.append(d)
+            n //= d
+        d += 1
+    if n > 1:
+        factors.append(n)
+    return factors
+
+# ============================================
+# DATA STRUCTURES
+# ============================================
+
+class Stack:
+    """Stack implementation using list"""
+    def __init__(self):
+        self.items = []
+
+    def push(self, item):
+        self.items.append(item)
+
+    def pop(self):
+        if not self.is_empty():
+            return self.items.pop()
+        return None
+
+    def peek(self):
+        if not self.is_empty():
+            return self.items[-1]
+        return None
+
+    def is_empty(self):
+        return len(self.items) == 0
+
+    def size(self):
+        return len(self.items)
+
+class Queue:
+    """Queue implementation using list"""
+    def __init__(self):
+        self.items = []
+
+    def enqueue(self, item):
+        self.items.insert(0, item)
+
+    def dequeue(self):
+        if not self.is_empty():
+            return self.items.pop()
+        return None
+
+    def is_empty(self):
+        return len(self.items) == 0
+
+    def size(self):
+        return len(self.items)
+
+class Node:
+    """Linked list node"""
+    def __init__(self, data):
+        self.data = data
+        self.next = None
+
+class LinkedList:
+    """Singly linked list implementation"""
+    def __init__(self):
+        self.head = None
+
+    def append(self, data):
+        new_node = Node(data)
+        if not self.head:
+            self.head = new_node
+            return
+        current = self.head
+        while current.next:
+            current = current.next
+        current.next = new_node
+
+    def prepend(self, data):
+        new_node = Node(data)
+        new_node.next = self.head
+        self.head = new_node
+
+    def delete(self, data):
+        if not self.head:
+            return
+        if self.head.data == data:
+            self.head = self.head.next
+            return
+        current = self.head
+        while current.next:
+            if current.next.data == data:
+                current.next = current.next.next
+                return
+            current = current.next
+
+# ============================================
+# ARRAY OPERATIONS
+# ============================================
+
+def find_max(arr):
+    """Find maximum element in array"""
+    if not arr:
+        return None
+    max_val = arr[0]
+    for num in arr[1:]:
+        if num > max_val:
+            max_val = num
+    return max_val
+
+def find_min(arr):
+    """Find minimum element in array"""
+    if not arr:
+        return None
+    min_val = arr[0]
+    for num in arr[1:]:
+        if num < min_val:
+            min_val = num
+    return min_val
+
+def rotate_array(arr, k):
+    """Rotate array by k positions"""
+    n = len(arr)
+    k = k % n
+    return arr[-k:] + arr[:-k]
+
+def remove_element(arr, val):
+    """Remove all occurrences of value from array"""
+    return [x for x in arr if x != val]
+
+def two_sum(arr, target):
+    """Find two numbers that sum to target"""
+    seen = {}
+    for i, num in enumerate(arr):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    return []
+
+def merge_sorted_arrays(arr1, arr2):
+    """Merge two sorted arrays"""
+    result = []
+    i = j = 0
+
+    while i < len(arr1) and j < len(arr2):
+        if arr1[i] <= arr2[j]:
+            result.append(arr1[i])
+            i += 1
+        else:
+            result.append(arr2[j])
+            j += 1
+
+    result.extend(arr1[i:])
+    result.extend(arr2[j:])
+    return result
+
+# ============================================
+# FILE OPERATIONS
+# ============================================
+
+def read_file(filename):
+    """Read entire file content"""
+    try:
+        with open(filename, 'r') as f:
+            return f.read()
+    except FileNotFoundError:
+        return None
+
+def read_lines(filename):
+    """Read file as list of lines"""
+    try:
+        with open(filename, 'r') as f:
+            return f.readlines()
+    except FileNotFoundError:
+        return []
+
+def write_file(filename, content):
+    """Write content to file"""
+    try:
+        with open(filename, 'w') as f:
+            f.write(content)
+        return True
+    except Exception:
+        return False
+
+def append_file(filename, content):
+    """Append content to file"""
+    try:
+        with open(filename, 'a') as f:
+            f.write(content)
+        return True
+    except Exception:
+        return False
+
+def count_lines(filename):
+    """Count number of lines in file"""
+    try:
+        with open(filename, 'r') as f:
+            return sum(1 for _ in f)
+    except FileNotFoundError:
+        return 0
+
+# ============================================
+# UTILITY FUNCTIONS
+# ============================================
+
+def flatten_list(nested_list):
+    """Flatten nested list"""
+    result = []
+    for item in nested_list:
+        if isinstance(item, list):
+            result.extend(flatten_list(item))
+        else:
+            result.append(item)
+    return result
+
+def chunk_list(lst, chunk_size):
+    """Split list into chunks of specified size"""
+    return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
+def unique_elements(lst):
+    """Get unique elements preserving order"""
+    seen = set()
+    result = []
+    for item in lst:
+        if item not in seen:
+            seen.add(item)
+            result.append(item)
+    return result
+
+def frequency_count(lst):
+    """Count frequency of each element"""
+    freq = {}
+    for item in lst:
+        freq[item] = freq.get(item, 0) + 1
+    return freq
