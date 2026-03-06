@@ -124,6 +124,67 @@ float MiniTransformer::gelu(float x) const {
     return 0.5f * x * (1.0f + tanh_val);
 }
 
+float MiniTransformer::gelu_derivative(float x) const {
+    // GELU'(x) = 0.5 * (1 + tanh(a)) + 0.5 * x * sech²(a) * a'
+    // where a = sqrt(2/π) * (x + 0.044715 * x³)
+    // Simplified: CDF + x * PDF
+    const float sqrt_2_over_pi = 0.7978845608f;
+    const float c = 0.044715f;
+
+    float x2 = x * x;
+    float x3 = x2 * x;
+    float tanh_arg = sqrt_2_over_pi * (x + c * x3);
+    float tanh_val = std::tanh(tanh_arg);
+
+    // CDF part
+    float cdf = 0.5f * (1.0f + tanh_val);
+
+    // PDF part: x * derivative of tanh argument
+    float sech2 = 1.0f - tanh_val * tanh_val;  // sech²(x) = 1 - tanh²(x)
+    float derivative_arg = sqrt_2_over_pi * (1.0f + 3.0f * c * x2);
+    float pdf = 0.5f * x * sech2 * derivative_arg;
+
+    return cdf + pdf;
+}
+
+// ============================================================================
+// Precision Conversion Helpers (Week 9 K10 - Mixed Precision)
+// ============================================================================
+
+void MiniTransformer::convert_weights_to_precision(
+    std::vector<std::vector<float>>& weights,
+    MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode
+) {
+    using namespace PrecisionUtils;
+    using PMode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode;
+
+    if (mode == PMode::FP32) {
+        // No conversion needed
+        return;
+    }
+
+    // Convert all weights in-place via round-trip conversion
+    for (auto& row : weights) {
+        for (float& val : row) {
+            if (mode == PMode::FP16) {
+                uint16_t fp16 = fp32_to_fp16(val);
+                val = fp16_to_fp32(fp16);
+            } else if (mode == PMode::BF16) {
+                uint16_t bf16 = fp32_to_bf16(val);
+                val = bf16_to_fp32(bf16);
+            }
+        }
+    }
+}
+
+void MiniTransformer::restore_weights_to_fp32(
+    std::vector<std::vector<float>>& weights,
+    const std::vector<std::vector<float>>& backup
+) {
+    // Simple copy from backup
+    weights = backup;
+}
+
 std::vector<std::vector<float>> MiniTransformer::layer_norm(
     const std::vector<std::vector<float>>& input,
     const std::vector<float>& gamma,
@@ -145,8 +206,11 @@ std::vector<std::vector<float>> MiniTransformer::layer_norm(
 std::vector<std::vector<float>> MiniTransformer::multi_head_attention(
     const std::vector<std::vector<float>>& input,
     const Weights::Layer& layer,
-    bool causal_mask
+    bool causal_mask,
+    MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode
 ) {
+    using namespace PrecisionUtils;
+    using PMode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode;
     int seq_len = input.size();
     int d_model = config_.embedding_dim;
     int d_k = d_model / config_.num_heads;
@@ -193,6 +257,38 @@ std::vector<std::vector<float>> MiniTransformer::multi_head_attention(
             Q[i][j] = Q_flat[i * d_model + j];
             K[i][j] = K_flat[i * d_model + j];
             V[i][j] = V_flat[i * d_model + j];
+        }
+    }
+
+    // Mixed Precision: Convert Q, K, V to lower precision (SIMD-optimized)
+    if (mode != PMode::FP32) {
+        size_t total_size = seq_len * d_model;
+        std::vector<uint16_t> temp_fp16(total_size);
+
+        if (mode == PMode::FP16) {
+            // Q: FP32 → FP16 → FP32 (SIMD)
+            fp32_array_to_fp16_simd(Q_flat.data(), temp_fp16.data(), total_size);
+            fp16_array_to_fp32_simd(temp_fp16.data(), Q_flat.data(), total_size);
+
+            // K: FP32 → FP16 → FP32 (SIMD)
+            fp32_array_to_fp16_simd(K_flat.data(), temp_fp16.data(), total_size);
+            fp16_array_to_fp32_simd(temp_fp16.data(), K_flat.data(), total_size);
+
+            // V: FP32 → FP16 → FP32 (SIMD)
+            fp32_array_to_fp16_simd(V_flat.data(), temp_fp16.data(), total_size);
+            fp16_array_to_fp32_simd(temp_fp16.data(), V_flat.data(), total_size);
+        } else if (mode == PMode::BF16) {
+            // Q: FP32 → BF16 → FP32 (SIMD)
+            fp32_array_to_bf16_simd(Q_flat.data(), temp_fp16.data(), total_size);
+            bf16_array_to_fp32_simd(temp_fp16.data(), Q_flat.data(), total_size);
+
+            // K: FP32 → BF16 → FP32 (SIMD)
+            fp32_array_to_bf16_simd(K_flat.data(), temp_fp16.data(), total_size);
+            bf16_array_to_fp32_simd(temp_fp16.data(), K_flat.data(), total_size);
+
+            // V: FP32 → BF16 → FP32 (SIMD)
+            fp32_array_to_bf16_simd(V_flat.data(), temp_fp16.data(), total_size);
+            bf16_array_to_fp32_simd(temp_fp16.data(), V_flat.data(), total_size);
         }
     }
 
@@ -478,8 +574,11 @@ std::vector<std::vector<float>> MiniTransformer::multi_head_attention_cached(
 
 std::vector<std::vector<float>> MiniTransformer::feed_forward(
     const std::vector<std::vector<float>>& input,
-    const Weights::Layer& layer
+    const Weights::Layer& layer,
+    MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode
 ) {
+    using namespace PrecisionUtils;
+    using PMode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode;
     int seq_len = input.size();
 
     // First layer: input -> ff_dim (SIMD-optimized)
@@ -513,6 +612,22 @@ std::vector<std::vector<float>> MiniTransformer::feed_forward(
         TensorOps::gelu(&hidden_flat[i * config_.ff_dim], &hidden_flat[i * config_.ff_dim], config_.ff_dim);
     }
 
+    // Mixed Precision: Convert hidden activations (SIMD-optimized)
+    if (mode != PMode::FP32) {
+        size_t hidden_size = seq_len * config_.ff_dim;
+        std::vector<uint16_t> temp_fp16(hidden_size);
+
+        if (mode == PMode::FP16) {
+            // FP32 → FP16 → FP32 (SIMD)
+            fp32_array_to_fp16_simd(hidden_flat.data(), temp_fp16.data(), hidden_size);
+            fp16_array_to_fp32_simd(temp_fp16.data(), hidden_flat.data(), hidden_size);
+        } else if (mode == PMode::BF16) {
+            // FP32 → BF16 → FP32 (SIMD)
+            fp32_array_to_bf16_simd(hidden_flat.data(), temp_fp16.data(), hidden_size);
+            bf16_array_to_fp32_simd(temp_fp16.data(), hidden_flat.data(), hidden_size);
+        }
+    }
+
     // Second layer: ff_dim -> embedding_dim (SIMD-optimized)
     std::vector<std::vector<float>> output(seq_len, std::vector<float>(config_.embedding_dim, 0.0f));
     std::vector<float> W2_flat(config_.ff_dim * config_.embedding_dim);
@@ -538,8 +653,24 @@ std::vector<std::vector<float>> MiniTransformer::feed_forward(
     return output;
 }
 
-std::vector<std::vector<float>> MiniTransformer::forward(const std::vector<int>& tokens) {
+std::vector<std::vector<float>> MiniTransformer::forward(
+    const std::vector<int>& tokens,
+    MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode
+) {
+    using PMode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode;
     int seq_len = tokens.size();
+
+    // Step 1: Convert embeddings to target precision (if not FP32)
+    std::vector<std::vector<float>> token_emb_backup, pos_emb_backup;
+    if (mode != PMode::FP32) {
+        // Backup original embeddings
+        token_emb_backup = weights_.token_embeddings;
+        pos_emb_backup = weights_.position_embeddings;
+
+        // Convert to target precision via round-trip
+        convert_weights_to_precision(weights_.token_embeddings, mode);
+        convert_weights_to_precision(weights_.position_embeddings, mode);
+    }
 
     // Embedding lookup + positional encoding
     std::vector<std::vector<float>> x(seq_len, std::vector<float>(config_.embedding_dim));
@@ -556,11 +687,33 @@ std::vector<std::vector<float>> MiniTransformer::forward(const std::vector<int>&
     for (int l = 0; l < config_.num_layers; l++) {
         auto& layer = weights_.layers[l];
 
+        // Step 2: Convert layer weights to target precision
+        std::vector<std::vector<float>> Q_backup, K_backup, V_backup, O_backup;
+        std::vector<std::vector<float>> FF1_backup, FF2_backup;
+
+        if (mode != PMode::FP32) {
+            // Backup layer weights
+            Q_backup = layer.query_weight;
+            K_backup = layer.key_weight;
+            V_backup = layer.value_weight;
+            O_backup = layer.output_weight;
+            FF1_backup = layer.ff1_weight;
+            FF2_backup = layer.ff2_weight;
+
+            // Convert to target precision
+            convert_weights_to_precision(layer.query_weight, mode);
+            convert_weights_to_precision(layer.key_weight, mode);
+            convert_weights_to_precision(layer.value_weight, mode);
+            convert_weights_to_precision(layer.output_weight, mode);
+            convert_weights_to_precision(layer.ff1_weight, mode);
+            convert_weights_to_precision(layer.ff2_weight, mode);
+        }
+
         // Multi-head attention with residual connection
         // Use Flash Attention if enabled (O(N) memory for long context)
         auto attn_out = config_.use_flash_attention
             ? multi_head_attention_flash(x, layer, true)
-            : multi_head_attention(x, layer, true);
+            : multi_head_attention(x, layer, true, mode);
         for (int i = 0; i < seq_len; i++) {
             for (int j = 0; j < config_.embedding_dim; j++) {
                 attn_out[i][j] += x[i][j];  // Residual
@@ -569,14 +722,33 @@ std::vector<std::vector<float>> MiniTransformer::forward(const std::vector<int>&
         attn_out = layer_norm(attn_out, layer.ln1_gamma, layer.ln1_beta);
 
         // Feed-forward with residual connection
-        auto ff_out = feed_forward(attn_out, layer);
+        auto ff_out = feed_forward(attn_out, layer, mode);
         for (int i = 0; i < seq_len; i++) {
             for (int j = 0; j < config_.embedding_dim; j++) {
                 ff_out[i][j] += attn_out[i][j];  // Residual
             }
         }
         x = layer_norm(ff_out, layer.ln2_gamma, layer.ln2_beta);
+
+        // Step 3: Restore layer weights to FP32
+        if (mode != PMode::FP32) {
+            restore_weights_to_fp32(layer.query_weight, Q_backup);
+            restore_weights_to_fp32(layer.key_weight, K_backup);
+            restore_weights_to_fp32(layer.value_weight, V_backup);
+            restore_weights_to_fp32(layer.output_weight, O_backup);
+            restore_weights_to_fp32(layer.ff1_weight, FF1_backup);
+            restore_weights_to_fp32(layer.ff2_weight, FF2_backup);
+        }
     }
+
+    // Step 4: Restore embeddings to FP32
+    if (mode != PMode::FP32) {
+        restore_weights_to_fp32(weights_.token_embeddings, token_emb_backup);
+        restore_weights_to_fp32(weights_.position_embeddings, pos_emb_backup);
+    }
+
+    // Cache embeddings for backward pass
+    cached_embeddings_ = x;
 
     return x;
 }
@@ -1757,4 +1929,182 @@ void MiniTransformer::update_all_weights(AdamOptimizer& optimizer, TransformerGr
         optimizer.update_with_clipping(layer.ln2_beta.data(), ln2_grads.beta_grad.data(),
                                        config_.embedding_dim, 1.0f);
     }
+}
+
+// ============================================================================
+// Mixed Precision Training Implementation (Week 9 Day 5)
+// ============================================================================
+
+float MiniTransformer::training_step(
+    const std::vector<int>& tokens,
+    const std::vector<int>& targets,
+    float learning_rate,
+    MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode
+) {
+    using PMode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode;
+
+    // 1. Forward pass (cache activations for backward)
+    auto hidden = forward(tokens, mode);  // [seq_len, d_model]
+
+    // Cache for backward pass
+    cached_embeddings_ = hidden;
+
+    // Apply output projection: hidden [seq_len, d_model] × W_out [d_model, vocab] = logits [seq_len, vocab]
+    int seq_len = hidden.size();
+    int d_model = hidden[0].size();
+    int vocab_size = weights_.output_projection[0].size();
+
+    std::vector<std::vector<float>> logits(seq_len,
+        std::vector<float>(vocab_size, 0.0f));
+
+    for (int t = 0; t < seq_len; t++) {
+        for (int v = 0; v < vocab_size; v++) {
+            float sum = 0.0f;
+            for (int d = 0; d < d_model; d++) {
+                sum += hidden[t][d] * weights_.output_projection[d][v];
+            }
+            logits[t][v] = sum;
+        }
+    }
+
+    cached_final_output_ = logits;
+
+    // 2. Compute loss and output gradient
+    float total_loss = 0.0f;
+    int valid_targets = 0;
+
+    std::vector<std::vector<float>> output_grad(seq_len,
+        std::vector<float>(vocab_size, 0.0f));
+
+    for (size_t t = 0; t < std::min(targets.size(), (size_t)seq_len); t++) {
+        int target_token = targets[t];
+
+        // Skip if target is out of vocab
+        if (target_token < 0 || target_token >= vocab_size) {
+            continue;
+        }
+
+        // Softmax for probabilities
+        float max_val = *std::max_element(logits[t].begin(), logits[t].end());
+        std::vector<float> exp_vals(vocab_size);
+        float sum_exp = 0.0f;
+
+        for (int i = 0; i < vocab_size; i++) {
+            exp_vals[i] = std::exp(logits[t][i] - max_val);
+            sum_exp += exp_vals[i];
+        }
+
+        // Cross-entropy loss
+        float prob = exp_vals[target_token] / sum_exp;
+        total_loss -= std::log(prob + 1e-10f);
+        valid_targets++;
+
+        // Gradient: softmax - one_hot(target)
+        for (int i = 0; i < vocab_size; i++) {
+            output_grad[t][i] = (exp_vals[i] / sum_exp) - (i == target_token ? 1.0f : 0.0f);
+        }
+    }
+
+    // Average loss
+    float avg_loss = (valid_targets > 0) ? (total_loss / valid_targets) : 0.0f;
+
+    // Apply loss scaling for FP16
+    float loss_scale = (mode == PMode::FP16) ? 1024.0f : 1.0f;
+    for (auto& row : output_grad) {
+        for (float& grad : row) {
+            grad *= loss_scale;
+        }
+    }
+
+    // 3. Backward pass
+    backward(output_grad, mode);
+
+    // 4. Unscale gradients
+    for (auto& [name, grad] : gradients_) {
+        for (auto& row : grad) {
+            for (float& g : row) {
+                g /= loss_scale;
+            }
+        }
+    }
+
+    // 5. Update weights (simple gradient descent)
+    if (gradients_.count("output_projection") > 0) {
+        auto& grad = gradients_["output_projection"];
+        for (size_t i = 0; i < weights_.output_projection.size() && i < grad.size(); i++) {
+            for (size_t j = 0; j < weights_.output_projection[i].size() && j < grad[i].size(); j++) {
+                weights_.output_projection[i][j] -= learning_rate * grad[i][j];
+            }
+        }
+    }
+
+    // TODO: Update other weight matrices (attention, feedforward) - Day 6
+
+    return avg_loss;
+}
+
+void MiniTransformer::backward(
+    const std::vector<std::vector<float>>& output_grad,
+    MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode
+) {
+    using namespace PrecisionUtils;
+    using PMode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode;
+
+    // Clear previous gradients
+    gradients_.clear();
+
+    if (cached_final_output_.empty() || cached_embeddings_.empty()) {
+        std::cerr << "[ERROR] Backward called without forward pass cache\n";
+        return;
+    }
+
+    int seq_len = output_grad.size();
+    int vocab_size = output_grad[0].size();
+    int d_model = config_.embedding_dim;
+
+    // Gradient for output projection: dL/dW_out = input^T × grad_output
+    // W_out shape: [d_model, vocab_size]
+    // input shape: [seq_len, d_model]
+    // grad_output shape: [seq_len, vocab_size]
+
+    std::vector<std::vector<float>> dW_out(d_model,
+        std::vector<float>(vocab_size, 0.0f));
+
+    // Use cached embeddings as input to output projection
+    for (int i = 0; i < d_model; i++) {
+        for (int j = 0; j < vocab_size; j++) {
+            float grad_sum = 0.0f;
+            for (int t = 0; t < seq_len && t < (int)cached_embeddings_.size(); t++) {
+                if (i < (int)cached_embeddings_[t].size()) {
+                    grad_sum += cached_embeddings_[t][i] * output_grad[t][j];
+                }
+            }
+            dW_out[i][j] = grad_sum;
+        }
+    }
+
+    // Apply precision conversion to gradients if not FP32
+    if (mode != PMode::FP32) {
+        for (auto& row : dW_out) {
+            for (float& grad : row) {
+                if (mode == PMode::FP16) {
+                    uint16_t fp16 = fp32_to_fp16(grad);
+                    grad = fp16_to_fp32(fp16);
+                } else if (mode == PMode::BF16) {
+                    uint16_t bf16 = fp32_to_bf16(grad);
+                    grad = bf16_to_fp32(bf16);
+                }
+            }
+        }
+    }
+
+    gradients_["output_projection"] = dW_out;
+
+    // TODO: Compute gradients for attention and feedforward layers (Day 6)
+    // For now, only output projection gradients are computed
+}
+
+std::unordered_map<std::string, std::vector<std::vector<float>>>
+MiniTransformer::get_gradients() const {
+    return gradients_;
 }

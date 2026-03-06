@@ -1,0 +1,84 @@
+neural_engine.cpp: In constructor 'Matrix::Matrix(int, int)':
+neural_engine.cpp:247:15: warning: 'Matrix::cols' will be initialized after [-Wreorder]
+  247 |     int rows, cols;
+      |               ^~~~
+neural_engine.cpp:246:24: warning:   'std::vector<float> Matrix::data' [-Wreorder]
+  246 |     std::vector<float> data;
+      |                        ^~~~
+neural_engine.cpp:250:5: warning:   when initialized here [-Wreorder]
+  250 |     Matrix(int r, int c) : rows(r), cols(c), data(r * c, 0.0f) {}
+      |     ^~~~~~
+neural_engine.cpp: In lambda function:
+neural_engine.cpp:2177:13: warning: this 'for' clause does not guard... [-Wmisleading-indentation]
+ 2177 |             for (auto& c : s) c = (char)std::tolower((unsigned char)c); return s; };
+      |             ^~~
+neural_engine.cpp:2177:73: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'for'
+ 2177 |             for (auto& c : s) c = (char)std::tolower((unsigned char)c); return s; };
+      |                                                                         ^~~~~~
+neural_engine.cpp: In lambda function:
+neural_engine.cpp:2315:13: warning: this 'for' clause does not guard... [-Wmisleading-indentation]
+ 2315 |             for (auto& c : s) c = (char)std::tolower((unsigned char)c); return s; };
+      |             ^~~
+neural_engine.cpp:2315:73: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'for'
+ 2315 |             for (auto& c : s) c = (char)std::tolower((unsigned char)c); return s; };
+      |                                                                         ^~~~~~
+web_fetcher.cpp:13: warning: ignoring '#pragma comment ' [-Wunknown-pragmas]
+   13 | #pragma comment(lib, "winhttp.lib")
+      | 
+bwt_simd.cpp: In function 'std::vector<unsigned char> rle_zeros_encode_simd(const uint8_t*, size_t)':
+bwt_simd.cpp:130:20: warning: unused variable 'run_start' [-Wunused-variable]
+  130 |             size_t run_start = i;
+      |                    ^~~~~~~~~
+bpe_tokenizer.cpp: In member function 'void BPETokenizer::train(const std::vector<std::__cxx11::basic_string<char> >&, int)':
+bpe_tokenizer.cpp:49:75: warning: comparison of integer expressions of different signedness: 'std::unordered_map<std::__cxx11::basic_string<char>, int>::size_type' {aka 'long long unsigned int'} and 'int' [-Wsign-compare]
+   49 |     for (int merge_idx = 0; merge_idx < num_merges && token_to_id_.size() < vocab_size_; merge_idx++) {
+      |                                                       ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
+optimizer.cpp: In member function 'void AdamOptimizer::update_with_clipping(float*, const float*, int, float)':
+optimizer.cpp:74:11: warning: unused variable 'norm' [-Wunused-variable]
+   74 |     float norm = GradientUtils::clip_grad_norm(clipped_grad.data(), size, max_norm);
+      |           ^~~~
+mixed_precision_commands.cpp: In function 'int cmd_train_transformer_mixed(int, char**)':
+mixed_precision_commands.cpp:245:25: warning: unused variable 'batch' [-Wunused-variable]
+  245 |             const auto& batch = batches[batch_idx];
+      |                         ^~~~~
+precision_utils.cpp: In function 'uint16_t PrecisionUtils::fp32_to_fp16(float)':
+precision_utils.cpp:25:21: warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]
+   25 |     uint32_t f32 = *reinterpret_cast<uint32_t*>(&value);
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+precision_utils.cpp: In function 'float PrecisionUtils::fp16_to_fp32(uint16_t)':
+precision_utils.cpp:70:21: warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]
+   70 |             return *reinterpret_cast<float*>(&f32);
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+precision_utils.cpp:82:17: warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]
+   82 |         return *reinterpret_cast<float*>(&f32);
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+precision_utils.cpp:90:13: warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]
+   90 |     return *reinterpret_cast<float*>(&f32);
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+precision_utils.cpp: In function 'uint16_t PrecisionUtils::fp32_to_bf16(float)':
+precision_utils.cpp:102:21: warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]
+  102 |     uint32_t f32 = *reinterpret_cast<uint32_t*>(&value);
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+precision_utils.cpp: In function 'float PrecisionUtils::bf16_to_fp32(uint16_t)':
+precision_utils.cpp:120:13: warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]
+  120 |     return *reinterpret_cast<float*>(&f32);
+      |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+mistral_attention.cpp: In member function 'void MistralAttention::SlidingWindowAttention::forward(const float*, float*, KVCache::CacheManager&, int, int, const int*)':
+mistral_attention.cpp:44:22: warning: unused variable 'K_cached' [-Wunused-variable]
+   44 |         const float* K_cached = kv_cache.get_keys(layer_idx, cached_len);
+      |                      ^~~~~~~~
+mistral_attention.cpp:45:22: warning: unused variable 'V_cached' [-Wunused-variable]
+   45 |         const float* V_cached = kv_cache.get_values(layer_idx, cached_len);
+      |                      ^~~~~~~~
+mistral_attention.cpp: In member function 'void MistralAttention::SlidingWindowAttention::forward_no_cache(const float*, float*, int, const int*)':
+mistral_attention.cpp:77:9: warning: unused variable 'window_size' [-Wunused-variable]
+   77 |     int window_size = config_.sliding_window;
+      |         ^~~~~~~~~~~
+self_learning.cpp: In function 'std::vector<std::__cxx11::basic_string<char> > self_learning::load_json_array(const string&)':
+self_learning.cpp:104:12: warning: unused variable 'pos' [-Wunused-variable]
+  104 |     size_t pos = 0;
+      |            ^~~
+rlhf.cpp: In function 'std::vector<std::__cxx11::basic_string<char> > rlhf::load_json_array(const string&)':
+rlhf.cpp:91:12: warning: unused variable 'pos' [-Wunused-variable]
+   91 |     size_t pos = 0;
+      |            ^~~

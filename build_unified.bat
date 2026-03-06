@@ -24,6 +24,7 @@ g++ -O3 -std=c++17 -Wall -march=native -msse2 -mavx2 ^
     quantization.cpp kv_cache.cpp ^
     quantize_commands.cpp ^
     mixed_precision_commands.cpp ^
+    precision_utils.cpp ^
     flash_attention.cpp mistral_attention.cpp qwen_attention.cpp ^
     mixed_precision.cpp gradient_checkpoint.cpp unigram_tokenizer.cpp ^
     self_learning.cpp self_learning_bridge.cpp ^

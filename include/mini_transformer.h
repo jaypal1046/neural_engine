@@ -7,9 +7,12 @@
 #include "loss.h"
 #include "transformer_gradients.h"
 #include "kv_cache.h"
+#include "precision_utils.h"
+#include "mixed_precision.h"
 #include <vector>
 #include <string>
 #include <memory>
+#include <unordered_map>
 
 // Mini-Transformer: Real AI Language Model
 // Architecture: GPT-style decoder-only transformer
@@ -63,6 +66,14 @@ public:
     // Get next token probabilities
     std::vector<float> predict_next(const std::vector<int>& context);
 
+    // Test forward pass with specific precision mode (for testing)
+    std::vector<std::vector<float>> test_forward(
+        const std::vector<int>& tokens,
+        MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode::FP32
+    ) {
+        return forward(tokens, mode);
+    }
+
     // Persistence
     void save(const std::string& path) const;
     void load(const std::string& path);
@@ -106,7 +117,10 @@ private:
     Weights weights_;
 
     // Forward pass helpers
-    std::vector<std::vector<float>> forward(const std::vector<int>& tokens);
+    std::vector<std::vector<float>> forward(
+        const std::vector<int>& tokens,
+        MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode::FP32
+    );
 
     // KV-Cache optimized forward pass (for incremental generation)
     std::vector<std::vector<float>> forward_incremental(
@@ -125,7 +139,8 @@ private:
     std::vector<std::vector<float>> multi_head_attention(
         const std::vector<std::vector<float>>& input,
         const Weights::Layer& layer,
-        bool causal_mask = true
+        bool causal_mask = true,
+        MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode::FP32
     );
 
     // Flash Attention v2 (memory-efficient, long context)
@@ -147,7 +162,8 @@ private:
 
     std::vector<std::vector<float>> feed_forward(
         const std::vector<std::vector<float>>& input,
-        const Weights::Layer& layer
+        const Weights::Layer& layer,
+        MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode::FP32
     );
     std::vector<std::vector<float>> layer_norm(
         const std::vector<std::vector<float>>& input,
@@ -157,7 +173,18 @@ private:
 
     // Activation functions
     float gelu(float x) const;
+    float gelu_derivative(float x) const;  // For backward pass
     float softmax_temperature(float x, float temp) const;
+
+    // Precision conversion helpers (for mixed precision forward pass)
+    void convert_weights_to_precision(
+        std::vector<std::vector<float>>& weights,
+        MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode
+    );
+    void restore_weights_to_fp32(
+        std::vector<std::vector<float>>& weights,
+        const std::vector<std::vector<float>>& backup
+    );
 
     // Initialization
     void initialize_weights();
@@ -204,6 +231,37 @@ private:
         AttentionGradients& attn_grads,
         std::vector<std::vector<float>>& grad_input
     );
+
+public:
+    // ========================================================================
+    // Mixed Precision Training API (Week 9 Day 5)
+    // ========================================================================
+
+    // Training step with mixed precision support
+    float training_step(
+        const std::vector<int>& tokens,
+        const std::vector<int>& targets,
+        float learning_rate,
+        MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode::FP32
+    );
+
+    // Backward pass with mixed precision
+    void backward(
+        const std::vector<std::vector<float>>& output_grad,
+        MixedPrecision::MixedPrecisionOptimizer::PrecisionMode mode = MixedPrecision::MixedPrecisionOptimizer::PrecisionMode::FP32
+    );
+
+    // Get gradients after backward pass
+    std::unordered_map<std::string, std::vector<std::vector<float>>> get_gradients() const;
+
+private:
+    // Gradient storage
+    std::unordered_map<std::string, std::vector<std::vector<float>>> gradients_;
+
+    // Cache forward pass activations (needed for backward)
+    std::vector<std::vector<float>> cached_embeddings_;
+    std::vector<std::vector<std::vector<float>>> cached_layer_outputs_;
+    std::vector<std::vector<float>> cached_final_output_;
 };
 
 #endif // MINI_TRANSFORMER_H
