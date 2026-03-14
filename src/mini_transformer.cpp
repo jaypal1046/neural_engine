@@ -4,11 +4,16 @@
 #include "transformer_gradients.h"
 #include "tensor_ops.h"  // SIMD-optimized operations
 #include "flash_attention.h"  // Flash Attention v2
+#include "thread_pool.h"  // Multi-threading support
 #include <cmath>
 #include <algorithm>
 #include <random>
 #include <iostream>
 #include <fstream>
+#include <thread>
+#include <mutex>
+#include <future>
+#include <vector>
 
 MiniTransformer::MiniTransformer(const TransformerConfig& config)
     : config_(config) {
@@ -195,10 +200,11 @@ std::vector<std::vector<float>> MiniTransformer::layer_norm(
     // Note: beta (bias) is ignored in RMSNorm for compatibility
     std::vector<std::vector<float>> output = input;
 
-    for (size_t i = 0; i < input.size(); i++) {
+    // Parallelize RMSNorm across sequence positions with thread pool
+    ThreadPool::parallel_for_static(0, input.size(), [&](size_t i) {
         // OPTIMIZED: Use SIMD RMSNorm
         TensorOps::rmsnorm(output[i].data(), input[i].data(), gamma.data(), input[i].size());
-    }
+    });
 
     return output;
 }
@@ -604,13 +610,13 @@ std::vector<std::vector<float>> MiniTransformer::feed_forward(
     TensorOps::matmul(input_flat.data(), W1_flat.data(), hidden_flat.data(),
                       seq_len, config_.embedding_dim, config_.ff_dim);
 
-    // Add bias and apply GELU (SIMD-optimized)
-    for (int i = 0; i < seq_len; i++) {
+    // Add bias and apply GELU (SIMD-optimized + parallelized with thread pool)
+    ThreadPool::parallel_for_static(0, seq_len, [&](int i) {
         for (int j = 0; j < config_.ff_dim; j++) {
             hidden_flat[i * config_.ff_dim + j] += layer.ff1_bias[j];
         }
         TensorOps::gelu(&hidden_flat[i * config_.ff_dim], &hidden_flat[i * config_.ff_dim], config_.ff_dim);
-    }
+    });
 
     // Mixed Precision: Convert hidden activations (SIMD-optimized)
     if (mode != PMode::FP32) {
@@ -643,12 +649,12 @@ std::vector<std::vector<float>> MiniTransformer::feed_forward(
     TensorOps::matmul(hidden_flat.data(), W2_flat.data(), output_flat.data(),
                       seq_len, config_.ff_dim, config_.embedding_dim);
 
-    // Add bias and copy back
-    for (int i = 0; i < seq_len; i++) {
+    // Add bias and copy back (parallelized with thread pool)
+    ThreadPool::parallel_for_static(0, seq_len, [&](int i) {
         for (int j = 0; j < config_.embedding_dim; j++) {
             output[i][j] = output_flat[i * config_.embedding_dim + j] + layer.ff2_bias[j];
         }
-    }
+    });
 
     return output;
 }
@@ -1587,6 +1593,9 @@ void MiniTransformer::train(
         int num_tokens = 0;
         int batch_count = 0;
 
+        // Use serial processing for stability (parallel training causes memory issues)
+        std::cerr << "[TRAINING] Processing " << sequences.size() << " sequences\n\n";
+
         for (size_t i = 0; i < sequences.size(); i += batch_size) {
             size_t batch_end = std::min(i + batch_size, sequences.size());
             float batch_loss = 0.0f;
@@ -1595,6 +1604,7 @@ void MiniTransformer::train(
             // Zero gradients
             zero_gradients(transformer_grads);
 
+            // Process batch serially (stable, no memory explosion)
             for (size_t j = i; j < batch_end; j++) {
                 const auto& seq = sequences[j];
                 if (seq.size() < 2) continue;
@@ -1604,39 +1614,48 @@ void MiniTransformer::train(
                 std::vector<int> targets(seq.begin() + 1, seq.end());
                 int seq_len = input.size();
 
-                // === FORWARD PASS WITH CACHING ===
+                // === FORWARD PASS ===
                 std::vector<LayerCache> layer_caches;
                 auto x = forward_with_cache(input, layer_caches);
 
-                // === LOSS COMPUTATION & BACKWARD PASS ===
-                // Initialize gradient accumulator for final hidden states
+                // === LOSS & GRADIENTS ===
                 std::vector<std::vector<float>> grad_hidden(seq_len,
                     std::vector<float>(config_.embedding_dim, 0.0f));
 
-                // Accumulate gradients from all positions
+                float seq_loss = 0.0f;
+                int seq_tokens = 0;
+
                 for (size_t pos = 0; pos < targets.size(); pos++) {
-                    // Project to vocabulary
+                    // Project to vocabulary (parallelized with TensorOps)
                     std::vector<float> logits(config_.vocab_size, 0.0f);
-                    for (int v = 0; v < config_.vocab_size; v++) {
-                        for (int h = 0; h < config_.embedding_dim; h++) {
-                            logits[v] += x[pos][h] * weights_.output_projection[h][v];
+                    std::vector<float> x_flat(config_.embedding_dim);
+                    for (int h = 0; h < config_.embedding_dim; h++) {
+                        x_flat[h] = x[pos][h];
+                    }
+
+                    // Flatten output_projection for SIMD matvec
+                    std::vector<float> W_flat(config_.embedding_dim * config_.vocab_size);
+                    for (int h = 0; h < config_.embedding_dim; h++) {
+                        for (int v = 0; v < config_.vocab_size; v++) {
+                            W_flat[h * config_.vocab_size + v] = weights_.output_projection[h][v];
                         }
                     }
+                    TensorOps::matvec(W_flat.data(), x_flat.data(), logits.data(), config_.vocab_size, config_.embedding_dim);
 
                     // Compute loss and gradient
                     std::vector<float> grad_logits;
                     float loss = loss_fn.forward_backward(logits, targets[pos], grad_logits);
-                    batch_loss += loss;
-                    batch_tokens++;
+                    seq_loss += loss;
+                    seq_tokens++;
 
-                    // 1. Output projection gradient (accumulate)
+                    // 1. Output projection gradient (serial - thread-safe)
                     for (int h = 0; h < config_.embedding_dim; h++) {
                         for (int v = 0; v < config_.vocab_size; v++) {
                             transformer_grads.output_projection_grad[h][v] += x[pos][h] * grad_logits[v];
                         }
                     }
 
-                    // 2. Accumulate gradient w.r.t. this position's hidden state
+                    // 2. Gradient w.r.t. hidden state (serial - thread-safe)
                     for (int h = 0; h < config_.embedding_dim; h++) {
                         for (int v = 0; v < config_.vocab_size; v++) {
                             grad_hidden[pos][h] += weights_.output_projection[h][v] * grad_logits[v];
@@ -1644,22 +1663,7 @@ void MiniTransformer::train(
                     }
                 }
 
-                // 3. Backward through transformer layers
-                // DISABLED: Attention/FF training makes quality worse on small corpus
-                // Current best: Just train embeddings + output (fast & good quality)
-                // for (int l = config_.num_layers - 1; l >= 0; l--) {
-                //     auto& cache = layer_caches[l];
-                //     auto& layer = weights_.layers[l];
-                //     std::vector<std::vector<float>> grad_attn_input;
-                //     backward_attention(
-                //         cache, grad_hidden, layer,
-                //         transformer_grads.layers[l].attention,
-                //         grad_attn_input
-                //     );
-                //     grad_hidden = grad_attn_input;
-                // }
-
-                // 4. Gradient to embeddings
+                // 3. Gradient to embeddings (direct accumulation)
                 for (int t = 0; t < seq_len; t++) {
                     int token_id = input[t];
                     if (token_id >= config_.vocab_size) token_id = 1;
@@ -1668,6 +1672,10 @@ void MiniTransformer::train(
                         transformer_grads.position_embeddings_grad[t][d] += grad_hidden[t][d];
                     }
                 }
+
+                // Accumulate batch metrics
+                batch_loss += seq_loss;
+                batch_tokens += seq_tokens;
             }
 
             if (batch_tokens == 0) continue;
@@ -1683,11 +1691,13 @@ void MiniTransformer::train(
             num_tokens += batch_tokens;
             batch_count++;
 
-            // Log less frequently to speed up training (every 20 batches instead of 5)
-            if (batch_count % 20 == 0) {
+            // Progress display every 10 batches
+            if (batch_count % 10 == 0) {
                 float avg_loss = batch_loss / batch_tokens;
-                std::cerr << "  [Batch " << batch_count << "] Loss: " << avg_loss
-                          << " | Perplexity: " << std::exp(avg_loss) << "\n";
+                float progress = (float)(i + batch_size) / sequences.size() * 100.0f;
+                std::cerr << "  [Batch " << batch_count << " | " << (int)progress << "%] "
+                          << "Loss: " << avg_loss << " | Perplexity: " << std::exp(avg_loss)
+                          << " | Sequences: " << (i + batch_size) << "/" << sequences.size() << "\n";
             }
         }
 

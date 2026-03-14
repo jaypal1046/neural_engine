@@ -4,6 +4,7 @@
 // Modifications: Removed dependencies, optimized for AIZip brain
 
 #include "tensor_ops.h"
+#include "thread_pool.h"
 #include <cstring>
 #include <algorithm>
 #include <cmath>
@@ -77,15 +78,14 @@ float vec_dot_scalar(const float* a, const float* b, int n) {
 
 void matmul_scalar(const float* A, const float* B, float* C, int m, int k, int n) {
     // C[m,n] = A[m,k] @ B[k,n]
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            float sum = 0.0f;
-            for (int p = 0; p < k; p++) {
-                sum += A[i * k + p] * B[p * n + j];
-            }
-            C[i * n + j] = sum;
+    // Parallelize outer loops with thread pool
+    ThreadPool::parallel_for_2d(m, n, [&](int i, int j) {
+        float sum = 0.0f;
+        for (int p = 0; p < k; p++) {
+            sum += A[i * k + p] * B[p * n + j];
         }
-    }
+        C[i * n + j] = sum;
+    });
 }
 
 // ============================================================================
@@ -121,37 +121,36 @@ float vec_dot_sse2(const float* a, const float* b, int n) {
 void matmul_sse2(const float* A, const float* B, float* C, int m, int k, int n) {
     // Optimized matrix multiplication with SSE2
     // Uses row-major order and vectorizes the inner loop
+    // Parallelize with thread pool for multi-core scaling
 
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            __m128 sum_vec = _mm_setzero_ps();
+    ThreadPool::parallel_for_2d(m, n, [&](int i, int j) {
+        __m128 sum_vec = _mm_setzero_ps();
 
-            int p = 0;
-            // Process 4 elements at a time
-            for (; p + 3 < k; p += 4) {
-                __m128 a_vec = _mm_loadu_ps(&A[i * k + p]);
-                __m128 b_vec = _mm_set_ps(
-                    B[(p + 3) * n + j],
-                    B[(p + 2) * n + j],
-                    B[(p + 1) * n + j],
-                    B[p * n + j]
-                );
-                sum_vec = _mm_add_ps(sum_vec, _mm_mul_ps(a_vec, b_vec));
-            }
-
-            // Horizontal sum
-            float result[4];
-            _mm_storeu_ps(result, sum_vec);
-            float sum = result[0] + result[1] + result[2] + result[3];
-
-            // Handle remaining elements
-            for (; p < k; p++) {
-                sum += A[i * k + p] * B[p * n + j];
-            }
-
-            C[i * n + j] = sum;
+        int p = 0;
+        // Process 4 elements at a time
+        for (; p + 3 < k; p += 4) {
+            __m128 a_vec = _mm_loadu_ps(&A[i * k + p]);
+            __m128 b_vec = _mm_set_ps(
+                B[(p + 3) * n + j],
+                B[(p + 2) * n + j],
+                B[(p + 1) * n + j],
+                B[p * n + j]
+            );
+            sum_vec = _mm_add_ps(sum_vec, _mm_mul_ps(a_vec, b_vec));
         }
-    }
+
+        // Horizontal sum
+        float result[4];
+        _mm_storeu_ps(result, sum_vec);
+        float sum = result[0] + result[1] + result[2] + result[3];
+
+        // Handle remaining elements
+        for (; p < k; p++) {
+            sum += A[i * k + p] * B[p * n + j];
+        }
+
+        C[i * n + j] = sum;
+    });
 }
 
 #else
@@ -199,14 +198,17 @@ float vec_dot_avx2(const float* a, const float* b, int n) {
 void matmul_avx2(const float* A, const float* B, float* C, int m, int k, int n) {
     // High-performance matrix multiplication with AVX2
     // Algorithm from GGML: uses blocking and vectorization
+    // Thread pool parallelization for multi-core CPUs
 
     const int BLOCK_SIZE = 32;  // Cache-friendly block size
 
     // Initialize output to zero
     std::fill_n(C, m * n, 0.0f);
 
-    // Blocked matrix multiplication
-    for (int i0 = 0; i0 < m; i0 += BLOCK_SIZE) {
+    // Blocked matrix multiplication with outer loop parallelization
+    int num_blocks = (m + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    ThreadPool::parallel_for(0, num_blocks, [&](int block_idx) {
+        int i0 = block_idx * BLOCK_SIZE;
         for (int j0 = 0; j0 < n; j0 += BLOCK_SIZE) {
             for (int p0 = 0; p0 < k; p0 += BLOCK_SIZE) {
 
@@ -252,7 +254,7 @@ void matmul_avx2(const float* A, const float* B, float* C, int m, int k, int n) 
                 }
             }
         }
-    }
+    });
 }
 
 #else
@@ -304,18 +306,18 @@ void matmul(const float* A, const float* B, float* C, int m, int k, int n) {
 void matmul_transposed(const float* A, const float* B, float* C, int m, int k, int n) {
     // C[m,n] = A[m,k] @ B[n,k]^T
     // B is stored transposed, so B[n,k] means row-major access is cache-friendly
-    for (int i = 0; i < m; i++) {
-        for (int j = 0; j < n; j++) {
-            C[i * n + j] = vec_dot(&A[i * k], &B[j * k], k);
-        }
-    }
+    // Parallelize outer loops with thread pool
+    ThreadPool::parallel_for_2d(m, n, [&](int i, int j) {
+        C[i * n + j] = vec_dot(&A[i * k], &B[j * k], k);
+    });
 }
 
 void matvec(const float* A, const float* x, float* y, int m, int n) {
     // y[m] = A[m,n] @ x[n]
-    for (int i = 0; i < m; i++) {
+    // Parallelize over output rows with thread pool
+    ThreadPool::parallel_for_static(0, m, [&](int i) {
         y[i] = vec_dot(&A[i * n], x, n);
-    }
+    });
 }
 
 // ============================================================================
@@ -398,6 +400,58 @@ void clip_by_norm(float* grad, int n, float max_norm) {
     if (norm > max_norm) {
         float scale = max_norm / norm;
         vec_scale(grad, grad, scale, n);
+    }
+}
+
+// ============================================================================
+// Activation Functions
+// ============================================================================
+
+void gelu(float* out, const float* x, int n) {
+    const float sqrt_2_over_pi = 0.7978845608f;  // sqrt(2/pi)
+    const float coeff = 0.044715f;
+
+    for (int i = 0; i < n; i++) {
+        float xi = x[i];
+        float cube = xi * xi * xi;
+        float inner = sqrt_2_over_pi * (xi + coeff * cube);
+        out[i] = 0.5f * xi * (1.0f + std::tanh(inner));
+    }
+}
+
+void softmax(float* out, const float* x, int n) {
+    // Find max for numerical stability
+    float max_val = x[0];
+    for (int i = 1; i < n; i++) {
+        if (x[i] > max_val) max_val = x[i];
+    }
+
+    // Compute exp and sum
+    float sum = 0.0f;
+    for (int i = 0; i < n; i++) {
+        out[i] = std::exp(x[i] - max_val);
+        sum += out[i];
+    }
+
+    // Normalize
+    float inv_sum = 1.0f / sum;
+    for (int i = 0; i < n; i++) {
+        out[i] *= inv_sum;
+    }
+}
+
+void rmsnorm(float* out, const float* x, const float* weight, int n, float eps) {
+    // Compute RMS
+    float sum_sq = 0.0f;
+    for (int i = 0; i < n; i++) {
+        sum_sq += x[i] * x[i];
+    }
+    float rms = std::sqrt(sum_sq / n + eps);
+    float inv_rms = 1.0f / rms;
+
+    // Normalize and scale
+    for (int i = 0; i < n; i++) {
+        out[i] = x[i] * inv_rms * weight[i];
     }
 }
 

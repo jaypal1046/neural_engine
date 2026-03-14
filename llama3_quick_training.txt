@@ -1,5 +1,0 @@
-Question: What is natural language processing
-Answer: Natural Language Processing (NLP) is a subfield of artificial intelligence (AI) that deals with the interaction between computers and human language. It involves the development
-
-Natural Language Processing (NLP) is a subfield of artificial intelligence (AI) that deals with the interaction between computers and human language. It involves the development
-

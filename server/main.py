@@ -1284,17 +1284,17 @@ class LearnUrlRequest(BaseModel):
 
 @app.post("/api/brain/learn_url")
 async def brain_learn_url(req: LearnUrlRequest):
-    """Learn from a URL using the C++ Neural Engine (fetches, parses, compresses, indexes)."""
+    """Learn from a URL using the C++ Neural Engine native URL learner."""
     if not os.path.exists(NEURAL_ENGINE_EXE):
         return {"error": "Neural engine not built. Run build command first."}
 
     try:
         result = subprocess.run(
-            [NEURAL_ENGINE_EXE, "learn", req.url],
+            [NEURAL_ENGINE_EXE, "learn_url", req.url],
             capture_output=True, text=True, timeout=120, cwd=BASE_DIR
         )
         log = (result.stderr + result.stdout).strip()
-        success = "SUCCESS" in log.upper() or "success" in log.lower()
+        success = "SUCCESS" in log.upper() or "success" in log.lower() or result.returncode == 0
         return {
             "status": "ok" if success else "error",
             "topic": req.topic,
@@ -1303,6 +1303,98 @@ async def brain_learn_url(req: LearnUrlRequest):
         }
     except subprocess.TimeoutExpired:
         return {"error": "timeout", "message": "Learning timeout (120s)"}
+    except Exception as e:
+        return {"error": str(e)}
+
+class InternetLearnRequest(BaseModel):
+    max_topics: int = 5
+    max_articles: int = 3
+    training_epochs: int = 3
+    min_corpus_lines: int = 100
+
+@app.post("/api/brain/internet_learn")
+async def brain_internet_learn(req: InternetLearnRequest):
+    """Trigger the AI to autonomously learn from the internet using Wikipedia."""
+    if not os.path.exists(NEURAL_ENGINE_EXE):
+        return {"error": "Neural engine not built. Run build command first."}
+
+    try:
+        args = [
+            NEURAL_ENGINE_EXE, "internet_learn",
+            f"--topics={req.max_topics}",
+            f"--articles={req.max_articles}",
+            f"--epochs={req.training_epochs}",
+            f"--min-corpus={req.min_corpus_lines}"
+        ]
+        
+        # This can take a while depending on topics, set a high timeout
+        result = subprocess.run(
+            args, capture_output=True, text=True, timeout=300, cwd=BASE_DIR
+        )
+        
+        log = (result.stderr + result.stdout).strip()
+        success = result.returncode == 0
+        
+        # Try to parse stats from the end of the log
+        stats = {}
+        for line in log.split("\\n"):
+            line = line.strip()
+            if line.startswith("Topics discovered:"):
+                stats["topics_discovered"] = int(line.split(":")[-1].strip())
+            elif line.startswith("Articles fetched:"):
+                stats["articles_fetched"] = int(line.split(":")[-1].strip())
+            elif line.startswith("Words learned:"):
+                stats["words_learned"] = int(line.split(":")[-1].strip())
+            elif line.startswith("Corpus lines added:"):
+                stats["corpus_lines"] = int(line.split(":")[-1].strip())
+            elif line.startswith("Training triggered:"):
+                stats["training_triggered"] = line.split(":")[-1].strip() == "YES"
+                
+        return {
+            "status": "ok" if success else "error",
+            "stats": stats,
+            "log": log[-2000:],
+        }
+    except subprocess.TimeoutExpired:
+        return {"error": "timeout", "message": "Internet learning timeout (300s)"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.post("/api/brain/auto_learn_stats")
+async def brain_auto_learn_stats():
+    """Get statistics about the AI's autonomous learning progress."""
+    if not os.path.exists(NEURAL_ENGINE_EXE):
+        return {"error": "Neural engine not built. Run build command first."}
+
+    try:
+        result = subprocess.run(
+            [NEURAL_ENGINE_EXE, "self_learn_stats"],
+            capture_output=True, text=True, timeout=10, cwd=BASE_DIR
+        )
+        log = (result.stderr + result.stdout).strip()
+        
+        import json
+        import re
+        
+        # Find JSON response at the end
+        cleaned = re.sub(r'[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f-\\x9f]', '', result.stdout).strip()
+        json_match = re.search(r'\\{.*\\}', cleaned, re.DOTALL)
+        
+        if json_match:
+            try:
+                response = json.loads(json_match.group(0))
+                return {
+                    "status": "success",
+                    "stats": response,
+                    "log": log
+                }
+            except json.JSONDecodeError:
+                pass
+                
+        return {
+            "status": "success", 
+            "log": log
+        }
     except Exception as e:
         return {"error": str(e)}
 

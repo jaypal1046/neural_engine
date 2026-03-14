@@ -49,6 +49,7 @@
 #include <cassert>
 #include <regex>
 #include <iomanip>
+#include <filesystem>
 
 // Smart Brain integration
 #ifdef INCLUDE_SMART_BRAIN
@@ -90,6 +91,13 @@
 #include "mixed_precision.h"       // FP16/BF16 training (BSD-3 - NVIDIA Apex)
 #include "gradient_checkpoint.h"   // Activation recomputation (Apache 2.0 - HuggingFace)
 #include "unigram_tokenizer.h"     // Multilingual tokenizer (Apache 2.0 - SentencePiece)
+
+// Self-Learning & Internet Learning (makes AI self-independent)
+#include "self_learning.h"
+#include "internet_learning.h"
+#include "teacher_brain.h"
+#include "web_fetcher.h"
+#include "html_parser.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -2531,6 +2539,140 @@ int main_neural_engine(int argc, char* argv[]) {
         ss << "}";
 
         std::cout << ss.str() << std::endl;
+    }
+
+    // =========================================================================
+    // Phase H: Self-Independent AI — Internet Learning & Auto-Learning
+    // =========================================================================
+
+    else if (cmd == "internet_learn") {
+        // Internet Learning — Learn from Wikipedia automatically
+        return internet_learning::main_internet_learn(argc, argv);
+    }
+
+    else if (cmd == "offline_bootstrap") {
+        int sentences = 50;
+        if (argc > 2) sentences = std::stoi(argv[2]);
+        if (TeacherBrain::run_offline_bootstrap(sentences)) return 0;
+        return 1;
+    }
+
+    else if (cmd == "auto_learn") {
+        // Self-Learning Daemon — Monitor, correct, and retrain continuously
+        return self_learning::main_auto_learn(argc, argv);
+    }
+
+    else if (cmd == "learn_url" && argc >= 3) {
+        // Learn from a specific URL
+        std::string url = argv[2];
+
+        std::cout << "{\"status\":\"learning\",\"url\":\"" << url << "\"}" << std::endl;
+
+        // Fetch the URL
+        HttpResponse resp = fetch_url(url);
+
+        if (resp.status_code != 200) {
+            std::cout << "{\"error\":\"Failed to fetch URL (status " << resp.status_code << ")\"}" << std::endl;
+            return 1;
+        }
+
+        // Extract text
+        std::string text = extract_text_from_html(resp.body);
+
+        if (text.size() < 50) {
+            std::cout << "{\"error\":\"Content too short (" << text.size() << " chars)\"}" << std::endl;
+            return 1;
+        }
+
+        // Save to knowledge base
+        std::string safe_name = url;
+        size_t proto = safe_name.find("://");
+        if (proto != std::string::npos) safe_name = safe_name.substr(proto + 3);
+        for (char& c : safe_name) {
+            if (c == '/' || c == '\\' || c == ':' || c == '?' || c == '&' ||
+                c == '=' || c == '#' || c == '%' || c == ' ') c = '_';
+        }
+        if (safe_name.size() > 80) safe_name = safe_name.substr(0, 80);
+
+        std::string knowledge_dir = "brain/knowledge";
+        std::filesystem::create_directories(knowledge_dir);
+        std::string output_file = knowledge_dir + "/" + safe_name + ".txt";
+
+        std::ofstream out(output_file);
+        if (out) {
+            out << text;
+            out.close();
+        }
+
+        // Also append to training corpus
+        std::string corpus_file = "brain/self_learning/internet_corpus.txt";
+        std::filesystem::create_directories("brain/self_learning");
+        std::ofstream corpus(corpus_file, std::ios::app);
+        int lines_added = 0;
+        if (corpus) {
+            std::istringstream iss(text);
+            std::string line;
+            while (std::getline(iss, line)) {
+                if (line.size() > 20) {
+                    corpus << line << "\n";
+                    lines_added++;
+                }
+            }
+        }
+
+        std::cout << "{\"status\":\"success\"";
+        std::cout << ",\"url\":\"" << url << "\"";
+        std::cout << ",\"content_size\":" << text.size();
+        std::cout << ",\"lines_added\":" << lines_added;
+        std::cout << ",\"saved_to\":\"" << output_file << "\"";
+        std::cout << "}" << std::endl;
+    }
+
+    else if (cmd == "learn_topic" && argc >= 3) {
+        // Learn about a specific topic from Wikipedia
+        std::string topic;
+        for (int i = 2; i < argc; i++) {
+            if (i > 2) topic += " ";
+            topic += argv[i];
+        }
+
+        internet_learning::InternetLearningConfig config;
+        config.max_topics_per_cycle = 1;
+        config.use_simple_wikipedia = true;
+
+        auto content = internet_learning::fetch_simple_wikipedia(topic, config);
+        
+        if (content.word_count < 10) {
+            std::cout << "{\"error\":\"Could not find content for: " << topic << "\"}" << std::endl;
+            return 1;
+        }
+
+        std::string processed = internet_learning::process_content(content, config);
+        int lines = internet_learning::add_to_corpus(processed, "brain/self_learning/internet_corpus.txt");
+
+        std::cout << "{\"status\":\"success\"";
+        std::cout << ",\"topic\":\"" << topic << "\"";
+        std::cout << ",\"title\":\"" << content.title << "\"";
+        std::cout << ",\"words\":" << content.word_count;
+        std::cout << ",\"lines_added\":" << lines;
+        std::cout << ",\"quality\":" << content.quality_score;
+        std::cout << "}" << std::endl;
+    }
+
+    else if (cmd == "self_learn_stats") {
+        // Show self-learning statistics
+        self_learning::print_auto_learn_stats();
+        
+        // Also show internet learning history
+        auto learned = internet_learning::get_learned_topics();
+        std::cout << "\n[INTERNET-LEARN] Topics learned from internet: " << learned.size() << "\n";
+        for (const auto& t : learned) {
+            std::cout << "  ✅ " << t << "\n";
+        }
+
+        std::cout << "{\"status\":\"success\"";
+        std::cout << ",\"internet_topics_learned\":" << learned.size();
+        std::cout << "}" << std::endl;
     }
 
     else {
