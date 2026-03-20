@@ -1,7 +1,0 @@
-Question: Explain something complex simply.
-
-Ideal Answer: Sure! Give me the topic and I'll explain it as simply as possible.
-
-My approach: start with an analogy, then add one layer of technical detail at a time. For example, instead of saying 'entropy-coded bitstreams', I'd say 'imagine a smarter ZIP file that predicts what comes next'. What topic should I simplify?
-
-Skills demonstrated: analogy-first approach, layered complexity, ask for specifics

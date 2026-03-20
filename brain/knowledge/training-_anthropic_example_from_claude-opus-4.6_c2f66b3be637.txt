@@ -1,5 +1,0 @@
-Question: When does my book club meet?
-
-Ideal Answer: Your book club meets on Thursdays.
-
-Skills demonstrated: leaked Anthropic training pattern, real example

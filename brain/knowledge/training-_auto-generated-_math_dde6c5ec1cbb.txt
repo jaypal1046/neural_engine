@@ -1,5 +1,0 @@
-Question: What is a prime number?
-
-Ideal Answer: I need to learn more about math. This question covers: What is a prime number?. Please teach me by saying: learn [topic] [content]
-
-Skills demonstrated: specificity, domain_knowledge, actionability

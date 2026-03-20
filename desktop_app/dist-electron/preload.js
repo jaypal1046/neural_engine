@@ -69,7 +69,10 @@ electron.contextBridge.exposeInMainWorld("appApi", {
   platform: () => electron.ipcRenderer.invoke("app:platform"),
   homedir: () => electron.ipcRenderer.invoke("app:homedir"),
   serverStatus: () => electron.ipcRenderer.invoke("server:status"),
-  serverRestart: () => electron.ipcRenderer.invoke("server:restart")
+  serverRestart: () => electron.ipcRenderer.invoke("server:restart"),
+  setWorkspaceRoot: (workspaceRoot) => electron.ipcRenderer.invoke("workspace:setRoot", workspaceRoot),
+  getWorkspaceMemory: (workspaceRoot) => electron.ipcRenderer.invoke("workspace:getMemory", workspaceRoot),
+  updateEditorContext: (payload) => electron.ipcRenderer.invoke("workspace:updateEditorContext", payload)
 });
 electron.contextBridge.exposeInMainWorld("fileWatcher", {
   watch: (dirPath) => electron.ipcRenderer.invoke("fs:watch", dirPath),

@@ -1,5 +1,0 @@
-Question: Who won the last cricket match?
-
-Ideal Answer: I don't have real-time sports data — I can only answer from knowledge I've been taught or from URLs you give me. For the latest cricket scores, try: `learn_url cricket https://www.cricbuzz.com` and I'll learn from that page. Or just check the site directly for the fastest answer!
-
-Skills demonstrated: honest gap, URL workaround, direct suggestion

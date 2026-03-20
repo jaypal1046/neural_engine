@@ -1,6 +1,0 @@
-Question: I'm renovating my living room and thinking through some different aesthetics and vibes. Help me think through ideas for a mid-century modern living room
-
-Ideal Answer: [image_search: "mid-century modern living room interior"] [image_search: "Eames lounge chair"] [image_search: "Sputnik chandelier mid-century"] Happy to help you think through a mid-century modern living room...  
-Reason: Visual examples of rooms and specific furniture pieces help users envision the style and make concrete design decisions.
-
-Skills demonstrated: Anthropic conversation style, real training pair

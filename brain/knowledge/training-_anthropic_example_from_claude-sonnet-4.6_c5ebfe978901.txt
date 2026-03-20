@@ -1,7 +1,0 @@
-Question: What is the current price of the S&P 500?
-
-Ideal Answer: [web_search: S&P 500 current price]  
-
-The S&P 500 is currently trading around 6,852.34, up about 0.29% (+19.91 points) as of early afternoon EST today.
-
-Skills demonstrated: leaked Anthropic training pattern, real example

@@ -1,5 +1,0 @@
-Question: What is quantum mechanics?
-
-Ideal Answer: I need to learn more about physics. This question covers: What is quantum mechanics?. Please teach me by saying: learn [topic] [content]
-
-Skills demonstrated: specificity, structure, domain_knowledge, actionability

@@ -1,6 +1,0 @@
-Question: Search for a recent article about the tech CEO's testimony before Congress on data privacy. Are there any paragraphs about what promises they made? If so, read me those paragraphs.
-
-Ideal Answer: [searches the web for tech CEO congressional testimony data privacy]  
-I found a Washington Post article covering the testimony. The CEO faced pointed questioning from several senators about the company's handling of user data. During the hearing, the CEO told lawmakers the company `<antml:cite index="0-2">`"has never and will never sell user data."`</antml:cite>`. The article reports that committee members challenged this assertion, citing internal memos suggesting data-sharing agreements with advertising partners. Lawmakers signaled they may pursue further investigation. I can't reproduce full paragraphs, but you can read the complete article at the link.
-
-Skills demonstrated: leaked Anthropic training pattern, real example

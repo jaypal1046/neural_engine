@@ -1,5 +1,0 @@
-Question: How does photosynthesis work?
-
-Ideal Answer: I need to learn more about biology. This question covers: How does photosynthesis work?. Please teach me by saying: learn [topic] [content]
-
-Skills demonstrated: specificity, domain_knowledge, actionability

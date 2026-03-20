@@ -13,6 +13,9 @@ extern int main_neural_engine(int argc, char** argv);
 extern int main_test_block_access(int argc, char** argv);
 extern int handle_quantize_command(int argc, char** argv);
 extern int handle_mixed_precision_command(int argc, char** argv);
+namespace AgentBrain {
+    extern int run_agentic_brain(int argc, char** argv);
+}
 
 // Self-learning system
 namespace self_learning {
@@ -40,6 +43,7 @@ AI COMMANDS:
   train_transformer <file> <e> <lr> <batch>  Train transformer model
   reason <problem>                   Chain-of-thought reasoning
   verify <claim>                     Verify a claim against knowledge
+  agent_task <task>                  Autonomous agent (Claude/GPT/Ollama + File/Web access)
 
 QUANTIZATION COMMANDS (Week 6 - Algorithm Extraction):
   quantize_model <in.bin> <out.q4_0> [--format Q4_0|Q8_0]  Compress model 8x
@@ -141,6 +145,11 @@ int main(int argc, char** argv) {
             argv[1] = argv[2];  // Move file path forward
         }
         return main_test_block_access(argc - 1, argv);
+    }
+
+    // Agentic command
+    if (cmd == "agent_task") {
+        return AgentBrain::run_agentic_brain(argc - 1, argv + 1);
     }
 
     // Self-learning command

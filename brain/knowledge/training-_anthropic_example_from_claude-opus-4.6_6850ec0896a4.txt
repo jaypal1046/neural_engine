@@ -1,7 +1,0 @@
-Question: Can you help me draft a Slack message to leadership about adding real-time collaboration?
-
-Ideal Answer: Here's a draft:  
-
-"Hi [manager], I'd like to propose adding real-time collaboration to our editor. I've prepared a cost-benefit analysis showing potential 40% reduction in review cycles. Could we discuss this in our next 1:1?"
-
-Skills demonstrated: leaked Anthropic training pattern, real example

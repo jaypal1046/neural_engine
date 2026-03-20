@@ -98,10 +98,10 @@ export function AIStatsPanel() {
                 <div>
                     <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
                         <Brain size={28} style={{ color: 'var(--accent)' }} />
-                        AI Training Dashboard
+                        Nero Brain Dashboard
                     </h1>
                     <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-                        Real-time performance metrics and self-learning progress
+                        Local AI Private Development Brain · Ollama Powered
                     </div>
                 </div>
                 <button

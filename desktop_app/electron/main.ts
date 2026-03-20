@@ -1,8 +1,9 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import { spawn, ChildProcess, exec } from 'node:child_process'
-import { existsSync, readFileSync, writeFileSync, readdirSync, statSync, mkdirSync, unlinkSync, renameSync, rmdirSync, watch, FSWatcher } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { spawn, ChildProcess, exec, spawnSync } from 'node:child_process'
+import { appendFileSync, existsSync, readFileSync, writeFileSync, readdirSync, statSync, mkdirSync, unlinkSync, renameSync, rmdirSync, watch, FSWatcher } from 'node:fs'
 import { platform, homedir } from 'node:os'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -12,6 +13,7 @@ process.env.APP_ROOT = path.join(__dirname, '..')
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
 export const RENDERER_DIST = path.join(process.env.APP_ROOT, 'dist')
+const MAIN_PROCESS_LOG = path.join(process.env.APP_ROOT, 'main-process.log')
 
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 'public') : RENDERER_DIST
 
@@ -19,14 +21,234 @@ let win: BrowserWindow | null
 let serverProcess: ChildProcess | null = null
 let fileWatcher: FSWatcher | null = null
 const terminalProcesses: Map<string, ChildProcess> = new Map()
+const terminalCwds: Map<string, string> = new Map()
+let activeWorkspaceRoot = path.join(process.env.APP_ROOT!, '..')
+
+function safeMainLog(level: 'log' | 'warn' | 'error', ...parts: unknown[]) {
+    try {
+        const rendered = parts.map((part) => {
+            if (part instanceof Error) {
+                return part.stack || part.message
+            }
+            if (typeof part === 'string') {
+                return part
+            }
+            try {
+                return JSON.stringify(part)
+            } catch {
+                return String(part)
+            }
+        }).join(' ')
+        appendFileSync(
+            MAIN_PROCESS_LOG,
+            `[${new Date().toISOString()}] [${level.toUpperCase()}] ${rendered}\n`,
+            'utf-8',
+        )
+    } catch {
+        // Ignore file logging failures in the main process.
+    }
+}
+
+function installBrokenPipeGuards() {
+    const handleStreamError = (error: unknown) => {
+        const code = typeof error === 'object' && error && 'code' in error
+            ? String((error as { code?: unknown }).code || '')
+            : ''
+        if (code === 'EPIPE') {
+            return
+        }
+        safeMainLog('error', '[Neural Studio] Main-process stream error', error)
+    }
+
+    process.stdout?.on?.('error', handleStreamError)
+    process.stderr?.on?.('error', handleStreamError)
+}
+
+installBrokenPipeGuards()
+
+function normalizeWorkspaceRoot(root?: string | null): string {
+    return path.resolve(root || activeWorkspaceRoot || path.join(process.env.APP_ROOT!, '..'))
+}
+
+function isPathInsideWorkspace(targetPath: string, workspaceRoot: string): boolean {
+    const absoluteTarget = path.resolve(targetPath)
+    const absoluteRoot = normalizeWorkspaceRoot(workspaceRoot)
+    const relative = path.relative(absoluteRoot, absoluteTarget)
+    return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))
+}
+
+function getWorkspaceMemoryPaths(workspaceRoot: string) {
+    const normalizedRoot = normalizeWorkspaceRoot(workspaceRoot)
+    const workspaceId = createHash('sha1').update(normalizedRoot.toLowerCase()).digest('hex').slice(0, 16)
+    const baseDir = path.join(app.getPath('userData'), 'project-memory', workspaceId)
+    mkdirSync(baseDir, { recursive: true })
+    return {
+        baseDir,
+        eventsFile: path.join(baseDir, 'events.jsonl'),
+        stateFile: path.join(baseDir, 'workspace.json'),
+        normalizedRoot,
+        workspaceId,
+    }
+}
+
+function getLocalWorkspacePaths(workspaceRoot: string) {
+    const normalizedRoot = normalizeWorkspaceRoot(workspaceRoot)
+    const workspaceId = createHash('sha1').update(normalizedRoot.toLowerCase()).digest('hex').slice(0, 16)
+    const localBaseDir = process.env.LOCALAPPDATA
+        ? path.join(process.env.LOCALAPPDATA, 'NeuralStudio')
+        : path.join(app.getPath('home'), 'AppData', 'Local', 'NeuralStudio')
+    const workspaceDir = path.join(localBaseDir, 'workspaces', workspaceId)
+    mkdirSync(workspaceDir, { recursive: true })
+    return {
+        localBaseDir,
+        workspaceDir,
+        workspaceId,
+        normalizedRoot,
+        editorContextFile: path.join(workspaceDir, 'editor_context.json'),
+    }
+}
+
+function readWorkspaceState(stateFile: string) {
+    try {
+        return JSON.parse(readFileSync(stateFile, 'utf-8'))
+    } catch {
+        return {
+            eventCounts: {},
+            recentFiles: [],
+            recentCommands: [],
+        }
+    }
+}
+
+function readWorkspaceEvents(eventsFile: string, limit: number = 50) {
+    try {
+        const content = readFileSync(eventsFile, 'utf-8')
+        const lines = content.split(/\r?\n/).filter(Boolean)
+        return lines.slice(-limit).map((line) => {
+            try {
+                return JSON.parse(line)
+            } catch {
+                return null
+            }
+        }).filter(Boolean)
+    } catch {
+        return []
+    }
+}
+
+function getWorkspaceMemorySnapshot(workspaceRoot?: string) {
+    const root = normalizeWorkspaceRoot(workspaceRoot)
+    const { baseDir, eventsFile, stateFile, normalizedRoot, workspaceId } = getWorkspaceMemoryPaths(root)
+    const state = readWorkspaceState(stateFile)
+    const events = readWorkspaceEvents(eventsFile, 60)
+    return {
+        workspaceRoot: normalizedRoot,
+        workspaceId,
+        storagePath: baseDir,
+        state,
+        events,
+    }
+}
+
+function updateEditorContext(payload: Record<string, any>, workspaceRoot?: string) {
+    const root = normalizeWorkspaceRoot(workspaceRoot)
+    const { editorContextFile, workspaceDir, normalizedRoot, workspaceId } = getLocalWorkspacePaths(root)
+    let current: Record<string, any> = {}
+    try {
+        current = JSON.parse(readFileSync(editorContextFile, 'utf-8'))
+    } catch {
+        current = {}
+    }
+
+    const next = {
+        ...current,
+        ...payload,
+        workspaceRoot: normalizedRoot,
+        workspaceId,
+        updatedAt: new Date().toISOString(),
+        storagePath: workspaceDir,
+    }
+
+    if (payload.filePath && isPathInsideWorkspace(payload.filePath, normalizedRoot)) {
+        next.relativePath = path.relative(normalizedRoot, payload.filePath).replace(/\\/g, '/')
+    }
+
+    writeFileSync(editorContextFile, JSON.stringify(next, null, 2), 'utf-8')
+    return next
+}
+
+function recordWorkspaceEvent(eventType: string, payload: Record<string, any>, workspaceRoot?: string) {
+    const root = normalizeWorkspaceRoot(workspaceRoot)
+    const { eventsFile, stateFile, normalizedRoot, workspaceId } = getWorkspaceMemoryPaths(root)
+    const timestamp = new Date().toISOString()
+    const event = {
+        type: eventType,
+        timestamp,
+        workspaceRoot: normalizedRoot,
+        workspaceId,
+        ...payload,
+    }
+
+    appendFileSync(eventsFile, JSON.stringify(event) + '\n', 'utf-8')
+
+    const state = readWorkspaceState(stateFile)
+    state.workspaceRoot = normalizedRoot
+    state.workspaceId = workspaceId
+    state.lastActivityAt = timestamp
+    state.eventCounts = state.eventCounts || {}
+    state.eventCounts[eventType] = (state.eventCounts[eventType] || 0) + 1
+
+    if (payload.filePath) {
+        const existing = (state.recentFiles || []).filter((item: any) => item.path !== payload.filePath)
+        state.recentFiles = [{ path: payload.filePath, timestamp, kind: eventType }, ...existing].slice(0, 20)
+    }
+
+    if (payload.command) {
+        state.lastCommand = payload.command
+        state.recentCommands = [{ command: payload.command, timestamp }, ...(state.recentCommands || [])].slice(0, 20)
+    }
+
+    writeFileSync(stateFile, JSON.stringify(state, null, 2), 'utf-8')
+}
 
 // =============================================================================
 // Auto-start Python server
 // =============================================================================
 
-function findPython(): string {
-    const candidates = ['python', 'python3', 'py']
-    return candidates[0]
+function findPython(): { command: string; args: string[] } | null {
+    const envPython = process.env.NEURAL_STUDIO_PYTHON
+    if (envPython) {
+        return { command: envPython, args: [] }
+    }
+
+    const candidates = [
+        { command: 'python', args: [] },
+        { command: 'python3', args: [] },
+        { command: 'py', args: ['-3'] },
+        { command: 'py', args: [] },
+    ]
+
+    for (const candidate of candidates) {
+        const probe = spawnSync(candidate.command, [...candidate.args, '--version'], {
+            stdio: 'ignore',
+            shell: false,
+        })
+        if (!probe.error && probe.status === 0) {
+            if (candidate.command === 'python' || candidate.command === 'python3') {
+                const whereProbe = spawnSync('where', [candidate.command], {
+                    encoding: 'utf8',
+                    shell: false,
+                })
+                const resolved = whereProbe.stdout?.split(/\r?\n/).find(Boolean)?.trim()
+                if (resolved) {
+                    return { command: resolved, args: candidate.args }
+                }
+            }
+            return candidate
+        }
+    }
+
+    return null
 }
 
 function startServer() {
@@ -34,23 +256,27 @@ function startServer() {
     const serverScript = path.join(projectRoot, 'server', 'main.py')
 
     if (!existsSync(serverScript)) {
-        console.error(`[Neural Studio] Server script not found: ${serverScript}`)
+        safeMainLog('error', `[Neural Studio] Server script not found: ${serverScript}`)
         return
     }
 
-    console.log(`[Neural Studio] Starting Python server: ${serverScript}`)
+    safeMainLog('log', `[Neural Studio] Starting Python server: ${serverScript}`)
 
-    const pythonCmd = findPython()
+    const pythonRuntime = findPython()
+    if (!pythonRuntime) {
+        safeMainLog('error', '[Neural Studio] No working Python runtime found. Set NEURAL_STUDIO_PYTHON or install Python 3.')
+        return
+    }
 
-    serverProcess = spawn(pythonCmd, [serverScript], {
-        cwd: path.join(projectRoot, 'server'),
+    serverProcess = spawn(pythonRuntime.command, [...pythonRuntime.args, serverScript], {
+        cwd: projectRoot,
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env },
+        env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
     })
 
     serverProcess.stdout?.on('data', (data: Buffer) => {
         const msg = data.toString().trim()
-        if (msg) console.log(`[Server] ${msg}`)
+        if (msg) safeMainLog('log', `[Server] ${msg}`)
         if (win) {
             win.webContents.send('server-log', msg)
         }
@@ -58,23 +284,23 @@ function startServer() {
 
     serverProcess.stderr?.on('data', (data: Buffer) => {
         const msg = data.toString().trim()
-        if (msg) console.log(`[Server:ERR] ${msg}`)
+        if (msg) safeMainLog('log', `[Server:ERR] ${msg}`)
     })
 
     serverProcess.on('exit', (code) => {
-        console.log(`[Neural Studio] Server process exited with code ${code}`)
+        safeMainLog('log', `[Neural Studio] Server process exited with code ${code}`)
         serverProcess = null
     })
 
     serverProcess.on('error', (err) => {
-        console.error(`[Neural Studio] Failed to start server:`, err.message)
+        safeMainLog('error', `[Neural Studio] Failed to start server:`, err.message)
         serverProcess = null
     })
 }
 
 function stopServer() {
     if (serverProcess) {
-        console.log('[Neural Studio] Stopping Python server...')
+        safeMainLog('log', '[Neural Studio] Stopping Python server...')
         if (process.platform === 'win32' && serverProcess.pid) {
             spawn('taskkill', ['/pid', String(serverProcess.pid), '/f', '/t'], { shell: true })
         } else {
@@ -224,7 +450,7 @@ function createWindow() {
             contextIsolation: true,
         },
         autoHideMenuBar: true,
-        title: 'Neural Studio IDE',
+        title: 'Nero Brain Studio',
         frame: false,
         titleBarStyle: 'hidden',
         titleBarOverlay: {
@@ -304,14 +530,47 @@ app.whenReady().then(() => {
         setTimeout(startServer, 500)
         return { status: 'restarting' }
     })
+    ipcMain.handle('workspace:setRoot', (_event, workspaceRoot: string) => {
+        activeWorkspaceRoot = normalizeWorkspaceRoot(workspaceRoot)
+        recordWorkspaceEvent('workspace_selected', { workspaceRoot: activeWorkspaceRoot }, activeWorkspaceRoot)
+        return { success: true, workspaceRoot: activeWorkspaceRoot }
+    })
+    ipcMain.handle('workspace:getMemory', (_event, workspaceRoot?: string) => {
+        return getWorkspaceMemorySnapshot(workspaceRoot || activeWorkspaceRoot)
+    })
+    ipcMain.handle('workspace:updateEditorContext', (_event, payload: Record<string, any>) => {
+        if (payload?.filePath && isPathInsideWorkspace(payload.filePath, activeWorkspaceRoot)) {
+            recordWorkspaceEvent('editor_focus_changed', {
+                filePath: path.resolve(payload.filePath),
+                cursorLine: payload.cursorLine,
+                cursorColumn: payload.cursorColumn,
+            }, activeWorkspaceRoot)
+        }
+        return updateEditorContext(payload || {}, activeWorkspaceRoot)
+    })
 
     // ── File System IPC ──
     ipcMain.handle('fs:readDir', (_event, dirPath: string) => {
+        const workspaceRoot = normalizeWorkspaceRoot(dirPath || activeWorkspaceRoot)
+        if (dirPath && existsSync(dirPath)) {
+            recordWorkspaceEvent('folder_accessed', {
+                folderPath: path.resolve(dirPath),
+            }, workspaceRoot)
+        }
         return getFileTree(dirPath, 0, 4)
     })
     ipcMain.handle('fs:readFile', (_event, filePath: string) => {
         try {
-            return readFileSync(filePath, 'utf-8')
+            const content = readFileSync(filePath, 'utf-8')
+            const workspaceRoot = normalizeWorkspaceRoot(activeWorkspaceRoot)
+            if (isPathInsideWorkspace(filePath, workspaceRoot)) {
+                recordWorkspaceEvent('file_accessed', {
+                    filePath: path.resolve(filePath),
+                    fileName: path.basename(filePath),
+                    extension: path.extname(filePath).toLowerCase(),
+                }, workspaceRoot)
+            }
+            return content
         } catch (e: any) {
             return { error: e.message }
         }
@@ -453,6 +712,11 @@ app.whenReady().then(() => {
     ipcMain.handle('terminal:spawn', (_event, id: string, cwd?: string) => {
         const shellCmd = process.platform === 'win32' ? 'powershell.exe' : (process.env.SHELL || '/bin/bash')
         const defaultCwd = cwd || path.join(process.env.APP_ROOT!, '..')
+        terminalCwds.set(id, defaultCwd)
+        recordWorkspaceEvent('terminal_opened', {
+            terminalId: id,
+            cwd: defaultCwd,
+        }, defaultCwd)
 
         const proc = spawn(shellCmd, [], {
             cwd: defaultCwd,
@@ -477,6 +741,7 @@ app.whenReady().then(() => {
 
         proc.on('exit', (code) => {
             terminalProcesses.delete(id)
+            terminalCwds.delete(id)
             if (win) {
                 win.webContents.send(`terminal:exit:${id}`, code)
             }
@@ -489,6 +754,14 @@ app.whenReady().then(() => {
         const proc = terminalProcesses.get(id)
         if (proc && proc.stdin) {
             proc.stdin.write(data)
+            const trimmed = data.replace(/\r?\n/g, '').trim()
+            if (trimmed) {
+                const cwd = terminalCwds.get(id) || activeWorkspaceRoot
+                recordWorkspaceEvent('command_executed', {
+                    terminalId: id,
+                    command: trimmed,
+                }, cwd)
+            }
             return { success: true }
         }
         return { error: 'Terminal not found' }

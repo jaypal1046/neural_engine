@@ -23,6 +23,7 @@ import { QuickOpen } from './components/QuickOpen'
 import { NotificationManager, useNotifications } from './components/NotificationManager'
 import { AIStatsPanel } from './components/AIStatsPanel'
 import { DocumentViewer } from './components/DocumentViewer'
+import { ProjectMemoryPanel } from './components/ProjectMemoryPanel'
 
 declare global {
   interface Window {
@@ -93,6 +94,14 @@ function App() {
       window.fs.getProjectRoot().then((root: string) => setProjectRoot(root))
     }
   }, [])
+
+  useEffect(() => {
+    if (projectRoot && window.appApi?.setWorkspaceRoot) {
+      window.appApi.setWorkspaceRoot(projectRoot).catch(() => {
+        // Ignore workspace sync failures
+      })
+    }
+  }, [projectRoot])
 
   // ── Workspace Persistence — Restore on mount ──
   useEffect(() => {
@@ -171,7 +180,7 @@ function App() {
       }
     }
     check()
-    const interval = setInterval(check, 15000)
+    const interval = setInterval(check, 5000)
     return () => clearInterval(interval)
   }, [])
 
@@ -294,6 +303,46 @@ function App() {
     openTab({ id, label: fileName, type: 'file', filePath })
   }, [openTab])
 
+  useEffect(() => {
+    const handleAIOpenFile = (e: Event) => {
+      const ce = e as CustomEvent<{ path?: string, line?: number }>
+      const rawPath = ce.detail?.path
+      if (!rawPath) return
+
+      const isAbsolute = /^[A-Za-z]:[\\/]/.test(rawPath) || rawPath.startsWith('\\\\')
+      const resolvedPath = isAbsolute
+        ? rawPath
+        : projectRoot
+          ? `${projectRoot}${projectRoot.endsWith('\\') || projectRoot.endsWith('/') ? '' : '\\'}${rawPath.replace(/\//g, '\\')}`
+          : rawPath
+      const fileName = resolvedPath.split(/[\\/]/).pop() || resolvedPath
+      openFile(resolvedPath, fileName)
+
+      const line = ce.detail?.line
+      if (typeof line === 'number' && line > 0) {
+        window.setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('editor-go-to-line', { detail: { line } }))
+        }, 120)
+      }
+    }
+
+    window.addEventListener('ai-open-file', handleAIOpenFile)
+    return () => window.removeEventListener('ai-open-file', handleAIOpenFile)
+  }, [openFile, projectRoot])
+
+  useEffect(() => {
+    const handleOpenBottomPanel = (e: Event) => {
+      const ce = e as CustomEvent<{ tab?: string }>
+      setBottomPanelOpen(true)
+      if (ce.detail?.tab) {
+        setActiveBottomTab(ce.detail.tab)
+      }
+    }
+
+    window.addEventListener('open-bottom-panel', handleOpenBottomPanel)
+    return () => window.removeEventListener('open-bottom-panel', handleOpenBottomPanel)
+  }, [])
+
   const openWebView = useCallback((url?: string) => {
     const id = 'webview-main'
     openTab({ id, label: '🌐 Browser', type: 'webview', url: url || '' })
@@ -302,6 +351,11 @@ function App() {
   const openAIChat = useCallback(() => {
     openTab({ id: 'ai-chat', label: '🧠 AI Copilot', type: 'ai-chat' })
   }, [openTab])
+
+  const openProjectMemory = useCallback(() => {
+    setActivePanel('project-memory')
+    setSidebarOpen(true)
+  }, [])
 
   useEffect(() => {
     const handleOpenAIEv = () => openAIChat()
@@ -472,6 +526,7 @@ function App() {
     { id: 'new-file', label: 'New File', shortcut: 'Ctrl+N', action: handleNewFile },
     { id: 'new-browser', label: 'New Browser Tab', shortcut: '', action: () => openWebView() },
     { id: 'ai-chat', label: 'Open AI Copilot', shortcut: '', action: () => openAIChat() },
+    { id: 'project-memory', label: 'Open Project Memory', shortcut: '', action: () => openProjectMemory() },
     { id: 'toggle-terminal', label: 'Toggle Terminal', shortcut: 'Ctrl+`', action: () => setBottomPanelOpen(p => !p) },
     { id: 'toggle-sidebar', label: 'Toggle Sidebar', shortcut: 'Ctrl+B', action: () => setSidebarOpen(p => !p) },
     { id: 'compress', label: 'Open Compress', shortcut: '', action: () => openTab({ id: 'compress', label: 'Compress', type: 'compress' }) },
@@ -516,6 +571,7 @@ function App() {
       { label: 'Search', shortcut: 'Ctrl+Shift+F', action: () => togglePanel('search') },
       { label: 'Source Control', shortcut: 'Ctrl+Shift+G', action: () => togglePanel('git') },
       { label: 'Extensions', shortcut: 'Ctrl+Shift+X', action: () => togglePanel('extensions') },
+      { label: 'Project Memory', shortcut: '', action: () => openProjectMemory() },
       { label: '', action: () => { }, divider: true },
       { label: 'Toggle Sidebar', shortcut: 'Ctrl+B', action: () => setSidebarOpen(p => !p) },
       { label: 'Toggle Terminal', shortcut: 'Ctrl+`', action: () => setBottomPanelOpen(p => !p) },
@@ -600,6 +656,8 @@ function App() {
         return <MCPPanel serverStatus={serverStatus} />
       case 'ai-stats':
         return <AIStatsPanel />
+      case 'project-memory':
+        return <ProjectMemoryPanel projectRoot={projectRoot} onFileOpen={openFile} />
       case 'ai':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

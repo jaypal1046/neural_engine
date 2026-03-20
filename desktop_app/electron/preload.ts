@@ -83,6 +83,9 @@ contextBridge.exposeInMainWorld('appApi', {
     homedir: () => ipcRenderer.invoke('app:homedir'),
     serverStatus: () => ipcRenderer.invoke('server:status'),
     serverRestart: () => ipcRenderer.invoke('server:restart'),
+    setWorkspaceRoot: (workspaceRoot: string) => ipcRenderer.invoke('workspace:setRoot', workspaceRoot),
+    getWorkspaceMemory: (workspaceRoot?: string) => ipcRenderer.invoke('workspace:getMemory', workspaceRoot),
+    updateEditorContext: (payload: Record<string, any>) => ipcRenderer.invoke('workspace:updateEditorContext', payload),
 })
 
 // ── File Watcher API ──

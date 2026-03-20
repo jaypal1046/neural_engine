@@ -1,6 +1,0 @@
-Question: Things to do in Tokyo
-
-Ideal Answer: [image_search: "Senso-ji Temple"] [image_search: "Shibuya street crossing"] [image_search: "Teamlab Planets"] Tokyo is an incredible city with endless...  
-Reason: Visual references of iconic Tokyo destinations help users make more informed decisions about which attractions match their interests and travel style.
-
-Skills demonstrated: Anthropic conversation style, real training pair

@@ -4,6 +4,12 @@ import type { OnMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { Breadcrumbs } from './Breadcrumbs'
 
+interface EditorSymbol {
+    name: string
+    kind: string
+    line: number
+}
+
 // Load settings from localStorage
 function getEditorSettings(): Record<string, any> {
     try {
@@ -64,6 +70,37 @@ export function getLanguage(filePath: string): string {
         svelte: 'html',
     }
     return map[ext] || 'plaintext'
+}
+
+function extractSymbolsFromSource(text: string): EditorSymbol[] {
+    const lines = text.split('\n')
+    const found: EditorSymbol[] = []
+    const patterns = [
+        { regex: /(?:export\s+)?(?:async\s+)?function\s+(\w+)/g, kind: 'function', captureIndex: 1 },
+        { regex: /(?:export\s+)?class\s+(\w+)/g, kind: 'class', captureIndex: 1 },
+        { regex: /(?:export\s+)?(?:const|let|var)\s+(\w+)\s*=/g, kind: 'variable', captureIndex: 1 },
+        { regex: /(?:export\s+)?interface\s+(\w+)/g, kind: 'class', captureIndex: 1 },
+        { regex: /(?:export\s+)?type\s+(\w+)\s*=/g, kind: 'class', captureIndex: 1 },
+        { regex: /(?:export\s+)?enum\s+(\w+)/g, kind: 'class', captureIndex: 1 },
+        { regex: /def\s+(\w+)\s*\(/g, kind: 'function', captureIndex: 1 },
+        { regex: /class\s+(\w+)\s*[:(]/g, kind: 'class', captureIndex: 1 },
+        { regex: /\b([A-Za-z_][A-Za-z0-9_:<>~]*)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\([^;]*\)\s*\{/g, kind: 'function', captureIndex: 2 },
+    ]
+
+    for (let i = 0; i < lines.length; i++) {
+        for (const pattern of patterns) {
+            pattern.regex.lastIndex = 0
+            let match: RegExpExecArray | null
+            while ((match = pattern.regex.exec(lines[i])) !== null) {
+                const name = match[pattern.captureIndex]
+                if (name) {
+                    found.push({ name, kind: pattern.kind, line: i + 1 })
+                }
+            }
+        }
+    }
+
+    return found
 }
 
 // Neural Studio dark theme definition
@@ -142,6 +179,14 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
     // Cursor position tracking
     const [cursorLine, setCursorLine] = useState(1)
     const [cursorCol, setCursorCol] = useState(1)
+    const [currentSymbolName, setCurrentSymbolName] = useState('')
+    const [selectionInfo, setSelectionInfo] = useState<{
+        startLine: number
+        startColumn: number
+        endLine: number
+        endColumn: number
+        selectedText: string
+    } | null>(null)
 
     // AI Inline Generate State (Ctrl+K)
     const [aiOverlayVisible, setAiOverlayVisible] = useState(false)
@@ -179,10 +224,26 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
     const lineNumbers = settings['line-numbers'] !== false
     const bracketPairs = settings['bracket-pairs'] !== false
 
+    const normalizeFilePath = useCallback((value: string) => {
+        return value.replace(/\//g, '\\').toLowerCase()
+    }, [])
+
+    const buildNearbySnippet = useCallback((source: string | null, lineNumber: number) => {
+        if (!source) return ''
+        const lines = source.split('\n')
+        const start = Math.max(0, lineNumber - 4)
+        const end = Math.min(lines.length, lineNumber + 3)
+        return lines.slice(start, end).join('\n').slice(0, 2000)
+    }, [])
+
     // Load file content
     useEffect(() => {
         setLoading(true)
         setContent(null)
+        setSelectionInfo(null)
+        setCursorLine(1)
+        setCursorCol(1)
+        setCurrentSymbolName('')
 
         // Binary file check
         const ext = filePath.split('.').pop()?.toLowerCase() || ''
@@ -219,6 +280,46 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
         }
     }, [content, savedContent, onModified])
 
+    useEffect(() => {
+        if (content === null) {
+            setCurrentSymbolName('')
+            return
+        }
+
+        const symbols = extractSymbolsFromSource(content)
+        const currentSymbol = symbols.filter(symbol => symbol.line <= cursorLine).pop()
+        setCurrentSymbolName(currentSymbol?.name || '')
+    }, [content, cursorLine])
+
+    useEffect(() => {
+        if (!window.appApi?.updateEditorContext || !filePath || content === null) {
+            return
+        }
+
+        const timeout = window.setTimeout(() => {
+            window.appApi.updateEditorContext({
+                filePath,
+                fileName: filePath.split(/[\\/]/).pop() || filePath,
+                language: getLanguage(filePath),
+                cursorLine,
+                cursorColumn: cursorCol,
+                selection: selectionInfo ? {
+                    startLine: selectionInfo.startLine,
+                    startColumn: selectionInfo.startColumn,
+                    endLine: selectionInfo.endLine,
+                    endColumn: selectionInfo.endColumn,
+                } : null,
+                selectedText: selectionInfo?.selectedText || '',
+                currentSymbolName,
+                nearbySnippet: buildNearbySnippet(content, cursorLine),
+            }).catch(() => {
+                // Ignore background context sync failures.
+            })
+        }, 300)
+
+        return () => window.clearTimeout(timeout)
+    }, [filePath, content, cursorLine, cursorCol, selectionInfo, currentSymbolName, buildNearbySnippet])
+
     // Save file
     const saveFile = useCallback(async () => {
         if (!window.fs?.writeFile || content === null) return
@@ -245,6 +346,70 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
         window.addEventListener('keydown', handler)
         return () => window.removeEventListener('keydown', handler)
     }, [saveFile])
+
+    useEffect(() => {
+        const handleReviewedPatchApply = async (e: Event) => {
+            const customEvent = e as CustomEvent<{
+                requestId: string
+                targetPath: string
+                targetFile?: string
+                content: string
+            }>
+            const detail = customEvent.detail
+            const requestId = detail?.requestId
+
+            const respond = (success: boolean, message: string) => {
+                window.dispatchEvent(new CustomEvent('ai-apply-reviewed-patch-result', {
+                    detail: { requestId, success, message },
+                }))
+            }
+
+            if (!requestId) return
+
+            if (!detail?.targetPath || typeof detail.content !== 'string') {
+                respond(false, 'Patch payload was incomplete.')
+                return
+            }
+
+            if (normalizeFilePath(detail.targetPath) !== normalizeFilePath(filePath)) {
+                respond(false, 'Open the target file before applying the reviewed patch.')
+                return
+            }
+
+            if (content !== savedContent) {
+                respond(false, 'Save or discard your unsaved editor changes before applying the reviewed patch.')
+                return
+            }
+
+            if (!window.fs?.writeFile) {
+                respond(false, 'Local file write access is not available in this renderer.')
+                return
+            }
+
+            setSaving(true)
+            try {
+                const result = await window.fs.writeFile(detail.targetPath, detail.content)
+                if (result?.error) {
+                    throw new Error(result.error)
+                }
+                setContent(detail.content)
+                setSavedContent(detail.content)
+                setSelectionInfo(null)
+                setSaveStatus('Reviewed patch applied ✓')
+                setTimeout(() => setSaveStatus(''), 2500)
+                respond(true, 'Reviewed patch applied successfully.')
+            } catch (error) {
+                setSaveStatus('Patch apply failed!')
+                setTimeout(() => setSaveStatus(''), 2500)
+                respond(false, error instanceof Error ? error.message : 'Failed to write the reviewed patch to disk.')
+            } finally {
+                setSaving(false)
+            }
+        }
+
+        window.addEventListener('ai-apply-reviewed-patch', handleReviewedPatchApply)
+        return () => window.removeEventListener('ai-apply-reviewed-patch', handleReviewedPatchApply)
+    }, [content, filePath, normalizeFilePath, savedContent])
 
     // Apply Code from AI
     useEffect(() => {
@@ -321,6 +486,23 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
         editor.onDidChangeCursorPosition((e) => {
             setCursorLine(e.position.lineNumber)
             setCursorCol(e.position.column)
+        })
+
+        editor.onDidChangeCursorSelection((e) => {
+            const selection = e.selection
+            if (!selection || selection.isEmpty()) {
+                setSelectionInfo(null)
+                return
+            }
+
+            const selectedText = editor.getModel()?.getValueInRange(selection) || ''
+            setSelectionInfo({
+                startLine: selection.startLineNumber,
+                startColumn: selection.startColumn,
+                endLine: selection.endLineNumber,
+                endColumn: selection.endColumn,
+                selectedText: selectedText.slice(0, 4000),
+            })
         })
 
         // Add Ctrl+S command

@@ -103,7 +103,7 @@ export function StatusBar({ serverStatus, activeFilePath, cursorLine, cursorCol,
 
             <div className="status-item">
                 <Zap size={11} />
-                <span>Neural Engine V10</span>
+                <span>Nero Brain Engine v10</span>
             </div>
 
             <div className="status-separator" />

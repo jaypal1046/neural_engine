@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
-    ArrowUp, Paperclip, Globe, BrainCircuit, Zap,
-    Square, Copy, Check, Wand2, ThumbsUp, ThumbsDown
+    ArrowUp, BrainCircuit, Check, Copy, Globe, Paperclip, Square,
+    ThumbsDown, ThumbsUp, Wand2, Zap
 } from 'lucide-react'
 
 const API = 'http://127.0.0.1:8001'
@@ -13,6 +13,152 @@ interface Message {
     tool?: string
     feedback?: 'positive' | 'negative' | null
     messageId?: string
+    command?: string
+    browserUrl?: string
+    confidence?: number
+    sources?: string[]
+    flowSections?: FlowSection[]
+    analysis?: AnalysisDetails
+    findings?: ReviewFinding[]
+    testGaps?: string[]
+    proposedCode?: string
+    targetFile?: string
+    targetPath?: string
+    appliedContent?: string
+    validation?: {
+        status?: string
+        summary?: string
+        command?: string
+    }
+}
+
+interface FlowEntry {
+    label: string
+    path: string
+    line_start?: number
+    line_end?: number
+    kind?: string
+    snippet?: string
+}
+
+interface FlowSection {
+    type: 'symbol' | 'file' | 'impact'
+    title: string
+    summary?: string
+    entries: FlowEntry[]
+}
+
+interface ReviewFinding {
+    title: string
+    severity: 'high' | 'medium' | 'low' | 'info'
+    file: string
+    line_start: number
+    line_end?: number
+    body: string
+    confidence?: number
+}
+
+interface AnalysisStep {
+    name: string
+    category?: string
+    status?: string
+    reason?: string
+    command?: string
+    durationMs?: number
+    summary?: string[]
+    preferred?: boolean
+}
+
+interface AnalysisDetails {
+    status?: string
+    lastRunAt?: string
+    preferenceIntent?: string
+    preferredCommands?: string[]
+    steps: AnalysisStep[]
+    alternatives?: AnalysisStep[]
+}
+
+function FlowSectionsBlock({ sections }: { sections: FlowSection[] }) {
+    const openEntry = (entry: FlowEntry) => {
+        window.dispatchEvent(new CustomEvent('ai-open-file', {
+            detail: {
+                path: entry.path,
+                line: entry.line_start || 1,
+            },
+        }))
+    }
+
+    return (
+        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {sections.map((section, index) => (
+                <div
+                    key={`${section.type}-${section.title}-${index}`}
+                    style={{
+                        border: '1px solid var(--border)',
+                        borderRadius: 8,
+                        padding: 10,
+                        background: 'rgba(0,0,0,0.15)',
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                        <span style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: 999,
+                            border: '1px solid rgba(74,158,255,0.25)',
+                            background: 'rgba(74,158,255,0.08)',
+                            color: 'var(--accent)',
+                            textTransform: 'uppercase',
+                        }}>
+                            {section.type} flow
+                        </span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{section.title}</span>
+                    </div>
+                    {section.summary && (
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
+                            {section.summary}
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {section.entries.map((entry, entryIndex) => {
+                            const location = `${entry.path}:${entry.line_start || 1}${entry.line_end && entry.line_end !== entry.line_start ? `-${entry.line_end}` : ''}`
+                            return (
+                                <button
+                                    key={`${entry.path}-${entry.line_start || 1}-${entryIndex}`}
+                                    onClick={() => openEntry(entry)}
+                                    style={{
+                                        textAlign: 'left',
+                                        background: 'rgba(255,255,255,0.02)',
+                                        border: '1px solid var(--border)',
+                                        borderRadius: 8,
+                                        padding: 10,
+                                        cursor: 'pointer',
+                                        color: 'inherit',
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                                        <span style={{ fontSize: 10, fontWeight: 700, color: '#4A9EFF' }}>{entry.label}</span>
+                                        {entry.kind && (
+                                            <span style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                                                {entry.kind}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div style={{ fontSize: 11, color: 'var(--text)' }}>{location}</div>
+                                    {entry.snippet && (
+                                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4, whiteSpace: 'pre-wrap' }}>
+                                            {entry.snippet}
+                                        </div>
+                                    )}
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+            ))}
+        </div>
+    )
 }
 
 const QUICK_ACTIONS = [
@@ -23,9 +169,336 @@ const QUICK_ACTIONS = [
     { label: 'Optimize', color: '#FBBF24' },
 ]
 
-const CodeBlock = ({ code, language }: { code: string, language: string }) => {
+function ActionPreview({
+    label,
+    value,
+    buttonLabel,
+    onRun,
+}: {
+    label: string
+    value: string
+    buttonLabel: string
+    onRun: () => void
+}) {
+    const [done, setDone] = useState(false)
+
+    const handleRun = () => {
+        onRun()
+        setDone(true)
+    }
+
+    return (
+        <div style={{ marginTop: 12, padding: 12, background: 'rgba(0,0,0,0.2)', borderRadius: 8, border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>
+                    {label}
+                </div>
+                {done ? (
+                    <span style={{ fontSize: 11, color: 'var(--green)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Check size={12} /> Ready
+                    </span>
+                ) : (
+                    <button
+                        onClick={handleRun}
+                        style={{
+                            padding: '4px 12px',
+                            borderRadius: 4,
+                            background: 'var(--accent)',
+                            color: '#fff',
+                            border: 'none',
+                            fontSize: 11,
+                            cursor: 'pointer',
+                        }}
+                    >
+                        {buttonLabel}
+                    </button>
+                )}
+            </div>
+            <code style={{ fontSize: 12, color: 'var(--text)', wordBreak: 'break-all', fontFamily: 'monospace', background: '#000', padding: '2px 4px', borderRadius: 4 }}>
+                {value}
+            </code>
+        </div>
+    )
+}
+
+function ReviewFindingsBlock({ findings }: { findings: ReviewFinding[] }) {
+    const colors: Record<string, string> = {
+        high: '#EF4444',
+        medium: '#FBBF24',
+        low: '#4A9EFF',
+        info: '#A0A0A0',
+    }
+
+    return (
+        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {findings.map((finding, index) => {
+                const color = colors[finding.severity] || '#A0A0A0'
+                const location = `${finding.file}:${finding.line_start}${finding.line_end && finding.line_end !== finding.line_start ? `-${finding.line_end}` : ''}`
+                return (
+                    <div
+                        key={`${finding.file}-${finding.line_start}-${index}`}
+                        style={{
+                            border: '1px solid var(--border)',
+                            borderLeft: `3px solid ${color}`,
+                            borderRadius: 8,
+                            padding: 10,
+                            background: 'rgba(0,0,0,0.15)',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                            <span style={{
+                                fontSize: 10,
+                                fontWeight: 700,
+                                color,
+                                border: `1px solid ${color}44`,
+                                background: `${color}12`,
+                                borderRadius: 999,
+                                padding: '2px 8px',
+                                textTransform: 'uppercase',
+                            }}>
+                                {finding.severity}
+                            </span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{finding.title}</span>
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>{location}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text)', whiteSpace: 'pre-wrap' }}>{finding.body}</div>
+                    </div>
+                )
+            })}
+        </div>
+    )
+}
+
+function AnalysisBlock({ analysis }: { analysis: AnalysisDetails }) {
+    if (!analysis.steps.length) return null
+    const [preferredCommands, setPreferredCommands] = useState<string[]>(analysis.preferredCommands || [])
+
+    const runCommand = (command?: string) => {
+        if (!command) return
+        window.dispatchEvent(new CustomEvent('open-bottom-panel', { detail: { tab: 'terminal' } }))
+        window.setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('run-terminal-command', { detail: { cmd: command } }))
+        }, 150)
+    }
+
+    const savePreference = async (commandName?: string) => {
+        if (!commandName || !analysis.preferenceIntent) return
+        try {
+            const res = await fetch(`${API}/api/analysis/preferences`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    intent: analysis.preferenceIntent,
+                    command_name: commandName,
+                }),
+            })
+            const data = await res.json()
+            if (res.ok && data.status === 'ok') {
+                const next = Array.isArray(data.preferences?.[analysis.preferenceIntent]?.preferred_commands)
+                    ? data.preferences[analysis.preferenceIntent].preferred_commands
+                    : [commandName]
+                setPreferredCommands(next)
+            }
+        } catch {
+            // Ignore preference save errors in the chat UI
+        }
+    }
+
+    const statusColor = analysis.status === 'ok'
+        ? 'var(--green)'
+        : analysis.status === 'warning'
+            ? '#FBBF24'
+            : analysis.status === 'error'
+                ? '#EF4444'
+                : 'var(--text-muted)'
+
+    return (
+        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div
+                style={{
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    padding: 10,
+                    background: 'rgba(0,0,0,0.15)',
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                    <span style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: 999,
+                        border: `1px solid ${statusColor}44`,
+                        background: `${statusColor}12`,
+                        color: statusColor,
+                        textTransform: 'uppercase',
+                    }}>
+                        Local checks
+                    </span>
+                    {analysis.status && (
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                            {analysis.status}
+                        </span>
+                    )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {analysis.steps.map((step, index) => (
+                        <div
+                            key={`${step.name}-${index}`}
+                            style={{
+                                border: '1px solid var(--border)',
+                                borderRadius: 8,
+                                padding: 10,
+                                background: 'rgba(255,255,255,0.02)',
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{step.name}</span>
+                                {(step.preferred || preferredCommands.includes(step.name)) && (
+                                    <span style={{ fontSize: 10, color: 'var(--green)', textTransform: 'uppercase' }}>
+                                        preferred
+                                    </span>
+                                )}
+                                {step.category && (
+                                    <span style={{ fontSize: 10, color: 'var(--accent)', textTransform: 'uppercase' }}>
+                                        {step.category}
+                                    </span>
+                                )}
+                                {step.status && (
+                                    <span style={{ fontSize: 10, color: statusColor }}>
+                                        {step.status}
+                                    </span>
+                                )}
+                                {typeof step.durationMs === 'number' && (
+                                    <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                                        {step.durationMs} ms
+                                    </span>
+                                )}
+                            </div>
+                            {step.reason && (
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
+                                    {step.reason}
+                                </div>
+                            )}
+                            {step.command && (
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
+                                    Command: <code className="inline-code">{step.command}</code>
+                                    <button
+                                        onClick={() => runCommand(step.command)}
+                                        style={{
+                                            marginLeft: 8,
+                                            padding: '2px 8px',
+                                            borderRadius: 999,
+                                            border: '1px solid var(--border)',
+                                            background: 'transparent',
+                                            color: 'var(--accent)',
+                                            fontSize: 10,
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        Run
+                                    </button>
+                                    {analysis.preferenceIntent && (
+                                        <button
+                                            onClick={() => { void savePreference(step.name) }}
+                                            style={{
+                                                marginLeft: 6,
+                                                padding: '2px 8px',
+                                                borderRadius: 999,
+                                                border: '1px solid var(--border)',
+                                                background: 'transparent',
+                                                color: preferredCommands.includes(step.name) ? 'var(--green)' : 'var(--text-muted)',
+                                                fontSize: 10,
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {preferredCommands.includes(step.name) ? 'Preferred' : 'Prefer'}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                            {Array.isArray(step.summary) && step.summary.length > 0 && (
+                                <div style={{ fontSize: 11, color: 'var(--text)', whiteSpace: 'pre-wrap' }}>
+                                    {step.summary[step.summary.length - 1]}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+                {analysis.alternatives && analysis.alternatives.length > 0 && (
+                    <div style={{ marginTop: 10 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                            Other useful checks
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {analysis.alternatives.map((step, index) => (
+                                <div
+                                    key={`${step.name}-${index}`}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 4,
+                                        padding: '4px 8px',
+                                        borderRadius: 999,
+                                        border: '1px solid var(--border)',
+                                        background: 'rgba(255,255,255,0.02)',
+                                    }}
+                                    title={step.reason || step.command || step.name}
+                                >
+                                    <button
+                                        onClick={() => runCommand(step.command)}
+                                        style={{
+                                            border: 'none',
+                                            background: 'transparent',
+                                            color: 'var(--text)',
+                                            fontSize: 11,
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        {step.name}
+                                    </button>
+                                    {analysis.preferenceIntent && (
+                                        <button
+                                            onClick={() => { void savePreference(step.name) }}
+                                            style={{
+                                                border: 'none',
+                                                background: 'transparent',
+                                                color: preferredCommands.includes(step.name) ? 'var(--green)' : 'var(--text-muted)',
+                                                fontSize: 10,
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {preferredCommands.includes(step.name) ? 'Preferred' : 'Prefer'}
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
+const CodeBlock = ({
+    code,
+    language,
+    onApply,
+    showApplyButton = true,
+    applyLabel = 'Apply',
+    applyTitle = 'Apply to Active File',
+}: {
+    code: string
+    language: string
+    onApply?: () => Promise<boolean> | boolean
+    showApplyButton?: boolean
+    applyLabel?: string
+    applyTitle?: string
+}) => {
     const [copied, setCopied] = useState(false)
     const [applied, setApplied] = useState(false)
+    const [applying, setApplying] = useState(false)
 
     const copy = () => {
         navigator.clipboard.writeText(code)
@@ -33,10 +506,23 @@ const CodeBlock = ({ code, language }: { code: string, language: string }) => {
         setTimeout(() => setCopied(false), 2000)
     }
 
-    const apply = () => {
-        window.dispatchEvent(new CustomEvent('ai-apply-code', { detail: { code } }))
-        setApplied(true)
-        setTimeout(() => setApplied(false), 2000)
+    const apply = async () => {
+        setApplying(true)
+        try {
+            let ok = true
+            if (onApply) {
+                ok = await onApply()
+            } else {
+                window.dispatchEvent(new CustomEvent('ai-apply-code', { detail: { code } }))
+            }
+
+            if (ok) {
+                setApplied(true)
+                setTimeout(() => setApplied(false), 2000)
+            }
+        } finally {
+            setApplying(false)
+        }
     }
 
     return (
@@ -47,9 +533,16 @@ const CodeBlock = ({ code, language }: { code: string, language: string }) => {
                     <button onClick={copy} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                         {copied ? <Check size={12} /> : <Copy size={12} />} {copied ? 'Copied' : 'Copy'}
                     </button>
-                    <button onClick={apply} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }} title="Apply to Active File">
-                        {applied ? <Check size={12} /> : <Wand2 size={12} />} {applied ? 'Applied' : 'Apply'}
-                    </button>
+                    {showApplyButton && (
+                        <button
+                            onClick={() => { void apply() }}
+                            disabled={applying}
+                            style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: applying ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 4, opacity: applying ? 0.7 : 1 }}
+                            title={applyTitle}
+                        >
+                            {applied ? <Check size={12} /> : <Wand2 size={12} />} {applied ? 'Applied' : applying ? 'Applying...' : applyLabel}
+                        </button>
+                    )}
                 </div>
             </div>
             <pre style={{ margin: 0, padding: 8, background: '#1A1D23', color: '#ABB2BF', fontSize: 12, overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
@@ -63,12 +556,12 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
     const [messages, setMessages] = useState<Message[]>([
         {
             role: 'system',
-            content: 'Neural Studio AI Copilot — connected to neural engine',
+            content: 'Neural Studio AI Copilot connected to the local brain',
             timestamp: new Date(),
         },
         {
             role: 'assistant',
-            content: `Welcome to Neural Studio AI Copilot! 🧠\n\nI'm connected to your local Neural Engine API and ready to help with:\n\n• **File compression & analysis** — powered by 1,046 neural advisors\n• **Code generation** — write Python, C++, JavaScript, and more\n• **Architecture analysis** — understand your codebase\n• **Web research** — search and summarize anything\n\nHow can I help you today?`,
+            content: "Welcome to Neural Studio AI Copilot.\n\nI can help explain the project, review code, and suggest safe next steps while keeping the code local.",
             timestamp: new Date(),
         },
     ])
@@ -98,134 +591,254 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
         const text = input.trim()
         if (!text || isTyping) return
 
+        const historyPayload = messages
+            .filter(m => m.role !== 'system')
+            .map(m => ({ role: m.role, content: m.content }))
+
         const userMsg: Message = { role: 'user', content: text, timestamp: new Date() }
         setMessages(prev => [...prev, userMsg])
         setInput('')
         setIsTyping(true)
 
         try {
-            const systemPrompt = "You are Neural Studio Copilot running inside the user's IDE. " +
-                "You can trigger actual IDE actions by using EXACTLY these formats in your text (on a new line): " +
-                "\n[ACTION: OPEN_BROWSER] https://example.com" +
-                "\n[ACTION: SEARCH] query" +
-                "\n[ACTION: RUN_COMMAND] command";
-
-            // Try the actual API
             const res = await fetch(`${API}/api/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: `${systemPrompt}\n\nUser request:\n${text}`,
-                    history: messages.filter(m => m.role !== 'system').map(m => ({
-                        role: m.role,
-                        content: m.content,
-                    })),
+                    message: text,
+                    history: historyPayload,
                     web_search: webEnabled,
                 }),
             })
 
-            if (res.ok) {
-                const data = await res.json()
-                let replyContent = data.response || data.reply || data.content || JSON.stringify(data)
-                let toolUsed = data.tool
-                let confidence = data.confidence || 100  // Default to high confidence if not provided
-
-                // Check if replyContent is a JSON string from C++ neural_engine
-                try {
-                    // Try to extract JSON from the string if it contains any prefix like ">> Loaded..." 
-                    // or other terminal output before the JSON
-                    const jsonMatch = replyContent.match(/\{[\s\S]*\}/);
-                    const jsonString = jsonMatch ? jsonMatch[0] : replyContent;
-
-                    const parsed = JSON.parse(jsonString)
-                    if (parsed.answer) {
-                        // C++ neural_engine returns JSON with {status, question, answer, confidence, ...}
-                        replyContent = parsed.answer
-                        confidence = parsed.confidence !== undefined ? parsed.confidence : confidence
-
-                        // Add sources if available
-                        if (parsed.sources && parsed.sources.length > 0) {
-                            replyContent += '\n\nSources:\n' + parsed.sources.map((s: any) => `- ${s}`).join('\n')
-                        }
-                    } else if (parsed.response) {
-                        replyContent = parsed.response;
-                    }
-                } catch {
-                    // Not JSON, use as-is (plain text response)
-                }
-
-                // Only process actions if confidence is high enough and response doesn't contain system prompt artifacts
-                const hasSystemPromptArtifacts = replyContent.includes('[ACTION:') && replyContent.includes('User request:')
-                const shouldProcessActions = !hasSystemPromptArtifacts && confidence >= 70
-
-                if (shouldProcessActions) {
-                    // Intercept Agentic Actions - only if AI explicitly generated them
-                    const browseMatch = replyContent.match(/^\[ACTION:\s*OPEN_BROWSER\]\s*([^\n]+)/im)
-                    if (browseMatch) {
-                        const url = browseMatch[1].trim()
-                        // Validate URL format
-                        if (url.startsWith('http://') || url.startsWith('https://')) {
-                            window.dispatchEvent(new CustomEvent('ai-open-browser', { detail: { url } }))
-                            replyContent = replyContent.replace(browseMatch[0], '')
-                            toolUsed = `Opened Browser: ${url}`
-                        }
-                    }
-                    const searchMatch = replyContent.match(/^\[ACTION:\s*SEARCH\]\s*([^\n]+)/im)
-                    if (searchMatch) {
-                        const query = searchMatch[1].trim()
-                        // Only search if query is not a placeholder
-                        if (query && query !== 'query' && !query.includes('[') && !query.includes(']')) {
-                            window.dispatchEvent(new CustomEvent('ai-open-browser', { detail: { url: 'https://google.com/search?q=' + encodeURIComponent(query) } }))
-                            replyContent = replyContent.replace(searchMatch[0], '')
-                            toolUsed = `Searched Web: ${query}`
-                        }
-                    }
-                    const runMatch = replyContent.match(/^\[ACTION:\s*RUN_COMMAND\]\s*([^\n]+)/im)
-                    if (runMatch) {
-                        const cmd = runMatch[1].trim()
-                        // Only run if command is not a placeholder
-                        if (cmd && cmd !== 'command' && !cmd.includes('[') && !cmd.includes(']')) {
-                            window.dispatchEvent(new CustomEvent('run-terminal-command', { detail: { cmd } }))
-                            replyContent = replyContent.replace(runMatch[0], '')
-                            toolUsed = `Ran Terminal Command: ${cmd}`
-                        }
-                    }
-                }
-
-                // Clean up any remaining system prompt artifacts
-                replyContent = replyContent.replace(/\[ACTION:\s*(SEARCH|RUN_COMMAND|OPEN_BROWSER)\]\s*[^\n]+/gi, '')
-                replyContent = replyContent.replace(/User request:\n/gi, '')
-
-                // If confidence is low, offer to search online instead of auto-triggering
-                if (confidence < 50 && replyContent.includes("don't have knowledge")) {
-                    replyContent += '\n\nWould you like me to search online for this information?'
-                }
-
+            if (!res.ok) {
                 setMessages(prev => [...prev, {
                     role: 'assistant',
-                    content: replyContent.trim(),
-                    timestamp: new Date(),
-                    tool: toolUsed,
-                    messageId: `msg-${Date.now()}`,
-                    feedback: null,
-                }])
-            } else {
-                // Fallback response
-                setMessages(prev => [...prev, {
-                    role: 'assistant',
-                    content: `I received your message: "${text}"\n\nThe Neural Engine API responded with status ${res.status}. Make sure the server is running on port 8001.`,
+                    content: `The local connector returned status ${res.status}. Check the Python connector and C++ brain processes.`,
                     timestamp: new Date(),
                 }])
+                return
             }
+
+            const data = await res.json()
+            let replyContent = data.response || data.reply || data.content || JSON.stringify(data)
+            let toolUsed = data.tool
+            let confidence = data.confidence || 100
+            let proposedCommand = ''
+            let proposedUrl = ''
+            const findings: ReviewFinding[] = Array.isArray(data.findings) ? data.findings : []
+            const testGaps: string[] = Array.isArray(data.test_gaps) ? data.test_gaps : []
+            const proposedCode = typeof data.proposed_code === 'string' ? data.proposed_code : ''
+            const targetFile = typeof data.target_file === 'string' ? data.target_file : ''
+            const targetPath = typeof data.target_path === 'string' ? data.target_path : ''
+            const appliedContent = typeof data.applied_content === 'string' ? data.applied_content : ''
+            const validation = data.validation && typeof data.validation === 'object' ? data.validation : undefined
+            const analysis: AnalysisDetails | undefined = data.analysis && typeof data.analysis === 'object' && Array.isArray(data.analysis.steps)
+                ? {
+                    status: typeof data.analysis.status === 'string' ? data.analysis.status : undefined,
+                    lastRunAt: typeof data.analysis.last_run_at === 'string' ? data.analysis.last_run_at : undefined,
+                    preferenceIntent: typeof data.analysis.preference_intent === 'string' ? data.analysis.preference_intent : undefined,
+                    preferredCommands: Array.isArray(data.analysis.preferred_commands)
+                        ? data.analysis.preferred_commands.filter((item: any) => typeof item === 'string')
+                        : undefined,
+                    steps: data.analysis.steps
+                        .filter((step: any) => step && typeof step.name === 'string')
+                        .map((step: any) => ({
+                            name: step.name,
+                            category: typeof step.category === 'string' ? step.category : undefined,
+                            status: typeof step.status === 'string' ? step.status : undefined,
+                            reason: typeof step.reason === 'string' ? step.reason : undefined,
+                            command: typeof step.command === 'string' ? step.command : undefined,
+                            durationMs: typeof step.duration_ms === 'number' ? step.duration_ms : undefined,
+                            summary: Array.isArray(step.summary) ? step.summary.filter((item: any) => typeof item === 'string') : undefined,
+                            preferred: Boolean(step.preferred),
+                        })),
+                    alternatives: Array.isArray(data.analysis.alternatives)
+                        ? data.analysis.alternatives
+                            .filter((step: any) => step && typeof step.name === 'string')
+                            .map((step: any) => ({
+                                name: step.name,
+                                category: typeof step.category === 'string' ? step.category : undefined,
+                                status: typeof step.status === 'string' ? step.status : undefined,
+                                reason: typeof step.reason === 'string' ? step.reason : undefined,
+                                command: typeof step.command === 'string' ? step.command : undefined,
+                                preferred: Boolean(step.preferred),
+                            }))
+                        : undefined,
+                }
+                : undefined
+            const flowSections: FlowSection[] = Array.isArray(data.flow_sections)
+                ? data.flow_sections
+                    .filter((section: any) => section && typeof section === 'object' && Array.isArray(section.entries))
+                    .map((section: any) => ({
+                        type: section.type === 'file' ? 'file' : section.type === 'impact' ? 'impact' : 'symbol',
+                        title: typeof section.title === 'string' ? section.title : 'Flow',
+                        summary: typeof section.summary === 'string' ? section.summary : '',
+                        entries: section.entries
+                            .filter((entry: any) => entry && typeof entry.path === 'string')
+                            .map((entry: any) => ({
+                                label: typeof entry.label === 'string' ? entry.label : 'Reference',
+                                path: entry.path,
+                                line_start: typeof entry.line_start === 'number' ? entry.line_start : undefined,
+                                line_end: typeof entry.line_end === 'number' ? entry.line_end : undefined,
+                                kind: typeof entry.kind === 'string' ? entry.kind : undefined,
+                                snippet: typeof entry.snippet === 'string' ? entry.snippet : undefined,
+                            })),
+                    }))
+                    .filter((section: FlowSection) => section.entries.length > 0)
+                : []
+            let sourceLines: string[] = Array.isArray(data.sources)
+                ? data.sources.map((s: any) => {
+                    if (typeof s === 'string') return s
+                    const path = s.path || s.file || 'unknown'
+                    const start = s.line_start || s.lineStart
+                    const end = s.line_end || s.lineEnd
+                    return start ? `${path}:${start}${end ? `-${end}` : ''}` : path
+                })
+                : []
+
+            try {
+                const jsonMatch = replyContent.match(/\{[\s\S]*\}/)
+                const jsonString = jsonMatch ? jsonMatch[0] : replyContent
+                const parsed = JSON.parse(jsonString)
+                if (parsed.answer) {
+                    replyContent = parsed.answer
+                    confidence = parsed.confidence !== undefined ? parsed.confidence : confidence
+                    if (parsed.sources && parsed.sources.length > 0) {
+                        replyContent += '\n\nSources:\n' + parsed.sources.map((s: string) => `- ${s}`).join('\n')
+                    }
+                } else if (parsed.response) {
+                    replyContent = parsed.response
+                }
+            } catch {
+                // Plain text response, keep as-is.
+            }
+
+            const runMatch = replyContent.match(/^\[ACTION:\s*RUN_COMMAND\]\s*([^\n]+)/im)
+            if (runMatch) {
+                const cmd = runMatch[1].trim()
+                if (cmd && cmd !== 'command' && !cmd.includes('[') && !cmd.includes(']')) {
+                    proposedCommand = cmd
+                    toolUsed = `Proposed Command`
+                }
+                replyContent = replyContent.replace(runMatch[0], '')
+            }
+
+            const browseMatch = replyContent.match(/^\[ACTION:\s*OPEN_BROWSER\]\s*([^\n]+)/im)
+            if (browseMatch) {
+                const url = browseMatch[1].trim()
+                if (url.startsWith('http://') || url.startsWith('https://')) {
+                    proposedUrl = url
+                    toolUsed = proposedCommand ? `${toolUsed} + Link` : 'Proposed Link'
+                }
+                replyContent = replyContent.replace(browseMatch[0], '')
+            }
+
+            const searchMatch = replyContent.match(/^\[ACTION:\s*SEARCH\]\s*([^\n]+)/im)
+            if (searchMatch) {
+                const query = searchMatch[1].trim()
+                if (query && query !== 'query' && !query.includes('[') && !query.includes(']')) {
+                    proposedUrl = 'https://google.com/search?q=' + encodeURIComponent(query)
+                    toolUsed = proposedCommand ? `${toolUsed} + Search` : 'Proposed Search'
+                }
+                replyContent = replyContent.replace(searchMatch[0], '')
+            }
+
+            replyContent = replyContent.replace(/User request:\n/gi, '').trim()
+            if (!replyContent) {
+                replyContent = proposedCommand || proposedUrl ? 'Proposed action:' : 'Task complete.'
+            }
+
+            if (sourceLines.length > 0) {
+                replyContent += '\n\nSources:\n' + sourceLines.map(line => `- ${line}`).join('\n')
+            }
+
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: replyContent,
+                timestamp: new Date(),
+                tool: toolUsed,
+                messageId: `msg-${Date.now()}`,
+                feedback: null,
+                command: proposedCommand,
+                browserUrl: proposedUrl,
+                confidence,
+                sources: sourceLines,
+                flowSections,
+                analysis,
+                findings,
+                testGaps,
+                proposedCode,
+                targetFile,
+                targetPath,
+                appliedContent,
+                validation,
+            }])
         } catch (err) {
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: `⚠️ Could not reach Neural Engine API at ${API}\n\nPlease ensure the Python server is running. You can restart it from the status bar or terminal.\n\nIn the meantime, I can still help with general questions!`,
+                content: `Could not reach the local connector at ${API}. Make sure the Python connector is running.`,
                 timestamp: new Date(),
             }])
+        } finally {
+            setIsTyping(false)
+        }
+    }
+
+    const applyReviewedPatch = async (msg: Message): Promise<boolean> => {
+        if (!msg.targetPath || !msg.appliedContent) {
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: 'This patch is missing the final staged file content, so it cannot be applied safely.',
+                timestamp: new Date(),
+                tool: 'patch_apply',
+            }])
+            return false
         }
 
-        setIsTyping(false)
+        const requestId = `patch-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+        return await new Promise<boolean>((resolve) => {
+            let settled = false
+            const handleResult = (event: Event) => {
+                const customEvent = event as CustomEvent<{ requestId: string, success: boolean, message?: string }>
+                if (customEvent.detail?.requestId !== requestId) return
+                settled = true
+                window.clearTimeout(timeoutId)
+                window.removeEventListener('ai-apply-reviewed-patch-result', handleResult)
+                if (!customEvent.detail?.success) {
+                    setMessages(prev => [...prev, {
+                        role: 'assistant',
+                        content: customEvent.detail?.message || 'The reviewed patch could not be applied.',
+                        timestamp: new Date(),
+                        tool: 'patch_apply',
+                    }])
+                }
+                resolve(Boolean(customEvent.detail?.success))
+            }
+
+            window.addEventListener('ai-apply-reviewed-patch-result', handleResult)
+            window.dispatchEvent(new CustomEvent('ai-apply-reviewed-patch', {
+                detail: {
+                    requestId,
+                    targetPath: msg.targetPath,
+                    targetFile: msg.targetFile,
+                    content: msg.appliedContent,
+                },
+            }))
+
+            const timeoutId = window.setTimeout(() => {
+                if (settled) return
+                window.removeEventListener('ai-apply-reviewed-patch-result', handleResult)
+                setMessages(prev => [...prev, {
+                    role: 'assistant',
+                    content: 'The editor did not confirm the patch apply request in time. Try again with the target file open.',
+                    timestamp: new Date(),
+                    tool: 'patch_apply',
+                }])
+                resolve(false)
+            }, 4000)
+        })
     }
 
     const handleQuickAction = (action: string) => {
@@ -238,17 +851,14 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
         const msg = messages[messageIndex]
         if (msg.role !== 'assistant') return
 
-        // Check if feedback collection is enabled
         const settings = localStorage.getItem('neural-studio-settings')
         const collectFeedback = settings ? JSON.parse(settings)['collect-feedback'] !== false : true
         if (!collectFeedback) return
 
-        // Update message with feedback
         setMessages(prev => prev.map((m, i) => i === messageIndex ? { ...m, feedback } : m))
 
-        // Send feedback to server
         try {
-            const userMsg = messages[messageIndex - 1] // Previous message should be user
+            const userMsg = messages[messageIndex - 1]
             await fetch(`${API}/api/feedback`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -275,13 +885,12 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                 return <CodeBlock key={idx} language={lang} code={code} />
             }
 
-            // Handle bold outside codeblocks
             const parts = block.split(/(\*\*[^*]+\*\*)/g)
             return parts.map((part, i) => {
                 if (part.startsWith('**') && part.endsWith('**')) {
                     return <strong key={`${idx}-${i}`} style={{ color: 'var(--accent)' }}>{part.slice(2, -2)}</strong>
                 }
-                // Handle inline code
+
                 const codeParts = part.split(/(`[^`]+`)/g)
                 return codeParts.map((cp, j) => {
                     if (cp.startsWith('`') && cp.endsWith('`')) {
@@ -295,7 +904,6 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
 
     return (
         <div className="ai-chat-panel">
-            {/* Header */}
             <div className="ai-chat-header">
                 <div className="ai-chat-header-left">
                     <div className="ai-chat-avatar">
@@ -327,7 +935,6 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                 </button>
             </div>
 
-            {/* Chat history */}
             <div className="ai-chat-history" ref={historyRef}>
                 {messages.map((msg, i) => {
                     if (msg.role === 'system') {
@@ -345,20 +952,129 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                     return (
                         <div key={i} className={`ai-msg-row ${msg.role}`}>
                             <div className={`ai-msg-avatar-sm ${msg.role}`}>
-                                {msg.role === 'assistant' ? '🧠' : '👤'}
+                                {msg.role === 'assistant' ? 'AI' : 'U'}
                             </div>
                             <div className="ai-msg-content">
                                 {msg.tool && (
-                                    <div style={{
-                                        fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
-                                        border: '1px solid rgba(201,127,219,0.3)', background: 'rgba(201,127,219,0.08)',
-                                        color: '#C97FDB', display: 'inline-block', marginBottom: 4
-                                    }}>
-                                        🔧 {msg.tool}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
+                                        <div style={{
+                                            fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
+                                            border: '1px solid rgba(201,127,219,0.3)', background: 'rgba(201,127,219,0.08)',
+                                            color: '#C97FDB', display: 'inline-block'
+                                        }}>
+                                            {msg.tool}
+                                        </div>
+                                        {typeof msg.confidence === 'number' && (
+                                            <div style={{
+                                                fontSize: 10,
+                                                fontWeight: 700,
+                                                padding: '1px 6px',
+                                                borderRadius: 8,
+                                                border: '1px solid rgba(74,158,255,0.25)',
+                                                background: 'rgba(74,158,255,0.08)',
+                                                color: 'var(--accent)',
+                                            }}>
+                                                {msg.confidence}% confidence
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                                 <div className={`ai-bubble ${msg.role}`}>
                                     {formatContent(msg.content)}
+                                    {msg.analysis && msg.analysis.steps.length > 0 && (
+                                        <AnalysisBlock analysis={msg.analysis} />
+                                    )}
+                                    {msg.proposedCode && (
+                                        <div style={{ marginTop: 12 }}>
+                                            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                                                Proposed Code {msg.targetFile ? `for ${msg.targetFile}` : ''}
+                                            </div>
+                                            <CodeBlock
+                                                code={msg.proposedCode}
+                                                language={msg.targetFile?.split('.').pop() || 'code'}
+                                                showApplyButton={Boolean(msg.validation?.status === 'ok' && msg.targetPath && msg.appliedContent)}
+                                                onApply={msg.validation?.status === 'ok' && msg.targetPath && msg.appliedContent
+                                                    ? () => applyReviewedPatch(msg)
+                                                    : undefined}
+                                                applyLabel={msg.validation?.status === 'ok' && msg.targetPath && msg.appliedContent ? 'Apply Reviewed Patch' : 'Apply'}
+                                                applyTitle={msg.validation?.status === 'ok' && msg.targetPath && msg.appliedContent
+                                                    ? 'Apply the validated and reviewed patch to the target file'
+                                                    : 'Apply to Active File'}
+                                            />
+                                        </div>
+                                    )}
+                                    {msg.validation && (
+                                        <div style={{
+                                            marginTop: 12,
+                                            border: '1px solid var(--border)',
+                                            borderRadius: 8,
+                                            padding: 10,
+                                            background: 'rgba(0,0,0,0.15)',
+                                        }}>
+                                            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                                                Validation
+                                            </div>
+                                            <div style={{ fontSize: 12, color: 'var(--text)' }}>
+                                                Status: {msg.validation.status || 'unknown'}
+                                            </div>
+                                            {msg.validation.summary && (
+                                                <div style={{ fontSize: 12, color: 'var(--text)', marginTop: 4, whiteSpace: 'pre-wrap' }}>
+                                                    {msg.validation.summary}
+                                                </div>
+                                            )}
+                                            {msg.validation.command && (
+                                                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
+                                                    Command: <code className="inline-code">{msg.validation.command}</code>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                    {msg.flowSections && msg.flowSections.length > 0 && (
+                                        <FlowSectionsBlock sections={msg.flowSections} />
+                                    )}
+                                    {msg.findings && msg.findings.length > 0 && (
+                                        <ReviewFindingsBlock findings={msg.findings} />
+                                    )}
+                                    {msg.testGaps && msg.testGaps.length > 0 && (
+                                        <div style={{ marginTop: 12 }}>
+                                            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                                                Test Gaps
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                {msg.testGaps.map((gap, gapIndex) => (
+                                                    <div
+                                                        key={`${gap}-${gapIndex}`}
+                                                        style={{
+                                                            fontSize: 12,
+                                                            color: 'var(--text)',
+                                                            background: 'rgba(0,0,0,0.15)',
+                                                            border: '1px solid var(--border)',
+                                                            borderRadius: 8,
+                                                            padding: 10,
+                                                        }}
+                                                    >
+                                                        {gap}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {msg.command && (
+                                        <ActionPreview
+                                            label="PROPOSED COMMAND"
+                                            value={msg.command}
+                                            buttonLabel="Send to Terminal"
+                                            onRun={() => window.dispatchEvent(new CustomEvent('run-terminal-command', { detail: { cmd: msg.command } }))}
+                                        />
+                                    )}
+                                    {msg.browserUrl && (
+                                        <ActionPreview
+                                            label="PROPOSED LINK"
+                                            value={msg.browserUrl}
+                                            buttonLabel="Open Browser"
+                                            onRun={() => window.dispatchEvent(new CustomEvent('ai-open-browser', { detail: { url: msg.browserUrl } }))}
+                                        />
+                                    )}
                                 </div>
                                 <div style={{
                                     display: 'flex', alignItems: 'center', gap: 8, marginTop: 4,
@@ -407,7 +1123,7 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
 
                 {isTyping && (
                     <div className="ai-msg-row">
-                        <div className="ai-msg-avatar-sm assistant">🧠</div>
+                        <div className="ai-msg-avatar-sm assistant">AI</div>
                         <div className="ai-typing">
                             <div className="dot" /><div className="dot" /><div className="dot" />
                         </div>
@@ -415,7 +1131,6 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                 )}
             </div>
 
-            {/* Quick actions */}
             <div style={{
                 display: 'flex', gap: 4, padding: '6px 16px', overflowX: 'auto',
                 flexShrink: 0, scrollbarWidth: 'none'
@@ -441,7 +1156,6 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                 ))}
             </div>
 
-            {/* Input */}
             <div className="ai-input-area">
                 <div className="ai-input-box">
                     <button className="ai-input-action" title="Attach file">
@@ -450,7 +1164,7 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                     <input
                         type="text"
                         className="ai-input-field"
-                        placeholder={serverStatus === 'online' ? 'Ask AI anything...' : 'AI Engine offline — type a message...'}
+                        placeholder={serverStatus === 'online' ? 'Ask AI anything...' : 'AI Engine offline - type a message...'}
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
@@ -468,7 +1182,7 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                 <div style={{
                     textAlign: 'center', fontSize: 10, color: 'var(--text-faint)', marginTop: 6
                 }}>
-                    Neural Studio AI · Powered by 1,046 compression advisors
+                    Neural Studio AI · Local C++ brain through Python connector
                 </div>
             </div>
         </div>

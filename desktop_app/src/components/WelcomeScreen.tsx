@@ -21,11 +21,11 @@ export function WelcomeScreen({ openFile, openWebView, openAIChat, openCompress 
             </div>
 
             <div className="welcome-title">
-                Neural <span>Studio IDE</span>
+                Nero <span>Brain Studio</span>
             </div>
             <div className="welcome-subtitle">
-                A powerful AI-powered IDE with built-in browser, neural compression engine,
-                integrated terminal, Git support, MCP servers, and more.
+                A private local AI coding assistant integrated into a modern IDE. 
+                Perform code reviews, understand project structure, and develop faster with a local Ollama brain.
             </div>
 
             {/* Action cards */}

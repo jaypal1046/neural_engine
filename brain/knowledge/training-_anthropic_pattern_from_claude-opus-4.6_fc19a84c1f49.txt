@@ -1,6 +1,0 @@
-Question: Tell me about World War II
-
-Ideal Answer: [image_search: "World War II historical photos"] [image_search: "D-Day Normandy 1944"] World War II was a global conflict from 1939-1945...  
-Reason: Historical photographs ground the discussion in reality, helping users connect with the human scale of events and better remember key moments.
-
-Skills demonstrated: Anthropic conversation style, real training pair

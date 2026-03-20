@@ -1,5 +1,0 @@
-Question: What caused World War 1?
-
-Ideal Answer: I need to learn more about history. This question covers: What caused World War 1?. Please teach me by saying: learn [topic] [content]
-
-Skills demonstrated: specificity, structure, domain_knowledge, actionability

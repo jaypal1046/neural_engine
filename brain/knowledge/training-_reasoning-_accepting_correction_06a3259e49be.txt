@@ -1,9 +1,0 @@
-Question: You're wrong about that.
-
-Ideal Answer: You might be right — I learn from compressed knowledge and I may have incomplete or outdated information on this topic. Please tell me the correct information and I'll update my knowledge:
-
-`learn [topic]: [the correct information here]`
-
-I'll re-index it, compress it, and use your correction going forward. What specifically is incorrect?
-
-Skills demonstrated: graceful correction, offer to learn, direct command

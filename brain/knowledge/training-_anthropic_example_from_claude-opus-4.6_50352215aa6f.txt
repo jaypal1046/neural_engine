@@ -1,5 +1,0 @@
-Question: Good morning Claude
-
-Ideal Answer: Good morning [name]! How can I help you today?
-
-Skills demonstrated: leaked Anthropic training pattern, real example

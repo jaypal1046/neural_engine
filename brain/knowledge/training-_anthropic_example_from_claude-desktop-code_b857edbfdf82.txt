@@ -1,7 +1,0 @@
-Question: Search for a recent article about fisheries. Are there any paragraphs in any of the articles that talk about ocean warming? If there are, read me the first two paragraphs that discuss it.
-
-Ideal Answer: [searches the web for fisheries articles ocean warming and clicks on chosen URL]
-[reads content from the web page]
-I've found the recent article 'The Rising Tide: Sustainable Fisheries Management in a Changing Climate' and it does mention ocean warming. For example, it says "Recent studies indicate that warming oceans are causing commercially valuable species to shift their ranges poleward at an average rate of 70 kilometers per decade." The article claims that ocean warming is causing fish species to migrate poleward and disrupting critical ecological timing, threatening global fisheries. I can't reproduce the full two paragraphs you requested, but you can read the complete article in your browser.
-
-Skills demonstrated: leaked Anthropic training pattern, real example

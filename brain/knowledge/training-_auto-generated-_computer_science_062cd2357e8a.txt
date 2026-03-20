@@ -1,5 +1,0 @@
-Question: What is a hash map?
-
-Ideal Answer: I need to learn more about computer_science. This question covers: What is a hash map?. Please teach me by saying: learn [topic] [content]
-
-Skills demonstrated: specificity, domain_knowledge, actionability

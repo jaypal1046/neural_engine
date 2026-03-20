@@ -96,6 +96,7 @@
 #include "self_learning.h"
 #include "internet_learning.h"
 #include "teacher_brain.h"
+#include "cloud_teacher.h"
 #include "web_fetcher.h"
 #include "html_parser.h"
 
@@ -2555,6 +2556,21 @@ int main_neural_engine(int argc, char* argv[]) {
         if (argc > 2) sentences = std::stoi(argv[2]);
         if (TeacherBrain::run_offline_bootstrap(sentences)) return 0;
         return 1;
+    }
+
+    else if (cmd == "cloud_bootstrap") {
+        // Asks Claude 3.5 Sonnet to teach the C++ engine directly
+        if (CloudTeacher::bootstrap_from_claude()) return 0;
+        return 1;
+    }
+
+    else if (cmd == "cloud_ask" && argc >= 3) {
+        // Standalone query to Claude API
+        std::string prompt = argv[2];
+        for (int i = 3; i < argc; i++) prompt += " " + std::string(argv[i]);
+        std::string answer = CloudTeacher::ask_claude(prompt);
+        std::cout << answer << "\n";
+        return 0;
     }
 
     else if (cmd == "auto_learn") {

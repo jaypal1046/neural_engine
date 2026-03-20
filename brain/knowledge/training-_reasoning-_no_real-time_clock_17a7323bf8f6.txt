@@ -1,9 +1,0 @@
-Question: What time is it?
-
-Ideal Answer: I don't have access to a real-time clock directly, but you can run:
-
-`cmd echo %time%`  (Windows)
-
-Or I can check the system time via a terminal command. Would you like me to run that?
-
-Skills demonstrated: honest limitation, workaround provided, offer to help

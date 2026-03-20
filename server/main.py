@@ -30,14 +30,113 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
 import subprocess
 import hashlib
 import math
+import shlex
+import tempfile
 import time
+import threading
 from collections import Counter
-from fastapi import FastAPI
+from typing import Optional, List, Any
+from pathlib import Path
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from pydantic import BaseModel
-from typing import Optional
+import json
+import re
+import requests
+from urllib.parse import quote
+try:
+    from .llm_adapter import OllamaAdapter
+except ImportError:
+    try:
+        from llm_adapter import OllamaAdapter
+    except ImportError:
+        OllamaAdapter = None
+
+try:
+    from .agent_orchestrator import NeroAgentOrchestrator
+except ImportError:
+    try:
+        from agent_orchestrator import NeroAgentOrchestrator
+    except ImportError:
+        NeroAgentOrchestrator = None
+try:
+    from .context_provider import ContextProvider
+except ImportError:
+    try:
+        from context_provider import ContextProvider
+    except ImportError:
+        ContextProvider = None
+try:
+    from .task_intelligence import LocalTaskIntelligence
+except ImportError:
+    try:
+        from task_intelligence import LocalTaskIntelligence
+    except ImportError:
+        LocalTaskIntelligence = None
+try:
+    from .code_graph_engine import CodeGraphEngine
+except ImportError:
+    try:
+        from code_graph_engine import CodeGraphEngine
+    except ImportError:
+        CodeGraphEngine = None
+try:
+    from .review_pipeline import (
+        is_review_request,
+        patch_review_system_prompt,
+        normalize_patch_review_response,
+        review_system_prompt,
+        normalize_review_response,
+        format_review_markdown,
+    )
+except ImportError:
+    try:
+        from review_pipeline import (
+            is_review_request,
+            patch_review_system_prompt,
+            normalize_patch_review_response,
+            review_system_prompt,
+            normalize_review_response,
+            format_review_markdown,
+        )
+    except ImportError:
+        is_review_request = None
+        patch_review_system_prompt = None
+        normalize_patch_review_response = None
+        review_system_prompt = None
+        normalize_review_response = None
+        format_review_markdown = None
+try:
+    from .modify_pipeline import (
+        modify_system_prompt,
+        build_impact_brief,
+        extract_json_object as extract_modify_json,
+        apply_selection_to_text,
+        build_unified_diff,
+        validate_candidate_change,
+        format_modify_markdown,
+    )
+except ImportError:
+    try:
+        from modify_pipeline import (
+            modify_system_prompt,
+            build_impact_brief,
+            extract_json_object as extract_modify_json,
+            apply_selection_to_text,
+            build_unified_diff,
+            validate_candidate_change,
+            format_modify_markdown,
+        )
+    except ImportError:
+        modify_system_prompt = None
+        build_impact_brief = None
+        extract_modify_json = None
+        apply_selection_to_text = None
+        build_unified_diff = None
+        validate_candidate_change = None
+        format_modify_markdown = None
 
 app = FastAPI(title="Neural Studio V10 Server", version="10.0.0")
 
@@ -493,16 +592,142 @@ def decompress_stream(payload: DecompressRequest):
         headers={"X-Content-Type-Options": "nosniff", "Cache-Control": "no-cache"}
     )
 
+# ============================================
+# SECURITY: Workspace Path Validation
+# ============================================
+WORKSPACE_ROOT = os.path.realpath(BASE_DIR)
+SAFE_COMMANDS = {
+    "git",
+    "python",
+    "python3",
+    "py",
+    "pytest",
+    "node",
+    "npm",
+    "npx",
+    "cmake",
+    "ctest",
+    "g++",
+    "clang++",
+    "ollama",
+}
+SHELL_METACHARS = {"&&", "||", ";", "|", ">", "<", "$(", "`"}
+MAX_CHAT_HISTORY = 8
+
+
+def is_within_workspace(path_str: str) -> bool:
+    """Return True when the resolved path stays inside the workspace root."""
+    try:
+        resolved = os.path.realpath(os.path.abspath(os.path.expanduser(path_str)))
+        return os.path.commonpath([WORKSPACE_ROOT, resolved]) == WORKSPACE_ROOT
+    except ValueError:
+        return False
+
+
+def validate_path(path_str: str) -> str:
+    """Ensure paths stay within the authorized workspace root."""
+    if not path_str:
+        raise HTTPException(status_code=400, detail="Path cannot be empty")
+
+    resolved = os.path.realpath(os.path.abspath(os.path.expanduser(path_str)))
+    if not is_within_workspace(resolved):
+        print(f"[SECURITY] Path traversal attempt blocked: {resolved}", flush=True)
+        raise HTTPException(status_code=403, detail=f"Access denied: {path_str} is outside workspace")
+    return resolved
+
+
+def format_chat_history(history: list["ChatMessage"]) -> str:
+    """Format the most recent chat history for the C++ brain."""
+    recent_messages = history[-4:]
+    if not recent_messages:
+        return ""
+
+    lines = []
+    for msg in recent_messages:
+        role = (msg.role or "user").strip().lower()
+        content = (msg.content or "").strip()
+        if not content:
+            continue
+        compact = re.sub(r"\s+", " ", content)
+        if len(compact) > 240:
+            compact = compact[:240] + "..."
+        lines.append(f"{role.upper()}: {compact}")
+    return "\n".join(lines)
+
+
+def build_agent_task(req: "ChatRequest", task_prep: Optional[dict[str, Any]] = None) -> str:
+    """Build the connector payload sent to the C++ brain."""
+    user_message = req.message.strip()
+    if "User request:\n" in user_message:
+        user_message = user_message.split("User request:\n", 1)[1].strip()
+
+    history_block = format_chat_history(req.history)
+    if not history_block and not req.web_search:
+        return user_message
+
+    sections = []
+    if history_block:
+        sections.extend([
+            "Recent conversation:",
+            history_block,
+            "",
+        ])
+    if req.web_search:
+        sections.extend([
+            "Web assistance is enabled if needed.",
+            "",
+        ])
+    if task_prep and task_prep.get("analysis_summary"):
+        sections.extend([
+            "Local workspace preparation:",
+            task_prep["analysis_summary"],
+            "",
+        ])
+    sections.extend([
+        "Current request:",
+        user_message,
+    ])
+    return "\n".join(sections).strip()
+
 @app.post("/api/cmd")
 def run_command(payload: CommandRequest):
+    """
+    SECURITY: Run only explicitly allowed local development commands.
+    """
     try:
-        result = subprocess.run(payload.command, shell=True, capture_output=True, text=True)
+        cmd_args = shlex.split(payload.command)
+        if not cmd_args:
+            raise HTTPException(status_code=400, detail="Command cannot be empty")
+
+        lowered = payload.command.lower()
+        if any(token in payload.command for token in SHELL_METACHARS):
+            raise HTTPException(status_code=403, detail="Shell chaining and redirection are blocked")
+
+        dangerous = ["rm ", "rmdir ", "del ", "format", "mkfs", "dd ", "shutdown", "taskkill /f"]
+        if any(token in lowered for token in dangerous):
+            raise HTTPException(status_code=403, detail="Dangerous command blocked")
+
+        program_path = Path(cmd_args[0])
+        program = program_path.stem.lower() if program_path.suffix.lower() == ".exe" else program_path.name.lower()
+        if program not in SAFE_COMMANDS:
+            raise HTTPException(status_code=403, detail=f"Command '{program}' is not allowed")
+
+        result = subprocess.run(
+            cmd_args,
+            shell=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=WORKSPACE_ROOT,
+        )
         return {
             "status": "success",
             "stdout": result.stdout,
             "stderr": result.stderr,
             "code": result.returncode
         }
+    except HTTPException as he:
+        raise he
     except Exception as e:
         return {"error": str(e)}
 
@@ -539,45 +764,49 @@ class DeleteFileRequest(BaseModel):
 
 @app.post("/api/fs/write")
 def fs_write_file(payload: WriteFileRequest):
-    """Write or append text to a file."""
-    path = os.path.expanduser(payload.path)
+    """Write or append text to a file within workspace bounds."""
     try:
+        path = validate_path(payload.path)
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
         mode = "a" if payload.append else "w"
         with open(path, mode, encoding="utf-8") as f:
             f.write(payload.content)
-        return {"status": "success", "message": f"Written successfully to {path}"}
+        return {"status": "success", "message": f"Written successfully to {payload.path}"}
+    except HTTPException as he:
+        raise he
     except Exception as e:
         return {"error": str(e)}
 
 import shutil
 @app.post("/api/fs/delete")
 def fs_delete_file(payload: DeleteFileRequest):
-    """Delete a file or directory."""
-    path = os.path.expanduser(payload.path)
-    if not os.path.exists(path):
-        return {"error": f"Path not found: {path}"}
+    """Delete a file or directory within workspace bounds."""
     try:
+        path = validate_path(payload.path)
+        if not os.path.exists(path):
+            return {"error": f"Path not found: {payload.path}"}
+        
         if os.path.isdir(path):
             shutil.rmtree(path)
         else:
             os.remove(path)
-        return {"status": "success", "message": f"Deleted {path}"}
+        return {"status": "success", "message": f"Deleted {payload.path}"}
+    except HTTPException as he:
+        raise he
     except Exception as e:
         return {"error": str(e)}
 
 @app.post("/api/fs/list")
 def fs_list_dir(payload: ListDirRequest):
     """List contents of a directory. Defaults to project root."""
-    target = payload.path or BASE_DIR
-    target = os.path.expanduser(target)
-    
-    if not os.path.exists(target):
-        return {"error": f"Path not found: {target}"}
-    if not os.path.isdir(target):
-        return {"error": f"Not a directory: {target}"}
-    
     try:
+        target = validate_path(payload.path or BASE_DIR)
+        
+        if not os.path.exists(target):
+            return {"error": f"Path not found: {payload.path}"}
+        if not os.path.isdir(target):
+            return {"error": f"Not a directory: {payload.path}"}
+
         items = []
         for name in sorted(os.listdir(target)):
             if not payload.show_hidden and name.startswith('.'):
@@ -1524,34 +1753,44 @@ async def brain_train(req: TrainRequest):
 @app.post("/api/brain/ask")
 async def brain_ask(req: AskRequest):
     """
-    Query the C++ Neural Engine brain (ai_ask = reason + RAG + memory).
-    C++ is the ONE brain — fast, accurate, no Python TF-IDF.
+    Query the C++ Agent Brain (agent_task = Reason + Act + Local Tools).
+    This gives the desktop app direct access to your local project!
     """
     if not os.path.exists(NEURAL_ENGINE_EXE):
         return {"error": "Neural engine not built. Run build command first."}
 
     try:
         import json, re
+        # Use agent_task for full autonomous capabilities
         result = subprocess.run(
-            [NEURAL_ENGINE_EXE, "ai_ask", req.question],
-            capture_output=True, text=True, timeout=30, cwd=BASE_DIR
+            [NEURAL_ENGINE_EXE, "agent_task", req.question],
+            capture_output=True, text=True, timeout=60, cwd=BASE_DIR
         )
+        
         if result.stdout:
-            cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f]', '', result.stdout).strip()
-            json_match = re.search(r'\{.*\}', cleaned, re.DOTALL)
-            if json_match:
-                br = json.loads(json_match.group())
-                answer = br.get("answer", "")
-                conf = br.get("confidence", 0.5)
-                if answer:
-                    return {
-                        "status": "success",
-                        "answer": answer,
-                        "confidence": conf,
-                        "source": "C++ Neural Engine (ai_ask)",
-                        "reasoning_steps": br.get("reasoning_steps", []),
-                        "knowledge_used": len(br.get("sources", [])),
-                    }
+            # Look for FINAL_ANSWER in the agentic output
+            output = result.stdout
+            final_match = re.search(r'FINAL_ANSWER:\s*(.*)', output, re.DOTALL)
+            
+            if final_match:
+                answer = final_match.group(1).strip()
+                return {
+                    "status": "success",
+                    "answer": answer,
+                    "confidence": 0.95,
+                    "source": "Local Agentic Brain (Ollama + Tools)",
+                    "reasoning_steps": [line.strip() for line in output.split('\n') if "Thought:" in line or "Executing" in line]
+                }
+            else:
+                # Fallback: if no FINAL_ANSWER, just return the whole output or clean it
+                answer = output.strip()
+                return {
+                    "status": "success",
+                    "answer": answer,
+                    "confidence": 0.7,
+                    "source": "Local Brain (Direct Output)"
+                }
+        
         return {"error": "no_output", "stderr": result.stderr[:500]}
     except Exception as e:
         return {"error": str(e)}
@@ -1861,12 +2100,14 @@ def initialize_ai_capabilities():
     print(f">> ✓ Loaded {loaded}/{len(aiz_files)} knowledge modules")
     print(">> ✓ AI is fully aware and ready!")
 
-if __name__ == "__main__":
+if False and __name__ == "__main__":
     ensure_vault()
     # ensure_brain() - OLD Python brain removed, using C++ neural_engine.exe now
 
+    warm_ollama_model_background()
+
     # Initialize AI self-awareness (auto-load ALL knowledge + project files)
-    initialize_ai_capabilities()
+    threading.Thread(target=initialize_ai_capabilities, daemon=True).start()
 
     # Index all project files for complete AI awareness
     print("\n>> Indexing all project files for AI awareness...")
@@ -1875,7 +2116,7 @@ if __name__ == "__main__":
         import threading
         index_thread = threading.Thread(target=dynamic_indexer.start_dynamic_indexing, daemon=True)
         index_thread.start()
-        project_indexer.load_project_files_into_ai()
+        threading.Thread(target=project_indexer.load_project_files_into_ai, daemon=True).start()
     except Exception as e:
         print(f">> ⚠ Project indexing skipped: {e}")
 
@@ -1894,7 +2135,7 @@ if __name__ == "__main__":
     print("  |   Neural Studio V10 -- AI Compression API          |")
     print("  |   C++ Neural Engine + Smart Brain + Vault          |")
     print("  +----------------------------------------------------+\n")
-    uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=False)
 
 
 # =============================================================================
@@ -1910,6 +2151,20 @@ class ChatRequest(BaseModel):
     history: list[ChatMessage] = []
     web_search: bool = False
 
+class CommandPreferenceRequest(BaseModel):
+    intent: str
+    command_name: str
+
+class GraphSymbolRequest(BaseModel):
+    symbol: str
+
+class GraphFileRequest(BaseModel):
+    path: str
+
+class GraphImpactRequest(BaseModel):
+    symbol: Optional[str] = None
+    path: Optional[str] = None
+
 class FeedbackRequest(BaseModel):
     question: str
     answer: str
@@ -1920,6 +2175,1700 @@ class FeedbackRequest(BaseModel):
 # ============================================
 # QUICK WINS: Code Quality Improvements
 # ============================================
+
+SMALL_TALK_MESSAGES = {
+    "hi",
+    "hello",
+    "hey",
+    "yo",
+    "hola",
+    "good morning",
+    "good afternoon",
+    "good evening",
+}
+FAST_HELP_MESSAGES = {
+    "help",
+    "what can you do",
+    "what do you do",
+}
+LOCAL_LOOKUP_SUMMARIES = {
+    "java": "Java is a high-level, object-oriented programming language used for backend services, Android apps, desktop tools, and large enterprise systems.",
+    "python": "Python is a high-level programming language known for readable syntax and wide use in automation, web backends, data work, and AI tooling.",
+    "javascript": "JavaScript is the main programming language of the web and is used for browser apps, Node.js servers, and many full-stack tools.",
+    "typescript": "TypeScript is JavaScript with static typing, which helps catch errors earlier and makes larger codebases easier to maintain.",
+    "react": "React is a UI library for building component-based web interfaces with reusable stateful views.",
+    "electron": "Electron packages web technologies like React and Node.js into desktop applications for Windows, macOS, and Linux.",
+    "fastapi": "FastAPI is a Python web framework for building APIs quickly with type hints, validation, and high performance.",
+    "ollama": "Ollama runs language models locally on your machine and exposes them through a local API for chat and generation.",
+    "c++": "C++ is a compiled systems language used when you need speed, memory control, and native performance.",
+    "cpp": "C++ is a compiled systems language used when you need speed, memory control, and native performance.",
+    "node": "Node.js is a JavaScript runtime used to build servers, tooling, and desktop integrations outside the browser.",
+    "node.js": "Node.js is a JavaScript runtime used to build servers, tooling, and desktop integrations outside the browser.",
+}
+
+FAST_CHAT_MODEL = os.environ.get("OLLAMA_FAST_MODEL") or os.environ.get("OLLAMA_MODEL") or "llama3:latest"
+CONTEXT_CHAT_MODEL = os.environ.get("OLLAMA_CONTEXT_MODEL") or FAST_CHAT_MODEL
+HTTP_HEADERS = {
+    "accept": "application/json",
+    "user-agent": "NeuralStudio/1.0 (local desktop assistant)",
+}
+PROJECT_TASK_KEYWORDS = {
+    "code", "project", "repo", "repository", "file", "folder", "directory", "path",
+    "class", "function", "method", "module", "component", "server", "desktop",
+    "react", "python", "c++", "cpp", "ollama", "build", "compile", "error",
+    "exception", "bug", "fix", "implement", "generate code", "review", "analyze",
+    "architecture", "refactor", "test", "tests", "diff", "patch", "workspace",
+    "src", "include", "bin", "server/main.py", "desktop_app", "neural_engine",
+}
+DEEP_AGENT_KEYWORDS = {
+    "write", "generate", "implement", "fix", "modify", "edit", "patch", "refactor",
+    "create file", "delete", "rename", "apply", "run command", "terminal", "execute",
+}
+
+
+def small_talk_reply(message: str) -> Optional[str]:
+    cleaned = re.sub(r"\s+", " ", message.strip().lower())
+    normalized = re.sub(r"[!?.,]+$", "", cleaned).strip()
+    if normalized in SMALL_TALK_MESSAGES:
+        return "Hello! I'm online and ready to help with your project, code review, or architecture questions."
+    if normalized in {"hi there", "hello there", "hey there"}:
+        return "Hello! I'm online and ready to help with your project, code review, or architecture questions."
+    if normalized in {"how are you", "how are you doing", "how's it going", "whats up", "what's up"}:
+        return "I'm online, warmed up, and ready to help with local coding, review, and project understanding."
+    if normalized in {"thanks", "thank you", "thx"}:
+        return "You're welcome. I'm here whenever you want to review code or work through the project."
+    if normalized in {"bye", "goodbye", "see you"}:
+        return "See you soon. Your local workspace context will still be here when you come back."
+    if normalized in FAST_HELP_MESSAGES:
+        return "I can explain files and functions, review code, trace project flow, propose patches, run local checks, and keep the context local."
+    return None
+
+
+def should_use_fast_chat(message: str, web_search: bool) -> bool:
+    cleaned = message.strip().lower()
+    if not cleaned:
+        return True
+
+    if web_search:
+        return False
+
+    if "\n" in message or len(message) > 220:
+        return False
+
+    if any(token in cleaned for token in ("`", "\\", "/", ".py", ".cpp", ".ts", ".tsx", ".js", ".json")):
+        return False
+
+    return not any(keyword in cleaned for keyword in PROJECT_TASK_KEYWORDS)
+
+
+def should_use_context_chat(message: str) -> bool:
+    cleaned = message.strip().lower()
+    if any(keyword in cleaned for keyword in DEEP_AGENT_KEYWORDS):
+        return False
+    return any(keyword in cleaned for keyword in PROJECT_TASK_KEYWORDS)
+
+
+def fast_chat_messages(req: "ChatRequest", user_message: str) -> list[dict[str, str]]:
+    messages: list[dict[str, str]] = []
+    for msg in req.history[-6:]:
+        if msg.role not in {"user", "assistant"}:
+            continue
+        content = (msg.content or "").strip()
+        if not content:
+            continue
+        messages.append({"role": msg.role, "content": content[:600]})
+    messages.append({"role": "user", "content": user_message})
+    return messages
+
+
+def fast_chat_system_prompt(web_search: bool, task_prep: Optional[dict[str, Any]] = None) -> str:
+    base = (
+        "You are Nero fast local chat mode inside Neural Studio. "
+        "Reply quickly and clearly in 2-5 sentences unless the user asks for more. "
+        "Do not use tool syntax, action syntax, or long reasoning traces. "
+        "If the question is about the current project files, coding changes, code review, debugging, or architecture, "
+        "say briefly that you are switching to deep project mode."
+    )
+    if web_search:
+        base += " Web mode is enabled, but prioritize a fast local answer first."
+    if task_prep and task_prep.get("analysis_summary"):
+        base += " Local task routing summary:\n" + task_prep["analysis_summary"]
+    return base
+
+
+def context_chat_system_prompt(summary: str, task_prep: Optional[dict[str, Any]] = None) -> str:
+    prompt = (
+        "You are Nero context chat mode inside Neural Studio. "
+        "Answer using the provided workspace context first. "
+        "Be concrete, do not invent files, and say when context is incomplete. "
+        "Keep the answer clear and practical. "
+        f"{summary}"
+    )
+    if task_prep and task_prep.get("analysis_summary"):
+        prompt += "\n\nLocal task preparation:\n" + task_prep["analysis_summary"]
+    return prompt
+
+
+def extract_lookup_query(message: str) -> Optional[str]:
+    cleaned = re.sub(r"\s+", " ", message.strip())
+    lowered = cleaned.lower()
+    prefixes = ["what is ", "who is ", "what are ", "explain ", "tell me about "]
+    for prefix in prefixes:
+        if lowered.startswith(prefix):
+            return cleaned[len(prefix):].strip(" ?.")
+    return cleaned if len(cleaned.split()) <= 5 else None
+
+
+def quick_local_lookup_summary(message: str) -> Optional[str]:
+    query = extract_lookup_query(message)
+    if not query:
+        return None
+
+    normalized = query.strip().lower()
+    aliases = {
+        "nodejs": "node.js",
+        "node js": "node.js",
+        "js": "javascript",
+        "ts": "typescript",
+    }
+    normalized = aliases.get(normalized, normalized)
+    return LOCAL_LOOKUP_SUMMARIES.get(normalized)
+
+
+def quick_web_summary(message: str) -> Optional[str]:
+    query = extract_lookup_query(message)
+    if not query:
+        return None
+
+    try:
+        lowered = message.lower()
+        if query.lower() == "java" and any(term in lowered for term in ("code", "program", "language", "java")):
+            summary_resp = requests.get(
+                "https://en.wikipedia.org/api/rest_v1/page/summary/Java_(programming_language)",
+                timeout=6,
+                headers=HTTP_HEADERS,
+            )
+            summary_resp.raise_for_status()
+            summary = summary_resp.json()
+            extract = (summary.get("extract") or "").strip()
+            if extract:
+                return extract[:420] if len(extract) <= 420 else extract[:420].rsplit(" ", 1)[0] + "..."
+
+        duck = requests.get(
+            "https://api.duckduckgo.com/",
+            params={"q": query, "format": "json", "no_html": 1, "skip_disambig": 1},
+            timeout=5,
+            headers=HTTP_HEADERS,
+        )
+        duck.raise_for_status()
+        duck_data = duck.json()
+        extract = (duck_data.get("AbstractText") or "").strip()
+        if extract:
+            if len(extract) > 420:
+                extract = extract[:420].rsplit(" ", 1)[0] + "..."
+            return extract
+
+        search_resp = requests.get(
+            "https://en.wikipedia.org/w/api.php",
+            params={
+                "action": "opensearch",
+                "search": query,
+                "limit": 1,
+                "namespace": 0,
+                "format": "json",
+            },
+            timeout=5,
+        )
+        search_resp.raise_for_status()
+        data = search_resp.json()
+        titles = data[1] if isinstance(data, list) and len(data) > 1 else []
+        if not titles:
+            return None
+
+        title = titles[0]
+        summary_resp = requests.get(
+            f"https://en.wikipedia.org/api/rest_v1/page/summary/{quote(title)}",
+            timeout=5,
+            headers=HTTP_HEADERS,
+        )
+        summary_resp.raise_for_status()
+        summary = summary_resp.json()
+        extract = (summary.get("extract") or "").strip()
+        if not extract:
+            return None
+
+        if len(extract) > 420:
+            extract = extract[:420].rsplit(" ", 1)[0] + "..."
+        return extract
+    except Exception:
+        return None
+
+
+def build_context_fallback_answer(user_message: str, context: dict[str, Any], return_payload: bool = False) -> Any:
+    sources = context.get("sources", [])
+    project_overview = str(context.get("project_overview", "") or "").strip()
+    lowered = user_message.lower()
+
+    def _finalize(
+        response: str,
+        *,
+        override_sources: Optional[list[dict[str, Any]]] = None,
+        override_flow_sections: Optional[list[dict[str, Any]]] = None,
+    ) -> Any:
+        payload = {
+            "response": response.strip(),
+            "sources": override_sources if override_sources is not None else sources,
+            "flow_sections": override_flow_sections if override_flow_sections is not None else context.get("flow_sections", []),
+        }
+        return payload if return_payload else payload["response"]
+
+    is_project_overview_request = any(
+        phrase in lowered
+        for phrase in (
+            "about project",
+            "about this project",
+            "tell me about project",
+            "tell me about the project",
+            "explain this project",
+            "project structure",
+            "project architecture",
+        )
+    )
+
+    def _extract_explicit_paths() -> list[str]:
+        explicit_paths: list[str] = []
+        for match in re.findall(
+            r"[\w./\\-]+\.(?:cpp|h|hpp|hh|py|ts|tsx|js|jsx|json|md|txt)\b",
+            user_message,
+            re.IGNORECASE,
+        ):
+            normalized = match.replace("\\", "/").lstrip("./")
+            if "/" in normalized and normalized not in explicit_paths:
+                explicit_paths.append(normalized)
+        return explicit_paths[:3]
+
+    def _extract_symbol_candidates() -> list[str]:
+        candidates: list[str] = []
+        for pattern in (
+            r"`([A-Za-z_][A-Za-z0-9_]*)`",
+            r"\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)",
+            r"\bmethod\s+([A-Za-z_][A-Za-z0-9_]*)",
+            r"\bclass\s+([A-Za-z_][A-Za-z0-9_]*)",
+            r"\b([A-Za-z_][A-Za-z0-9_]*)\s*\(",
+        ):
+            for match in re.findall(pattern, user_message):
+                if match not in candidates:
+                    candidates.append(match)
+
+        for token in re.findall(r"\b[A-Za-z_][A-Za-z0-9_]{2,}\b", user_message):
+            lowered_token = token.lower()
+            if lowered_token in {
+                "tell", "about", "project", "file", "used", "where", "does", "what",
+                "this", "that", "current", "called", "function", "method", "class",
+                "explain", "summarize", "describe", "show", "flow", "architecture",
+            }:
+                continue
+            if ("_" in token or any(ch.isupper() for ch in token[1:])) and token not in candidates:
+                candidates.append(token)
+
+        for source in sources:
+            reason = str(source.get("reason") or "")
+            for prefix in ("symbol:", "symbol-flow-definition:", "symbol-flow-reference:"):
+                if prefix in reason:
+                    candidate = reason.split(prefix, 1)[1].split(",", 1)[0].strip()
+                    if candidate and candidate not in candidates:
+                        candidates.append(candidate)
+
+        for section in context.get("flow_sections", []) or []:
+            if str(section.get("type") or "").lower() == "symbol":
+                title = str(section.get("title") or "").strip()
+                if title and title not in candidates:
+                    candidates.append(title)
+
+        return candidates[:6]
+
+    def _is_architecture_flow_query() -> bool:
+        flow_words = ("flow", "path", "route", "pipeline", "journey")
+        if not any(word in lowered for word in flow_words):
+            return False
+        component_groups = (
+            ("ui", "react", "electron", "desktop"),
+            ("server", "python", "api", "backend"),
+            ("c++", "cpp", "brain", "engine", "neural_engine"),
+            ("ollama", "model", "llm"),
+        )
+        return sum(1 for group in component_groups if any(token in lowered for token in group)) >= 2
+
+    def _build_architecture_flow_payload() -> Optional[dict[str, Any]]:
+        if not _is_architecture_flow_query():
+            return None
+
+        def find_marker_line(rel_path: str, marker: str, occurrence: str = "last") -> int:
+            try:
+                text = (Path(BASE_DIR) / rel_path).read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                return 1
+            first_match = 1
+            last_match = 1
+            for line_number, line in enumerate(text.splitlines(), start=1):
+                if marker.lower() in line.lower():
+                    if first_match == 1:
+                        first_match = line_number
+                    last_match = line_number
+            return first_match if occurrence == "first" else last_match
+
+        entries: list[dict[str, Any]] = []
+        flow_sources: list[dict[str, Any]] = []
+
+        def add_entry(label: str, path: str, marker: str, snippet: str, kind: str = "flow", occurrence: str = "last") -> None:
+            line_number = find_marker_line(path, marker, occurrence=occurrence)
+            entries.append({
+                "label": label,
+                "path": path,
+                "line_start": line_number,
+                "line_end": line_number,
+                "kind": kind,
+                "snippet": snippet,
+            })
+            flow_sources.append({
+                "path": path,
+                "line_start": line_number,
+                "line_end": line_number,
+                "reason": f"architecture-flow:{label.lower().replace(' ', '-')}",
+            })
+
+        add_entry(
+            "UI sends chat request",
+            "desktop_app/src/components/AIChatPanel.tsx",
+            "/api/chat",
+            "The React chat panel sends the user message to the local FastAPI connector with fetch(`${API}/api/chat`, ...).",
+        )
+        add_entry(
+            "Python API receives chat",
+            "server/main.py",
+            "async def chat(req: ChatRequest):",
+            "FastAPI receives the message at /api/chat and becomes the local coordinator for routing and context prep.",
+        )
+        add_entry(
+            "Router chooses local chat path",
+            "server/main.py",
+            'elif route == "context_chat":',
+            "The Python router decides whether the request should use fast chat, context chat, review, modify, or generation mode.",
+        )
+        add_entry(
+            "Python talks to Ollama",
+            "server/llm_adapter.py",
+            "/api/chat",
+            "For the normal local LLM path, OllamaAdapter posts the prepared chat payload to the local Ollama HTTP API.",
+        )
+        add_entry(
+            "Optional deep agent path",
+            "server/main.py",
+            "Use agent_task for full autonomous capabilities",
+            "For heavier agentic work, Python can invoke bin/neural_engine.exe so the C++ brain handles reasoning and tools first.",
+            occurrence="first",
+        )
+        add_entry(
+            "C++ brain can call Ollama natively",
+            "src/agent_brain.cpp",
+            "const auto direct_response = query_ollama_local(prompt);",
+            "Inside the native brain path, the C++ agent has its own local Ollama bridge and can call the Ollama API directly.",
+        )
+
+        lines = [
+            "Here is the local flow from UI to Ollama.",
+            "",
+            "Normal chat path:",
+            "1. The React/Electron UI sends the message from `desktop_app/src/components/AIChatPanel.tsx` to the local `/api/chat` endpoint.",
+            "2. `server/main.py` receives that request and routes it into the right local mode such as fast chat, context chat, review, modify, or generate.",
+            "3. For the usual chat path, `server/llm_adapter.py` sends the prepared request to the local Ollama API, so the model answer stays on your machine.",
+            "",
+            "Deeper agent path:",
+            "4. For more agentic or tool-heavy work, the Python connector can invoke `bin/neural_engine.exe` from `server/main.py`.",
+            "5. In that path, `src/agent_brain.cpp` can query Ollama through its native local bridge, so the C++ brain can still use local models directly.",
+            "",
+            "In short: UI -> Python API/router -> Ollama for normal chat, with an optional UI -> Python -> C++ brain -> Ollama path for deeper local tasks.",
+        ]
+
+        return {
+            "response": "\n".join(lines).strip(),
+            "sources": flow_sources,
+            "flow_sections": [{
+                "type": "file",
+                "title": "UI -> Ollama",
+                "summary": "End-to-end local message flow from the desktop UI through the Python router and into local Ollama, with the optional C++ agent branch.",
+                "entries": entries,
+            }],
+        }
+
+    architecture_flow_payload = _build_architecture_flow_payload()
+    if architecture_flow_payload:
+        return _finalize(
+            architecture_flow_payload["response"],
+            override_sources=architecture_flow_payload["sources"],
+            override_flow_sections=architecture_flow_payload["flow_sections"],
+        )
+
+    if project_overview and is_project_overview_request:
+        if CODE_GRAPH_ENGINE is not None:
+            try:
+                overview = CODE_GRAPH_ENGINE.architecture_overview()
+            except Exception:
+                overview = None
+            if overview:
+                narrative = [str(line).strip() for line in (overview.get("narrative") or []) if str(line).strip()]
+                folders = overview.get("folders") or []
+                lines = [
+                    "Here is a fast local explanation of this project from the code graph.",
+                    "",
+                ]
+                if narrative:
+                    lines.extend(narrative[:5])
+                if any(folder.get("folder") == "desktop_app/src" for folder in folders) and any(
+                    folder.get("folder") == "server" for folder in folders
+                ) and any(folder.get("folder") == "src" for folder in folders):
+                    lines.append(
+                        "The main runtime flow is: React/Electron desktop UI -> Python server/connector -> C++ brain/engine -> local Ollama models."
+                    )
+                top_folders = [folder for folder in folders[:5] if folder.get("folder")]
+                if top_folders:
+                    lines.extend(["", "Main folders:"])
+                    for folder in top_folders:
+                        sample_files = [sample for sample in (folder.get("sample_files") or []) if sample][:2]
+                        detail = f"- `{folder['folder']}` has about {folder.get('file_count', 0)} indexed files"
+                        if sample_files:
+                            detail += f" such as {', '.join(sample_files)}"
+                        detail += "."
+                        lines.append(detail)
+                return _finalize("\n".join(lines).strip())
+
+        return _finalize(
+            "Here is a fast local explanation from the indexed project context.\n\n"
+            f"{project_overview.replace('PROJECT OVERVIEW:\\n', '')}"
+        )
+
+    if not sources and project_overview:
+        return _finalize(
+            "Here is a fast local explanation from the indexed project context.\n\n"
+            + project_overview.replace("PROJECT OVERVIEW:\n", "")
+        )
+
+    if not sources:
+        return _finalize("I could not find enough relevant local project context for that question.")
+    workspace_summary = str(context.get("workspace_summary", "") or "")
+    primary_path = str(sources[0].get("path") or "")
+    explicit_paths = _extract_explicit_paths()
+    if explicit_paths:
+        primary_path = explicit_paths[0]
+
+    concise_summary_lines = []
+    for line in workspace_summary.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("Workspace has "):
+            concise_summary_lines.append(stripped)
+        elif stripped.startswith("Active editor target:"):
+            active_target = stripped.split("Active editor target:", 1)[1].strip()
+            if primary_path and primary_path in active_target:
+                concise_summary_lines.append(stripped)
+
+    def _read_local_file(rel_path: str) -> str:
+        try:
+            return (Path(BASE_DIR) / rel_path).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return ""
+
+    def _extract_comment_summary(rel_path: str) -> str:
+        text = _read_local_file(rel_path)
+        if not text:
+            return ""
+
+        lines = text.splitlines()
+        collected: list[str] = []
+        in_block = False
+        started = False
+        for raw_line in lines[:120]:
+            stripped = raw_line.strip()
+            if not stripped and not started:
+                continue
+            if stripped.startswith("#include") or stripped.startswith("import ") or stripped.startswith("from "):
+                if not started:
+                    continue
+            if stripped.startswith("/*"):
+                in_block = True
+                started = True
+                stripped = stripped[2:].strip()
+            if in_block:
+                if "*/" in stripped:
+                    before, _, _ = stripped.partition("*/")
+                    stripped = before.strip()
+                    in_block = False
+                stripped = stripped.lstrip("*").strip()
+                if stripped:
+                    collected.append(stripped)
+                if not in_block and collected:
+                    break
+                continue
+            if stripped.startswith("//"):
+                started = True
+                stripped = stripped[2:].strip()
+                if stripped:
+                    collected.append(stripped)
+                continue
+            if started:
+                break
+
+        if not collected:
+            return ""
+
+        filtered = []
+        for line in collected:
+            if re.fullmatch(r"[-=]{4,}", line):
+                continue
+            if line not in filtered:
+                filtered.append(line)
+            if len(filtered) >= 4:
+                break
+
+        summary = " ".join(filtered).strip()
+        if len(summary) > 260:
+            summary = summary[:260].rsplit(" ", 1)[0] + "..."
+        return summary
+
+    def _format_file_overview(rel_path: str) -> list[str]:
+        text = _read_local_file(rel_path)
+        if not text:
+            return []
+
+        lines = text.splitlines()
+        non_empty = [line.strip() for line in lines if line.strip()]
+        preview = ""
+        for candidate in non_empty:
+            if candidate in {'"""', "'''", '/*', '*/'}:
+                continue
+            if candidate.startswith(("//", "#", "*")):
+                continue
+            if candidate.startswith(("#include", "import ", "from ")):
+                continue
+            preview = candidate
+            break
+
+        import_count = 0
+        function_names: list[str] = []
+        class_names: list[str] = []
+
+        suffix = Path(rel_path).suffix.lower()
+        for line in lines:
+            stripped = line.strip()
+            if suffix == ".py":
+                if stripped.startswith(("import ", "from ")):
+                    import_count += 1
+                func_match = re.match(r"def\s+([A-Za-z_][A-Za-z0-9_]*)", stripped)
+                class_match = re.match(r"class\s+([A-Za-z_][A-Za-z0-9_]*)", stripped)
+                if func_match and func_match.group(1) not in function_names:
+                    function_names.append(func_match.group(1))
+                if class_match and class_match.group(1) not in class_names:
+                    class_names.append(class_match.group(1))
+            elif suffix in {".ts", ".tsx", ".js", ".jsx"}:
+                if stripped.startswith(("import ", "export ")):
+                    import_count += 1
+                func_match = re.match(r"(?:export\s+)?function\s+([A-Za-z_][A-Za-z0-9_]*)", stripped)
+                class_match = re.match(r"(?:export\s+)?class\s+([A-Za-z_][A-Za-z0-9_]*)", stripped)
+                const_match = re.match(r"(?:export\s+)?const\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\(", stripped)
+                if func_match and func_match.group(1) not in function_names:
+                    function_names.append(func_match.group(1))
+                if class_match and class_match.group(1) not in class_names:
+                    class_names.append(class_match.group(1))
+                if const_match and const_match.group(1) not in function_names:
+                    function_names.append(const_match.group(1))
+            elif suffix in {".cpp", ".cc", ".cxx", ".h", ".hpp", ".hh"}:
+                if stripped.startswith(("#include", "using ")):
+                    import_count += 1
+                func_match = re.match(
+                    r"(?:inline\s+)?(?:static\s+)?(?:[\w:<>,~*&]+\s+)+([A-Za-z_][A-Za-z0-9_:]*)\s*\([^;{}]*\)\s*(?:const\s*)?\{\s*$",
+                    stripped,
+                )
+                class_match = re.match(r"(?:class|struct)\s+([A-Za-z_][A-Za-z0-9_]*)", stripped)
+                if func_match and "::" not in func_match.group(1) and func_match.group(1) not in function_names:
+                    function_names.append(func_match.group(1))
+                if class_match and class_match.group(1) not in class_names:
+                    class_names.append(class_match.group(1))
+
+        comment_summary = _extract_comment_summary(rel_path)
+        overview: list[str] = []
+        if comment_summary:
+            overview.append(f"- Purpose: {comment_summary}")
+        if preview:
+            if len(preview) > 140:
+                preview = preview[:140].rsplit(" ", 1)[0] + "..."
+            if not comment_summary or preview.lower() not in comment_summary.lower():
+                overview.append(f"- Starts with: {preview}")
+        if import_count:
+            overview.append(f"- It has about {import_count} import/include statements.")
+        if class_names:
+            overview.append(f"- Main classes: {', '.join(class_names[:4])}.")
+        if function_names:
+            overview.append(f"- Main functions: {', '.join(function_names[:6])}.")
+        if len(lines):
+            overview.append(f"- File size: about {len(lines)} lines.")
+        return overview
+
+    def _format_flow_summary() -> list[str]:
+        flow_sections = context.get("flow_sections", []) or []
+        lines_out: list[str] = []
+        for section in flow_sections[:2]:
+            entries = section.get("entries") or []
+            if not entries:
+                continue
+            section_type = str(section.get("type") or "").lower()
+            if section_type in {"symbol_flow", "symbol"}:
+                lines_out.append(f"- Symbol flow found for {section.get('title', 'current symbol')}.")
+                for entry in entries[:3]:
+                    label = entry.get("label") or entry.get("kind") or "reference"
+                    path = entry.get("path") or "unknown"
+                    line_start = entry.get("line_start")
+                    snippet = str(entry.get("snippet") or "").strip().replace("\n", " ")
+                    if len(snippet) > 100:
+                        snippet = snippet[:100].rsplit(" ", 1)[0] + "..."
+                    detail = f"- {label}: {path}"
+                    if line_start:
+                        detail += f":{line_start}"
+                    if snippet:
+                        detail += f" -> {snippet}"
+                    lines_out.append(detail)
+            elif section_type in {"file_flow", "file"}:
+                lines_out.append(f"- File flow found for {section.get('title', 'current file')}.")
+            elif section_type == "impact":
+                lines_out.append(f"- Impact analysis found {len(entries)} likely affected local location(s).")
+        return lines_out
+
+    def _layer_label(path_text: str) -> str:
+        normalized = path_text.replace("\\", "/")
+        if normalized.startswith("desktop_app/src/"):
+            return "React/Electron UI layer"
+        if normalized.startswith("desktop_app/electron/"):
+            return "Electron desktop shell"
+        if normalized.startswith("server/"):
+            return "Python connector/orchestration layer"
+        if normalized.startswith("src/"):
+            return "C++ brain/engine layer"
+        if normalized.startswith("include/"):
+            return "shared C++ interface layer"
+        if normalized.startswith("tests/"):
+            return "test/regression layer"
+        if normalized.startswith(("knowledge/", "knowledge_sample/")):
+            return "local knowledge layer"
+        return "workspace layer"
+
+    def _build_graph_file_explanation(rel_path: str) -> str:
+        if CODE_GRAPH_ENGINE is None or not rel_path:
+            return ""
+        try:
+            summary = CODE_GRAPH_ENGINE.describe_file(rel_path)
+        except Exception:
+            return ""
+        if not summary or not summary.get("found"):
+            return ""
+
+        overview_lines = _format_file_overview(rel_path)
+        purpose = ""
+        other_overview: list[str] = []
+        for line in overview_lines:
+            if line.startswith("- Purpose:"):
+                purpose = line.split(":", 1)[1].strip()
+            else:
+                other_overview.append(line)
+
+        lines = [f"Here is a fast local explanation of `{rel_path}` from the code graph.", ""]
+        if purpose:
+            lines.append(f"`{rel_path}` is responsible for {purpose}.")
+        else:
+            lines.append(f"`{rel_path}` is a relevant local workspace file.")
+
+        if other_overview:
+            lines.extend(["", "What this file contains:"])
+            lines.extend(other_overview[:4])
+
+        dependencies = [item for item in (summary.get("dependencies") or []) if item.get("path")]
+        dependents = [item for item in (summary.get("dependents") or []) if item.get("path")]
+        dependency_layers = []
+        for dependency in dependencies:
+            layer = _layer_label(str(dependency["path"]))
+            if layer not in dependency_layers:
+                dependency_layers.append(layer)
+        dependent_layers = []
+        for dependent in dependents:
+            layer = _layer_label(str(dependent["path"]))
+            if layer not in dependent_layers:
+                dependent_layers.append(layer)
+
+        if dependencies:
+            lines.extend(["", "This file depends on:"])
+            for dependency in dependencies[:4]:
+                detail = f"- `{dependency['path']}`"
+                if dependency.get("line_start"):
+                    detail += f" around line {dependency['line_start']}"
+                snippet = str(dependency.get("snippet") or "").strip().replace("\n", " ")
+                if snippet:
+                    detail += f" via `{snippet[:90]}`"
+                lines.append(detail)
+        if dependents:
+            lines.extend(["", "This file is used by:"])
+            for dependent in dependents[:4]:
+                detail = f"- `{dependent['path']}`"
+                if dependent.get("line_start"):
+                    detail += f" around line {dependent['line_start']}"
+                snippet = str(dependent.get("snippet") or "").strip().replace("\n", " ")
+                if snippet:
+                    detail += f" via `{snippet[:90]}`"
+                lines.append(detail)
+
+        fit_sentence = f"This file sits in the {_layer_label(rel_path)}."
+        relationship_bits: list[str] = []
+        if dependency_layers:
+            relationship_bits.append(f"it reads or imports pieces from the {', '.join(dependency_layers[:3])}")
+        if dependent_layers:
+            relationship_bits.append(f"it feeds behavior into the {', '.join(dependent_layers[:3])}")
+        if relationship_bits:
+            fit_sentence += " In the project flow, " + " and ".join(relationship_bits) + "."
+        lines.extend(["", "How it fits into the project:", f"- {fit_sentence}"])
+
+        lines.append("")
+        if dependents:
+            lines.append("If this file changes, these areas are most likely affected:")
+            for dependent in dependents[:4]:
+                detail = f"- `{dependent['path']}`"
+                if dependent.get("line_start"):
+                    detail += f" around line {dependent['line_start']}"
+                kind = str(dependent.get("kind") or "").strip()
+                if kind:
+                    detail += f" ({kind})"
+                lines.append(detail)
+        else:
+            lines.append("If this file changes, no strong local dependent files were detected in the current graph.")
+        return "\n".join(lines).strip()
+
+    def _build_graph_symbol_explanation() -> str:
+        if CODE_GRAPH_ENGINE is None:
+            return ""
+        for symbol_name in _extract_symbol_candidates():
+            try:
+                summary = CODE_GRAPH_ENGINE.describe_symbol(symbol_name)
+            except Exception:
+                continue
+            if not summary or not summary.get("found"):
+                continue
+
+            definitions = [item for item in (summary.get("definitions") or []) if item.get("path")]
+            callers = [item for item in (summary.get("callers") or []) if item.get("path")]
+            references = [item for item in (summary.get("references") or []) if item.get("path")]
+            if not definitions:
+                continue
+
+            primary_definition = definitions[0]
+            definition_path = str(primary_definition.get("path") or "")
+            owner_layer = _layer_label(definition_path)
+            caller_layers: list[str] = []
+            for caller in callers:
+                layer = _layer_label(str(caller.get("path") or ""))
+                if layer not in caller_layers:
+                    caller_layers.append(layer)
+            reference_layers: list[str] = []
+            for reference in references:
+                layer = _layer_label(str(reference.get("path") or ""))
+                if layer not in reference_layers:
+                    reference_layers.append(layer)
+
+            lines = [f"Here is a fast local explanation of `{summary['symbol']}` from the code graph.", ""]
+            lines.append(
+                f"`{summary['symbol']}` is defined in `{definition_path}`"
+                f" around lines {primary_definition.get('line_start', 1)}-{primary_definition.get('line_end', primary_definition.get('line_start', 1))}."
+            )
+            definition_line = str(primary_definition.get("definition_line") or "").strip()
+            if definition_line:
+                lines.append(f"It is declared as `{definition_line}`.")
+
+            if callers:
+                lines.extend(["", "It is called or referenced by:"])
+                for caller in callers[:5]:
+                    detail = f"- `{caller['path']}`"
+                    if caller.get("line_start"):
+                        detail += f" around line {caller['line_start']}"
+                    snippet = str(caller.get("snippet") or "").strip().replace("\n", " ")
+                    if snippet:
+                        detail += f" via `{snippet[:90]}`"
+                    lines.append(detail)
+            elif references:
+                lines.extend(["", "It is referenced by:"])
+                for reference in references[:5]:
+                    detail = f"- `{reference['path']}`"
+                    if reference.get("line_start"):
+                        detail += f" around line {reference['line_start']}"
+                    snippet = str(reference.get("snippet") or "").strip().replace("\n", " ")
+                    if snippet:
+                        detail += f" via `{snippet[:90]}`"
+                    lines.append(detail)
+
+            fit_sentence = f"This symbol sits in the {owner_layer} because that is where it is defined."
+            fit_bits: list[str] = []
+            if callers:
+                fit_bits.append(f"it is reached from the {', '.join(caller_layers[:3])}")
+            elif references:
+                fit_bits.append(f"it is referenced from the {', '.join(reference_layers[:3])}")
+            if definition_path == "server/main.py" and summary["symbol"].startswith("run_") and summary["symbol"].endswith("_chat"):
+                fit_bits.append("it appears to be part of the Python chat handling pipeline")
+            elif definition_path.startswith("desktop_app/src/"):
+                fit_bits.append("it contributes directly to the desktop UI behavior")
+            elif definition_path.startswith("src/"):
+                fit_bits.append("it contributes directly to the native C++ brain behavior")
+            if fit_bits:
+                fit_sentence += " In the project flow, " + " and ".join(fit_bits) + "."
+            lines.extend(["", "How it fits into the project:", f"- {fit_sentence}"])
+
+            try:
+                impact = CODE_GRAPH_ENGINE.impact_analysis(symbol=summary["symbol"])
+            except Exception:
+                impact = None
+            impacts = [item for item in ((impact or {}).get("impacts") or []) if item.get("path")]
+            lines.append("")
+            if impacts:
+                lines.append("If this symbol changes, these areas are most likely affected:")
+                for item in impacts[:5]:
+                    detail = f"- `{item['path']}`"
+                    if item.get("line_start"):
+                        detail += f" around line {item['line_start']}"
+                    label = str(item.get("label") or "").strip()
+                    if label:
+                        detail += f" ({label})"
+                    lines.append(detail)
+            else:
+                lines.append("If this symbol changes, no strong local callers or references were detected in the current graph.")
+
+            return "\n".join(lines).strip()
+        return ""
+
+    if primary_path and (
+        lowered.startswith("explain ")
+        or lowered.startswith("tell me about ")
+        or lowered.startswith("summarize ")
+        or lowered.startswith("describe ")
+        or "what does" in lowered
+        or "how does" in lowered
+    ):
+        graph_file_answer = _build_graph_file_explanation(primary_path)
+        if graph_file_answer:
+            return _finalize(graph_file_answer)
+
+    if any(phrase in lowered for phrase in ("how is", "used", "called", "where is", "where does", "what does")):
+        graph_symbol_answer = _build_graph_symbol_explanation()
+        if graph_symbol_answer:
+            return _finalize(graph_symbol_answer)
+
+    lines = [
+        "Here is a fast local explanation from the indexed project context.",
+    ]
+    if concise_summary_lines:
+        lines.extend(["", *concise_summary_lines])
+    lines.extend(["", "Relevant files:"])
+    for source in sources[:4]:
+        start = source.get("line_start")
+        end = source.get("line_end")
+        line_text = f"- {source['path']}"
+        if start:
+            line_text += f":{start}"
+            if end:
+                line_text += f"-{end}"
+        if source.get("reason"):
+            line_text += f" ({source['reason']})"
+        lines.append(line_text)
+
+    if primary_path and (
+        lowered.startswith("explain ")
+        or lowered.startswith("tell me about ")
+        or lowered.startswith("summarize ")
+        or "what does" in lowered
+        or "how does" in lowered
+    ):
+        overview = _format_file_overview(primary_path)
+        flow_summary = _format_flow_summary()
+        if overview or flow_summary:
+            lines.extend(["", f"About `{primary_path}`:"])
+            lines.extend(overview[:5])
+            lines.extend(flow_summary[:3])
+
+    if "project structure" in lowered:
+        top_roots = []
+        for source in sources[:4]:
+            path = source["path"]
+            root = path.split("/", 1)[0]
+            if root not in top_roots:
+                top_roots.append(root)
+        if top_roots:
+            lines.extend([
+                "",
+                "Initial structure summary:",
+                f"- Most relevant roots are: {', '.join(top_roots)}.",
+                "- `server/` is your Python connector layer.",
+                "- `src/` and `include/` are the main C++ brain code paths.",
+                "- `desktop_app/` is the Electron/React desktop client.",
+            ])
+    return _finalize("\n".join(line for line in lines if line is not None).strip())
+
+
+def should_prefer_context_fallback(user_message: str, context: dict[str, Any]) -> bool:
+    lowered = user_message.strip().lower()
+    action_pattern = r"(?<![A-Za-z0-9_])(review|modify|patch|fix|implement|refactor)(?![A-Za-z0-9_])"
+    if re.search(action_pattern, lowered):
+        return False
+
+    has_explicit_path = bool(re.search(r"[\w./\\-]+\.(?:cpp|h|hpp|py|ts|tsx|js|jsx|json|md)\b", user_message, re.IGNORECASE))
+    flow_sections = context.get("flow_sections") or []
+    is_project_overview_request = any(
+        phrase in lowered
+        for phrase in (
+            "about project",
+            "about this project",
+            "tell me about project",
+            "tell me about the project",
+            "explain this project",
+            "project structure",
+            "project architecture",
+        )
+    )
+    is_explain_style = (
+        lowered.startswith(("explain ", "summarize ", "describe ", "tell me about "))
+        or "what does" in lowered
+        or "how does" in lowered
+        or "how is" in lowered
+    )
+    asks_usage_or_location = any(phrase in lowered for phrase in ("used", "called", "where is", "where does"))
+    has_symbol_or_flow = bool(flow_sections or len(context.get("sources", [])) <= 2)
+    is_architecture_flow_request = (
+        any(word in lowered for word in ("flow", "path", "route", "pipeline"))
+        and any(word in lowered for word in ("ui", "react", "electron", "desktop", "server", "python", "c++", "cpp", "brain", "ollama"))
+    )
+    if is_project_overview_request:
+        return True
+    if is_architecture_flow_request:
+        return True
+    if asks_usage_or_location and flow_sections:
+        return True
+    return bool(is_explain_style and (has_explicit_path or has_symbol_or_flow))
+
+
+def warm_ollama_model(timeout: int = 20) -> bool:
+    if OllamaAdapter is None:
+        return False
+
+    try:
+        adapter = OllamaAdapter(model=FAST_CHAT_MODEL)
+        response = adapter.chat(
+            [{"role": "user", "content": "Reply with warm."}],
+            system_prompt="Warm the local model cache. Reply with one word only.",
+            temperature=0.0,
+            num_ctx=256,
+            timeout=timeout,
+            num_predict=4,
+        )
+        return bool(response and not response.startswith("Error contacting Ollama:"))
+    except Exception:
+        return False
+
+
+def warm_ollama_model_background() -> None:
+    if OllamaAdapter is None:
+        return
+
+    def _warm() -> None:
+        warm_ollama_model(timeout=20)
+
+    threading.Thread(target=_warm, daemon=True).start()
+
+
+def warm_ollama_model_sync(timeout: int = 12) -> bool:
+    return warm_ollama_model(timeout=timeout)
+
+
+def start_background_services() -> None:
+    def _boot() -> None:
+        try:
+            initialize_ai_capabilities()
+        except Exception as e:
+            print(f">> Warning: AI capability init skipped: {e}")
+
+        print("\n>> Indexing all project files for AI awareness...")
+        try:
+            import dynamic_indexer
+            index_thread = threading.Thread(target=dynamic_indexer.start_dynamic_indexing, daemon=True)
+            index_thread.start()
+            project_indexer.load_project_files_into_ai()
+        except Exception as e:
+            print(f">> Warning: Project indexing skipped: {e}")
+
+        try:
+            import chat_port
+            t = threading.Thread(target=chat_port.start_server, daemon=True)
+            t.start()
+            print(">> Background AI Chat Port started securely on TCP :9000 <<")
+        except Exception as e:
+            print(f"Failed to start TCP Chat Port: {e}")
+
+    threading.Thread(target=_boot, daemon=True).start()
+
+
+def run_fast_local_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None) -> dict:
+    local_lookup = quick_local_lookup_summary(user_message)
+    if local_lookup:
+        return {
+            "response": local_lookup,
+            "tool": "local_lookup_fast_path",
+            "status": "ok",
+            "confidence": 84,
+            "analysis": build_analysis_payload(task_prep),
+        }
+
+    if OllamaAdapter is None:
+        return {
+            "response": "Fast local chat is unavailable because the Ollama adapter could not be loaded.",
+            "tool": "error",
+            "status": "error"
+        }
+
+    adapter = OllamaAdapter(model=FAST_CHAT_MODEL)
+    response_text = adapter.chat(
+        fast_chat_messages(req, user_message),
+        system_prompt=fast_chat_system_prompt(req.web_search, task_prep),
+        temperature=0.3,
+        num_ctx=1536,
+        timeout=12,
+        num_predict=72,
+    ).strip()
+
+    if response_text.startswith("Error contacting Ollama:") and req.web_search:
+        web_summary = quick_web_summary(user_message)
+        if web_summary:
+            return {
+                "response": web_summary,
+                "tool": "quick_web_summary",
+                "status": "ok",
+                "confidence": 88,
+                "analysis": build_analysis_payload(task_prep),
+            }
+
+    if response_text.startswith("Error contacting Ollama:") and "Read timed out" in response_text:
+        response_text = (
+            "The local Ollama fast model is still too slow for short chat right now. "
+            f"This workspace is using `{FAST_CHAT_MODEL}` for fast chat, and a smaller local model in `OLLAMA_FAST_MODEL` will make simple messages much faster."
+        )
+
+    if not response_text:
+        response_text = "I didn't get a useful answer from the local model. Please try again."
+
+    return {
+        "response": response_text,
+        "tool": "fast_local_chat",
+        "status": "ok",
+        "confidence": 92,
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+
+CONTEXT_PROVIDER = ContextProvider(BASE_DIR) if ContextProvider else None
+TASK_INTELLIGENCE = LocalTaskIntelligence(BASE_DIR) if LocalTaskIntelligence else None
+CODE_GRAPH_ENGINE = CodeGraphEngine(BASE_DIR) if CodeGraphEngine else None
+
+
+def build_analysis_payload(task_prep: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+    if not isinstance(task_prep, dict):
+        return None
+
+    analysis = task_prep.get("analysis") or {}
+    steps = analysis.get("steps") or []
+    if not steps:
+        return None
+
+    intent = str(task_prep.get("intent") or "")
+    preferences = (task_prep.get("command_preferences") or {}).get("intents") or {}
+    preferred_commands = list(((preferences.get(intent) or {}).get("preferred_commands") or []))
+
+    normalized_steps = []
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        normalized_steps.append({
+            "name": step.get("name"),
+            "category": step.get("category"),
+            "status": step.get("status"),
+            "reason": step.get("reason"),
+            "command": step.get("command"),
+            "duration_ms": step.get("durationMs"),
+            "summary": step.get("summary"),
+            "preferred": step.get("name") in preferred_commands,
+        })
+
+    if not normalized_steps:
+        return None
+
+    target_hints = [str(hint).lower() for hint in (task_prep.get("target_hints") or [])]
+    discovery = (task_prep.get("command_discovery") or {}).get("commands") or []
+    preferred_stack = ""
+    if any(hint.startswith("desktop_app/") or hint.endswith((".tsx", ".ts", ".jsx", ".js")) for hint in target_hints):
+        preferred_stack = "desktop"
+    elif any(hint.startswith("src/") or hint.startswith("include/") or hint.endswith((".cpp", ".cc", ".cxx", ".h", ".hpp", ".hh")) for hint in target_hints):
+        preferred_stack = "cpp"
+    elif any(hint.startswith("server/") or hint.startswith("symbol:") or hint.startswith("function:") or hint.endswith(".py") for hint in target_hints):
+        preferred_stack = "python"
+    elif intent in {"explain_or_review", "review", "modify"}:
+        preferred_stack = "python"
+
+    preferred_categories = ["validate", "lint", "build", "test"]
+    if intent == "modify":
+        preferred_categories = ["build", "validate", "test", "lint"]
+    elif intent == "review":
+        preferred_categories = ["lint", "build", "test", "validate"]
+
+    seen_names = {str(step.get("name") or "") for step in normalized_steps}
+    alternatives = []
+    for category in preferred_categories:
+        for command in discovery:
+            if not isinstance(command, dict):
+                continue
+            name = str(command.get("name") or "")
+            if not name or name in seen_names:
+                continue
+            if preferred_stack and str(command.get("stack") or "") != preferred_stack:
+                continue
+            if str(command.get("category") or "") != category:
+                continue
+            alternatives.append({
+                "name": name,
+                "category": command.get("category"),
+                "reason": command.get("reason"),
+                "command": " ".join(command.get("command") or []),
+                "preferred": name in preferred_commands,
+            })
+            seen_names.add(name)
+            if len(alternatives) >= 3:
+                break
+        if len(alternatives) >= 3:
+            break
+
+    return {
+        "status": analysis.get("overallStatus"),
+        "last_run_at": analysis.get("lastRunAt"),
+        "preference_intent": intent,
+        "preferred_commands": preferred_commands,
+        "steps": normalized_steps,
+        "alternatives": alternatives,
+    }
+
+
+def run_context_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None) -> dict:
+    if OllamaAdapter is None or CONTEXT_PROVIDER is None:
+        return {
+            "response": "Context chat is unavailable because required local modules could not be loaded.",
+            "tool": "error",
+            "status": "error"
+        }
+
+    context = CONTEXT_PROVIDER.build_context(user_message)
+    if should_prefer_context_fallback(user_message, context):
+        fallback = build_context_fallback_answer(user_message, context, return_payload=True)
+        return {
+            "response": fallback["response"],
+            "tool": "context_chat_fast_fallback",
+            "status": "ok",
+            "confidence": 86,
+            "sources": fallback.get("sources", context["sources"]),
+            "flow_sections": fallback.get("flow_sections", context.get("flow_sections", [])),
+            "analysis": build_analysis_payload(task_prep),
+        }
+
+    prompt = user_message
+    if context["context_text"]:
+        prompt = (
+            "Task preparation:\n"
+            f"{(task_prep or {}).get('analysis_summary', 'No local task preparation was available.')}\n\n"
+            "Workspace context:\n"
+            f"{context['context_text']}\n\n"
+            "User request:\n"
+            f"{user_message}"
+        )
+
+    adapter = OllamaAdapter(model=CONTEXT_CHAT_MODEL)
+    response_text = adapter.chat(
+        fast_chat_messages(req, prompt),
+        system_prompt=context_chat_system_prompt(context["workspace_summary"], task_prep),
+        temperature=0.2,
+        num_ctx=2048,
+        timeout=4,
+        num_predict=120,
+    ).strip()
+
+    if not response_text or response_text.startswith("Error contacting Ollama:"):
+        fallback = build_context_fallback_answer(user_message, context, return_payload=True)
+        response_text = fallback["response"]
+        fallback_sources = fallback.get("sources", context["sources"])
+        fallback_flow_sections = fallback.get("flow_sections", context.get("flow_sections", []))
+    else:
+        fallback_sources = context["sources"]
+        fallback_flow_sections = context.get("flow_sections", [])
+
+    return {
+        "response": response_text,
+        "tool": "context_chat",
+        "status": "ok",
+        "confidence": 90,
+        "sources": fallback_sources,
+        "flow_sections": fallback_flow_sections,
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+
+def run_review_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None) -> dict:
+    if (
+        OllamaAdapter is None
+        or CONTEXT_PROVIDER is None
+        or review_system_prompt is None
+        or normalize_review_response is None
+        or format_review_markdown is None
+    ):
+        return {
+            "response": "Review mode is unavailable because required local modules could not be loaded.",
+            "tool": "error",
+            "status": "error",
+        }
+
+    context = CONTEXT_PROVIDER.build_context(user_message, max_files=5, max_chars=9500)
+    prompt = (
+        "Review request:\n"
+        f"{user_message}\n\n"
+        "Workspace context:\n"
+        f"{context['context_text']}\n\n"
+        "Return strict JSON only."
+    )
+
+    adapter = OllamaAdapter(model=CONTEXT_CHAT_MODEL)
+    raw_response = adapter.chat(
+        fast_chat_messages(req, prompt),
+        system_prompt=review_system_prompt(context["workspace_summary"], (task_prep or {}).get("analysis_summary", "")),
+        temperature=0.1,
+        num_ctx=4096,
+        timeout=12,
+        num_predict=500,
+    ).strip()
+
+    review = normalize_review_response(raw_response, context)
+    response_text = format_review_markdown(review)
+
+    return {
+        "response": response_text,
+        "tool": "review_chat",
+        "status": "ok",
+        "confidence": review.get("confidence", 82),
+        "sources": context["sources"],
+        "flow_sections": context.get("flow_sections", []),
+        "findings": review.get("findings", []),
+        "test_gaps": review.get("test_gaps", []),
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+
+def detect_generation_language(message: str) -> str:
+    lowered = message.lower()
+    if re.search(r"(?<![A-Za-z0-9_])(python|py)(?![A-Za-z0-9_])", lowered):
+        return "python"
+    if re.search(r"(?<![A-Za-z0-9_])(typescript|ts)(?![A-Za-z0-9_])", lowered):
+        return "typescript"
+    if re.search(r"(?<![A-Za-z0-9_])(javascript|js)(?![A-Za-z0-9_])", lowered):
+        return "javascript"
+    if re.search(r"(?<![A-Za-z0-9_])(cpp|c\+\+)(?![A-Za-z0-9_])", lowered):
+        return "cpp"
+    return "python"
+
+
+def build_generation_fallback(message: str, language: str) -> str:
+    lowered = message.lower()
+
+    if language == "python" and any(token in lowered for token in ("addition", "add", "sum")):
+        return (
+            "Here is a simple Python example:\n\n"
+            "```python\n"
+            "def add(a: float, b: float) -> float:\n"
+            "    return a + b\n\n"
+            "result = add(2, 3)\n"
+            "print(result)\n"
+            "```\n\n"
+            "If you want, I can also turn this into a file for this project or adapt it to your current module structure."
+        )
+
+    if language == "typescript" and any(token in lowered for token in ("addition", "add", "sum")):
+        return (
+            "Here is a simple TypeScript example:\n\n"
+            "```ts\n"
+            "function add(a: number, b: number): number {\n"
+            "  return a + b;\n"
+            "}\n\n"
+            "console.log(add(2, 3));\n"
+            "```\n\n"
+            "If you want, I can adapt this to the current project file you have open."
+        )
+
+    if language == "javascript" and any(token in lowered for token in ("addition", "add", "sum")):
+        return (
+            "Here is a simple JavaScript example:\n\n"
+            "```js\n"
+            "function add(a, b) {\n"
+            "  return a + b;\n"
+            "}\n\n"
+            "console.log(add(2, 3));\n"
+            "```\n\n"
+            "If you want, I can adapt this to the current project file you have open."
+        )
+
+    return (
+        f"I did not get a fast local model answer, but I understood this as a {language} code-generation request.\n\n"
+        f"If you open a target file, I can generate code directly into your project context. Otherwise I can still draft a standalone {language} snippet for you."
+    )
+
+
+def run_generate_code_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None) -> dict:
+    language = detect_generation_language(user_message)
+    context = CONTEXT_PROVIDER.build_context(user_message, max_files=3, max_chars=4500) if CONTEXT_PROVIDER is not None else {
+        "workspace_summary": "",
+        "context_text": "",
+        "sources": [],
+        "flow_sections": [],
+    }
+    editor_context = (task_prep or {}).get("editor_context") or {}
+    active_file = editor_context.get("relativePath") or editor_context.get("activeFilePath") or "none"
+
+    if OllamaAdapter is None:
+        return {
+            "response": build_generation_fallback(user_message, language),
+            "tool": "generate_chat_fallback",
+            "status": "ok",
+            "confidence": 78,
+            "sources": context.get("sources", []),
+            "flow_sections": context.get("flow_sections", []),
+            "analysis": build_analysis_payload(task_prep),
+        }
+
+    prompt = (
+        f"User request:\n{user_message}\n\n"
+        f"Preferred language: {language}\n"
+        f"Active project file: {active_file}\n\n"
+        "Workspace summary:\n"
+        f"{context.get('workspace_summary', '')}\n\n"
+        "Relevant project context:\n"
+        f"{context.get('context_text', '')}\n\n"
+        "Return a practical code answer in markdown. "
+        "If no target file is specified, provide a standalone snippet first, then one short note about how it could fit this project."
+    )
+
+    adapter = OllamaAdapter(model=FAST_CHAT_MODEL)
+    response_text = adapter.chat(
+        fast_chat_messages(req, prompt),
+        system_prompt=(
+            "You are Nero local code generation mode inside Neural Studio. "
+            "The user is inside a multi-stack project with a C++ brain, Python connector, and React/Electron desktop app. "
+            "When no target file is explicitly given, generate a small standalone snippet in the requested language and keep it concise. "
+            "When project context is relevant, mention how the snippet would fit the current workspace."
+        ),
+        temperature=0.2,
+        num_ctx=2048,
+        timeout=6,
+        num_predict=260,
+    ).strip()
+
+    if not response_text or response_text.startswith("Error contacting Ollama:"):
+        response_text = build_generation_fallback(user_message, language)
+        tool_name = "generate_chat_fallback"
+        confidence = 80
+    else:
+        response_text = cleanup_generated_code(response_text)
+        tool_name = "generate_chat"
+        confidence = calculate_code_confidence(response_text)
+
+    return {
+        "response": response_text,
+        "tool": tool_name,
+        "status": "ok",
+        "confidence": confidence,
+        "sources": context.get("sources", []),
+        "flow_sections": context.get("flow_sections", []),
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+
+def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None) -> dict:
+    if (
+        OllamaAdapter is None
+        or CONTEXT_PROVIDER is None
+        or modify_system_prompt is None
+        or build_impact_brief is None
+        or extract_modify_json is None
+        or apply_selection_to_text is None
+        or build_unified_diff is None
+        or validate_candidate_change is None
+        or patch_review_system_prompt is None
+        or normalize_patch_review_response is None
+        or format_modify_markdown is None
+    ):
+        return {
+            "response": "Modify mode is unavailable because required local modules could not be loaded.",
+            "tool": "error",
+            "status": "error",
+        }
+
+    editor_context = (task_prep or {}).get("editor_context") or {}
+    active_file = editor_context.get("activeFilePath")
+    if not active_file:
+        if (task_prep or {}).get("intent") == "generate":
+            return run_generate_code_chat(req, user_message, task_prep)
+        return {
+            "response": "Modify mode needs an active file in the editor. Open the target file and select code if possible, then try again.",
+            "tool": "modify_chat",
+            "status": "error",
+        }
+
+    try:
+        active_file = validate_path(str(active_file))
+    except HTTPException as exc:
+        return {
+            "response": exc.detail,
+            "tool": "modify_chat",
+            "status": "error",
+        }
+
+    try:
+        original_full_text = Path(active_file).read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        return {
+            "response": f"Could not read the active file for patch generation: {exc}",
+            "tool": "modify_chat",
+            "status": "error",
+        }
+
+    selection = editor_context.get("selection") or {}
+    selected_text = str(editor_context.get("selectedText") or "").strip()
+    target_context = selected_text or editor_context.get("nearbySnippet") or original_full_text[:2000]
+    relative_file = os.path.relpath(active_file, BASE_DIR).replace("\\", "/")
+
+    context = CONTEXT_PROVIDER.build_context(user_message, max_files=5, max_chars=9000)
+    impact_brief = build_impact_brief(context.get("flow_sections", []))
+    prompt = "".join([
+        "Modify request:\n",
+        f"{user_message}\n\n",
+        f"Target file: {relative_file}\n",
+        f"Current symbol: {editor_context.get('currentSymbolName') or 'unknown'}\n",
+        "Selected or nearby code:\n",
+        f"{target_context}\n\n",
+        f"{impact_brief}\n\n" if impact_brief else "",
+        "Workspace context:\n",
+        f"{context['context_text']}\n\n",
+        "Return strict JSON only.",
+    ])
+
+    adapter = OllamaAdapter(model=CONTEXT_CHAT_MODEL)
+    raw_response = adapter.chat(
+        fast_chat_messages(req, prompt),
+        system_prompt=modify_system_prompt(context["workspace_summary"], (task_prep or {}).get("analysis_summary", "")),
+        temperature=0.15,
+        num_ctx=4096,
+        timeout=15,
+        num_predict=700,
+    ).strip()
+
+    parsed = extract_modify_json(raw_response) or {}
+    updated_code = str(parsed.get("updated_code") or "").strip()
+    summary = str(parsed.get("summary") or "Patch proposal generated from the local context.").strip()
+    confidence = parsed.get("confidence", 82)
+    try:
+        confidence = int(confidence)
+    except (TypeError, ValueError):
+        confidence = 82
+
+    if not updated_code:
+        return {
+            "response": "The local model did not return a patch proposal. Try selecting a smaller code block and asking again.",
+            "tool": "modify_chat",
+            "status": "error",
+            "sources": context["sources"],
+            "flow_sections": context.get("flow_sections", []),
+            "analysis": build_analysis_payload(task_prep),
+        }
+
+    if selection and selection.get("startLine") and selection.get("endLine"):
+        candidate_full_text = apply_selection_to_text(original_full_text, selection, updated_code)
+    else:
+        candidate_full_text = updated_code
+
+    line_start = int(selection.get("startLine") or editor_context.get("cursorLine") or 1)
+    line_end = int(selection.get("endLine") or selection.get("startLine") or editor_context.get("cursorLine") or line_start)
+    diff_text = build_unified_diff(relative_file, original_full_text, candidate_full_text)
+    validation = validate_candidate_change(relative_file, candidate_full_text, BASE_DIR)
+
+    if validation.get("status") == "error":
+        repair_prompt = "".join([
+            "The previous patch failed local validation.\n\n",
+            f"Original request:\n{user_message}\n\n",
+            f"Target file: {relative_file}\n",
+            "Original selected or nearby code:\n",
+            f"{target_context}\n\n",
+            f"{impact_brief}\n\n" if impact_brief else "",
+            "Previous proposed replacement:\n",
+            f"{updated_code}\n\n",
+            "Validation error:\n",
+            f"{validation.get('summary', '')}\n\n",
+            "Return strict JSON only with a corrected updated_code.",
+        ])
+        repair_raw = adapter.chat(
+            fast_chat_messages(req, repair_prompt),
+            system_prompt=modify_system_prompt(
+                context["workspace_summary"],
+                ((task_prep or {}).get("analysis_summary", "") + "\nFix the patch so it passes local validation."),
+            ),
+            temperature=0.1,
+            num_ctx=4096,
+            timeout=15,
+            num_predict=700,
+        ).strip()
+        repaired = extract_modify_json(repair_raw) or {}
+        repaired_code = str(repaired.get("updated_code") or "").strip()
+        if repaired_code and repaired_code != updated_code:
+            repaired_full_text = apply_selection_to_text(original_full_text, selection, repaired_code) if selection and selection.get("startLine") and selection.get("endLine") else repaired_code
+            repaired_validation = validate_candidate_change(relative_file, repaired_full_text, BASE_DIR)
+            if repaired_validation.get("status") == "ok":
+                updated_code = repaired_code
+                candidate_full_text = repaired_full_text
+                validation = repaired_validation
+                diff_text = build_unified_diff(relative_file, original_full_text, candidate_full_text)
+                summary = (summary + " The patch was automatically repaired after a validation failure.").strip()
+
+    patch_review_prompt = "".join([
+        "Patch review request:\n",
+        f"{user_message}\n\n",
+        f"Target file: {relative_file}\n",
+        f"Current symbol: {editor_context.get('currentSymbolName') or 'unknown'}\n",
+        f"{impact_brief}\n\n" if impact_brief else "",
+        f"Validation summary:\n{validation.get('summary', 'No validation summary was available.')}\n\n",
+        "Review the staged diff below and return strict JSON only.\n\n",
+        f"{diff_text or 'No diff was produced.'}",
+    ])
+    patch_review_raw = adapter.chat(
+        fast_chat_messages(req, patch_review_prompt),
+        system_prompt=patch_review_system_prompt(
+            context["workspace_summary"],
+            ((task_prep or {}).get("analysis_summary", "") + "\nThe patch was staged in a temporary workspace before review."),
+        ),
+        temperature=0.1,
+        num_ctx=4096,
+        timeout=12,
+        num_predict=500,
+    ).strip()
+    patch_review = normalize_patch_review_response(
+        patch_review_raw,
+        file_path=relative_file,
+        diff_text=diff_text,
+        validation=validation,
+        line_start=line_start,
+    )
+
+    review_findings = list(patch_review.get("findings", []))
+    if validation.get("status") == "error" and not any(finding.get("title") == "Staged patch failed validation" for finding in review_findings):
+        review_findings.append({
+            "title": "Validation failed",
+            "severity": "high",
+            "file": relative_file,
+            "line_start": line_start,
+            "line_end": line_end,
+            "body": validation.get("summary", "The proposed patch did not pass local validation."),
+            "confidence": 0.92,
+        })
+
+    response_text = format_modify_markdown(summary, relative_file, diff_text, validation, confidence, patch_review, impact_brief)
+
+    return {
+        "response": response_text,
+        "tool": "modify_chat",
+        "status": "ok",
+        "confidence": confidence,
+        "sources": context["sources"],
+        "flow_sections": context.get("flow_sections", []),
+        "impact_summary": impact_brief,
+        "findings": review_findings,
+        "test_gaps": patch_review.get("test_gaps", []),
+        "proposed_code": updated_code,
+        "patch_diff": diff_text,
+        "validation": validation,
+        "target_file": relative_file,
+        "target_path": active_file,
+        "applied_content": candidate_full_text,
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+
+@app.post("/api/analysis/preferences")
+def set_analysis_preference(req: CommandPreferenceRequest):
+    if TASK_INTELLIGENCE is None:
+        return {
+            "status": "error",
+            "message": "Task intelligence is unavailable.",
+        }
+
+    try:
+        updated = TASK_INTELLIGENCE.set_command_preference(req.intent, req.command_name)
+        return {
+            "status": "ok",
+            "intent": req.intent,
+            "command_name": req.command_name,
+            "preferences": updated.get("intents", {}),
+        }
+    except ValueError as exc:
+        return {
+            "status": "error",
+            "message": str(exc),
+        }
+
+
+@app.get("/api/graph/overview")
+def graph_overview():
+    if CODE_GRAPH_ENGINE is None:
+        return {"status": "error", "message": "Code graph engine is unavailable."}
+    return {
+        "status": "ok",
+        "overview": CODE_GRAPH_ENGINE.architecture_overview(),
+    }
+
+
+@app.post("/api/graph/symbol")
+def graph_symbol(req: GraphSymbolRequest):
+    if CODE_GRAPH_ENGINE is None:
+        return {"status": "error", "message": "Code graph engine is unavailable."}
+    return {
+        "status": "ok",
+        "result": CODE_GRAPH_ENGINE.describe_symbol(req.symbol),
+    }
+
+
+@app.post("/api/graph/file")
+def graph_file(req: GraphFileRequest):
+    if CODE_GRAPH_ENGINE is None:
+        return {"status": "error", "message": "Code graph engine is unavailable."}
+    return {
+        "status": "ok",
+        "result": CODE_GRAPH_ENGINE.describe_file(req.path),
+    }
+
+
+@app.post("/api/graph/impact")
+def graph_impact(req: GraphImpactRequest):
+    if CODE_GRAPH_ENGINE is None:
+        return {"status": "error", "message": "Code graph engine is unavailable."}
+    return {
+        "status": "ok",
+        "result": CODE_GRAPH_ENGINE.impact_analysis(symbol=req.symbol, rel_path=req.path),
+    }
 
 def cleanup_generated_code(code: str) -> str:
     """
@@ -2000,138 +3949,66 @@ def calculate_code_confidence(code: str) -> int:
 async def chat(req: ChatRequest):
     """
     Conversational AI chat endpoint for desktop UI.
-    Routes to C++ neural_engine.exe ai_ask command.
+    Local-first routing keeps simple chat fast and only uses deeper project
+    context when the request actually needs it.
     """
     try:
-        # Extract user request from system prompt wrapper if present
-        user_message = req.message
-        if "User request:\n" in req.message:
-            user_message = req.message.split("User request:\n", 1)[1].strip()
-        else:
-            user_message = req.message.strip()
-
-        # Check if this is a code generation/fixing request
-        code_keywords = ['write', 'generate', 'create', 'code', 'function', 'implement', 'fix', 'debug', 'correct']
-        is_code_request = any(kw in user_message.lower() for kw in code_keywords)
-
-        if is_code_request:
-            # Use transformer generation for code
-            import json as json_module
-
-            print(f"[CODE GENERATION] Detected code request: {user_message[:50]}...", flush=True)
-
-            # Few-shot prompting: Add compact examples (512-token buffer allows this)
-            # Using condensed format to keep generation time reasonable
-            few_shot_examples = """def fibonacci(n): return n if n<=1 else fibonacci(n-1)+fibonacci(n-2)
-def factorial(n): return 1 if n<=1 else n*factorial(n-1)
-def reverse_string(s): return s[::-1]
-
-"""
-            enhanced_message = few_shot_examples + user_message
-
-            print(f"[CODE GENERATION] Using few-shot prompt (3 examples)", flush=True)
-            cmd = [NEURAL_ENGINE_EXE, "transformer_generate", enhanced_message]
-            # Increased timeout for longer prompts (few-shot examples + user message)
-            # errors='ignore' handles binary characters in transformer output
-            # Increased timeout for few-shot prompts (3 examples + user message = longer inference)
-            # 3M param model on CPU: ~60-90 seconds with few-shot
-            result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='ignore', timeout=120, cwd=BASE_DIR)
-
-            if result.returncode == 0:
-                response_text = result.stdout.strip()
-
-                print(f"[CODE GENERATION] Raw output length: {len(response_text)}", flush=True)
-
-                # Extract JSON
-                json_start = response_text.find('{')
-                json_end = response_text.rfind('}')
-
-                if json_start >= 0 and json_end > json_start:
-                    json_str = response_text[json_start:json_end+1]
-                    try:
-                        parsed = json_module.loads(json_str)
-                        print(f"[CODE GENERATION] Parsed transformer output successfully", flush=True)
-
-                        # QUICK WIN #2: Post-processing cleanup
-                        raw_answer = parsed.get("generated", "")
-                        cleaned_answer = cleanup_generated_code(raw_answer)
-
-                        # QUICK WIN #3: Confidence thresholding
-                        confidence = calculate_code_confidence(cleaned_answer)
-
-                        # Wrap transformer output in ai_ask format
-                        response_text = json_module.dumps({
-                            "status": "success",
-                            "question": req.message,
-                            "answer": cleaned_answer,
-                            "confidence": confidence,
-                            "tool": "transformer_generate"
-                        })
-                    except Exception as e:
-                        print(f"[CODE GENERATION] JSON parse error: {e}", flush=True)
-                        # Fallback: wrap raw output
-                        response_text = json_module.dumps({
-                            "status": "success",
-                            "question": req.message,
-                            "answer": response_text,
-                            "confidence": 70,
-                            "tool": "transformer_generate_raw"
-                        })
-
-                print(f"[CODE GENERATION] Returning response with tool: transformer_generate", flush=True)
-                return {
-                    "response": response_text,
-                    "tool": "transformer_generate",
-                    "status": "ok"
-                }
-            else:
-                print(f"[CODE GENERATION] Command failed: {result.stderr[:200]}", flush=True)
-
-        # Not a code request - use regular ai_ask
-        cmd = [NEURAL_ENGINE_EXE, "ai_ask", req.message]
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, cwd=BASE_DIR)
-
-        if result.returncode == 0:
-            response_text = result.stdout.strip()
-
-            # C++ neural_engine may print debug messages before JSON
-            # Extract only the JSON part (starts with '{' and ends with '}')
-            json_start = response_text.find('{')
-            json_end = response_text.rfind('}')
-
-            if json_start >= 0 and json_end > json_start:
-                # Found JSON - extract it
-                json_str = response_text[json_start:json_end+1]
-                try:
-                    # Validate it's proper JSON
-                    parsed = json.loads(json_str)
-                    response_text = json_str
-                except:
-                    # Not valid JSON, use full output
-                    pass
-
+        user_message = (req.message or "").strip()
+        if not user_message:
             return {
-                "response": response_text,
-                "tool": "neural_engine",
-                "status": "ok"
+                "response": "Please type a message first.",
+                "tool": "validation",
+                "status": "error",
             }
-        else:
-            # Fallback to Python brain if available
-            if PYTHON_BRAIN_AVAILABLE and _brain:
-                response_text = _brain.generate_response(req.message)
-                return {
-                    "response": response_text,
-                    "tool": "python_brain_fallback",
-                    "status": "ok"
-                }
+
+        quick_reply = small_talk_reply(user_message)
+        if quick_reply:
             return {
-                "response": f"Neural engine error: {result.stderr}",
-                "tool": "error",
-                "status": "error"
+                "response": quick_reply,
+                "tool": "small_talk_fast_path",
+                "status": "ok",
+                "confidence": 99,
             }
-    except subprocess.TimeoutExpired:
-        return {"response": "Request timeout - question too complex", "tool": "timeout", "status": "error"}
+
+        task_prep = None
+        if TASK_INTELLIGENCE is not None:
+            task_prep = TASK_INTELLIGENCE.prepare_task(user_message, bool(req.web_search))
+
+        route = str((task_prep or {}).get("route") or "")
+
+        if route == "web_lookup":
+            web_summary = quick_web_summary(user_message)
+            if web_summary:
+                return {
+                    "response": web_summary,
+                    "tool": "quick_web_summary",
+                    "status": "ok",
+                    "confidence": 88,
+                    "analysis": build_analysis_payload(task_prep),
+                }
+            route = "fast_local_chat"
+
+        if route == "modify_chat":
+            response = run_modify_chat(req, user_message, task_prep)
+        elif route == "generate_chat":
+            response = run_generate_code_chat(req, user_message, task_prep)
+        elif route == "review_chat":
+            response = run_review_chat(req, user_message, task_prep)
+        elif route == "context_chat":
+            response = run_context_chat(req, user_message, task_prep)
+        elif route == "fast_local_chat" or should_use_fast_chat(user_message, bool(req.web_search)):
+            response = run_fast_local_chat(req, user_message, task_prep)
+        elif should_use_context_chat(user_message):
+            response = run_context_chat(req, user_message, task_prep)
+        else:
+            response = run_fast_local_chat(req, user_message, task_prep)
+
+        if isinstance(response, dict) and task_prep and "analysis" not in response:
+            response["analysis"] = build_analysis_payload(task_prep)
+        return response
+            
     except Exception as e:
+        print(f"[API ERROR] {str(e)}")
         return {"response": f"Chat error: {str(e)}", "tool": "error", "status": "error"}
 
 @app.post("/api/debug/code-detection")
@@ -2367,3 +4244,16 @@ def ai_find_text(req: TextSearchRequest):
 def ai_project_stats():
     """AI gets project statistics"""
     return ai_files.cmd_project_stats()
+
+
+if __name__ == "__main__":
+    ensure_vault()
+    warm_ollama_model_sync(timeout=12)
+    warm_ollama_model_background()
+    start_background_services()
+
+    print("\n  +----------------------------------------------------+")
+    print("  |   Neural Studio V10 -- AI Compression API          |")
+    print("  |   C++ Neural Engine + Smart Brain + Vault          |")
+    print("  +----------------------------------------------------+\n")
+    uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=False)

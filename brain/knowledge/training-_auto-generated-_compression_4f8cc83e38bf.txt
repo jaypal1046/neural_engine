@@ -1,5 +1,0 @@
-Question: What is LZ77?
-
-Ideal Answer: I need to learn more about compression. This question covers: What is LZ77?. Please teach me by saying: learn [topic] [content]
-
-Skills demonstrated: specificity, structure, domain_knowledge, actionability

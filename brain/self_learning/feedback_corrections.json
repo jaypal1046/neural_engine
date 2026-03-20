@@ -1,8 +1,0 @@
-[
-  {
-    "question": "What is compression?",
-    "bad_answer": "I don't have knowledge about this topic yet.\n\nWould you like me to search online for this information?",
-    "improved_answer": "{\"status\":\"success\",\"question\":\"What is compression?\",\"answer\":\"I don't have knowledge about this topic yet.\",\"confidence\":0,\"reasoning_verified\":false,\"reasoning_steps\":[{\"step\":\"Classify question type\",\"confidence\":0.9},{\"step\":\"Query knowledge base\",\"confidence\":0.3},{\"step\":\"Synthesize answer from facts\",\"confidence\":0.3}],\"sources\":[],\"overall_confidence\":0.5}",
-    "topic": "compression?"
-  }
-]

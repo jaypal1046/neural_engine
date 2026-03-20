@@ -1,6 +1,0 @@
-Question: What is photosynthesis?
-
-Ideal Answer: [image_search: "photosynthesis diagram process"] Photosynthesis is how plants convert sunlight into energy...  
-Reason: An image or diagram shows the process of photosynthesis more clearly than text alone.
-
-Skills demonstrated: Anthropic conversation style, real training pair
