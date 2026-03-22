@@ -15,7 +15,7 @@ except ImportError:
 BIN_PATH = os.path.join(os.path.dirname(__file__), "..", "bin", "neural_engine.exe")
 
 class NeroAgentOrchestrator:
-    def __init__(self, workspace_root: str, model: str = "llama3"):
+    def __init__(self, workspace_root: str, model: str = "qwen2.5-coder:7b"):
         self.workspace_root = workspace_root
         self.adapter = OllamaAdapter(model=model)
         self.system_prompt = self._build_system_prompt()

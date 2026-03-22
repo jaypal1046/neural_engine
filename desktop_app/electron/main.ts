@@ -22,7 +22,7 @@ let serverProcess: ChildProcess | null = null
 let fileWatcher: FSWatcher | null = null
 const terminalProcesses: Map<string, ChildProcess> = new Map()
 const terminalCwds: Map<string, string> = new Map()
-let activeWorkspaceRoot = path.join(process.env.APP_ROOT!, '..')
+let activeWorkspaceRoot = '' // Start with no workspace by default (VS Code style)
 
 function safeMainLog(level: 'log' | 'warn' | 'error', ...parts: unknown[]) {
     try {
@@ -160,7 +160,7 @@ function updateEditorContext(payload: Record<string, any>, workspaceRoot?: strin
         current = {}
     }
 
-    const next = {
+    const next: Record<string, any> = {
         ...current,
         ...payload,
         workspaceRoot: normalizedRoot,
@@ -169,7 +169,7 @@ function updateEditorContext(payload: Record<string, any>, workspaceRoot?: strin
         storagePath: workspaceDir,
     }
 
-    if (payload.filePath && isPathInsideWorkspace(payload.filePath, normalizedRoot)) {
+    if (typeof payload.filePath === 'string' && isPathInsideWorkspace(payload.filePath, normalizedRoot)) {
         next.relativePath = path.relative(normalizedRoot, payload.filePath).replace(/\\/g, '/')
     }
 
@@ -444,7 +444,7 @@ function createWindow() {
         minHeight: 700,
         icon: path.join(process.env.VITE_PUBLIC || '', 'electron-vite.svg'),
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
+            preload: path.join(MAIN_DIST, 'preload.js'),
             webviewTag: true,
             nodeIntegration: false,
             contextIsolation: true,
@@ -516,8 +516,17 @@ app.whenReady().then(() => {
         return null
     })
     ipcMain.handle('dialog:openDirectory', async () => {
-        const { canceled, filePaths } = await dialog.showOpenDialog({ properties: ['openDirectory'] })
-        if (!canceled) return filePaths[0]
+        safeMainLog('log', '[IPC] dialog:openDirectory called')
+        const parentWindow = BrowserWindow.getFocusedWindow() || win!
+        const { canceled, filePaths } = await dialog.showOpenDialog(parentWindow, { 
+            properties: ['openDirectory'],
+            title: 'Select Project Folder'
+        })
+        if (!canceled && filePaths.length > 0) {
+            safeMainLog('log', `[IPC] User selected directory: ${filePaths[0]}`)
+            return filePaths[0]
+        }
+        safeMainLog('log', '[IPC] Directory selection canceled')
         return null
     })
 
@@ -539,7 +548,7 @@ app.whenReady().then(() => {
         return getWorkspaceMemorySnapshot(workspaceRoot || activeWorkspaceRoot)
     })
     ipcMain.handle('workspace:updateEditorContext', (_event, payload: Record<string, any>) => {
-        if (payload?.filePath && isPathInsideWorkspace(payload.filePath, activeWorkspaceRoot)) {
+        if (typeof payload?.filePath === 'string' && isPathInsideWorkspace(payload.filePath, activeWorkspaceRoot)) {
             recordWorkspaceEvent('editor_focus_changed', {
                 filePath: path.resolve(payload.filePath),
                 cursorLine: payload.cursorLine,
@@ -551,13 +560,18 @@ app.whenReady().then(() => {
 
     // ── File System IPC ──
     ipcMain.handle('fs:readDir', (_event, dirPath: string) => {
+        safeMainLog('log', `[IPC] fs:readDir called for: ${dirPath || 'activeWorkspaceRoot'}`)
         const workspaceRoot = normalizeWorkspaceRoot(dirPath || activeWorkspaceRoot)
+        safeMainLog('log', `[IPC] fs:readDir resolved root: ${workspaceRoot}`)
+        
         if (dirPath && existsSync(dirPath)) {
             recordWorkspaceEvent('folder_accessed', {
                 folderPath: path.resolve(dirPath),
             }, workspaceRoot)
         }
-        return getFileTree(dirPath, 0, 4)
+        const tree = getFileTree(workspaceRoot, 0, 4)
+        safeMainLog('log', `[IPC] fs:readDir returning tree with ${tree.length} top-level entries`)
+        return tree
     })
     ipcMain.handle('fs:readFile', (_event, filePath: string) => {
         try {
@@ -647,7 +661,11 @@ app.whenReady().then(() => {
         }
     })
     ipcMain.handle('fs:getProjectRoot', () => {
-        return path.join(process.env.APP_ROOT!, '..')
+        safeMainLog('log', `[IPC] fs:getProjectRoot returning: ${activeWorkspaceRoot || 'null'}`)
+        return activeWorkspaceRoot || null
+    })
+    ipcMain.handle('workspace:getRoot', () => {
+        return activeWorkspaceRoot || null
     })
 
     // ── Search IPC ──

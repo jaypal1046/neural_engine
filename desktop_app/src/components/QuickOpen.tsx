@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, File, Clock, Hash, ArrowRight } from 'lucide-react'
+import { readDir } from '../lib/desktopBridge'
 
 interface FileItem {
     name: string
@@ -125,11 +126,11 @@ export function QuickOpen({ projectRoot, onOpen, onClose, mode = 'file', initial
 
     // Load file tree
     useEffect(() => {
-        if (!projectRoot || !window.fs?.readDir) {
+        if (!projectRoot) {
             setLoading(false)
             return
         }
-        window.fs.readDir(projectRoot).then((tree: any[]) => {
+        readDir(projectRoot).then((tree: any[]) => {
             setFiles(flattenFileTree(tree))
             setLoading(false)
         }).catch(() => setLoading(false))

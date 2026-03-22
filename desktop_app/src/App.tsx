@@ -24,6 +24,7 @@ import { NotificationManager, useNotifications } from './components/Notification
 import { AIStatsPanel } from './components/AIStatsPanel'
 import { DocumentViewer } from './components/DocumentViewer'
 import { ProjectMemoryPanel } from './components/ProjectMemoryPanel'
+import { getProjectRoot, selectDirectory, selectFile } from './lib/desktopBridge'
 
 declare global {
   interface Window {
@@ -90,10 +91,14 @@ function App() {
 
   // Load project root
   useEffect(() => {
-    if (window.fs?.getProjectRoot) {
-      window.fs.getProjectRoot().then((root: string) => setProjectRoot(root))
-    }
+    getProjectRoot()?.then((root: string | null) => {
+      setProjectRoot(root || '')
+    }).catch(() => {
+      // Ignore desktop bridge startup failures
+    })
   }, [])
+
+
 
   useEffect(() => {
     if (projectRoot && window.appApi?.setWorkspaceRoot) {
@@ -220,6 +225,10 @@ function App() {
         e.preventDefault()
         handleOpenFile()
       }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'O' || e.key === 'o')) {
+        e.preventDefault()
+        handleOpenFolder()
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault()
         handleNewFile()
@@ -256,6 +265,16 @@ function App() {
     }
     window.addEventListener('open-quick-open', handleOpenQuickOpen)
     return () => window.removeEventListener('open-quick-open', handleOpenQuickOpen)
+  }, [])
+
+  // ── Open Terminal event listener ──
+  useEffect(() => {
+    const handleOpenTerminalCwd = () => {
+      setBottomPanelOpen(true)
+      setActiveBottomTab('terminal')
+    }
+    window.addEventListener('open-terminal-cwd', handleOpenTerminalCwd)
+    return () => window.removeEventListener('open-terminal-cwd', handleOpenTerminalCwd)
   }, [])
 
   // ── Notify on save events ──
@@ -373,43 +392,99 @@ function App() {
 
   // ── File operations ──
   const handleOpenFile = async () => {
-    if (window.ipcRenderer?.selectFile) {
-      const f = await window.ipcRenderer.selectFile()
-      if (f) openFile(f, f.split(/[\\/]/).pop()!)
+    const f = await selectFile()
+    if (f) {
+      const nextRoot = f.includes('\\') || f.includes('/')
+        ? f.replace(/[\\/][^\\/]+$/, '')
+        : projectRoot
+      if (nextRoot) {
+        setProjectRoot(nextRoot)
+        setActivePanel('explorer')
+        setSidebarOpen(true)
+      }
+      openFile(f, f.split(/[\\/]/).pop()!)
     }
   }
 
-  const handleOpenFolder = async () => {
-    if (window.ipcRenderer?.selectDirectory) {
-      const dir = await window.ipcRenderer.selectDirectory()
+  const handleOpenFolder = useCallback(async () => {
+    console.log('[App] handleOpenFolder called')
+
+    // 1. Prefer the Electron bridge when available
+    try {
+      const dir = await selectDirectory()
+      console.log(`[App] User selected directory: ${dir}`)
       if (dir) {
         setProjectRoot(dir)
         setActivePanel('explorer')
         setSidebarOpen(true)
+        return
+      }
+    } catch (err) {
+      console.error('[App] Electron directory picker failed:', err)
+    }
+
+    // 2. Browser preview fallback
+    if (typeof (window as any).showDirectoryPicker === 'function') {
+      try {
+        const handle = await (window as any).showDirectoryPicker()
+        setProjectRoot(handle.name)
+        setActivePanel('explorer')
+        setSidebarOpen(true)
+        console.log('[App] Browser folder opened:', handle.name)
+        return
+      } catch (err: any) {
+        if (err.name === 'AbortError') return
+        console.error('[App] Browser directory picker failed:', err)
       }
     }
-  }
+
+    // 3. Final fallback
+    const desktopSignals = [
+      Boolean(window.ipcRenderer?.invoke),
+      Boolean(window.fs?.readDir),
+      Boolean(window.appApi?.setWorkspaceRoot),
+    ].filter(Boolean).length
+
+    if (desktopSignals > 0) {
+      alert('Folder picker is unavailable in this desktop session. Fully close Neural Studio and reopen it so the Electron preload bridge can attach, then try Open Folder again.')
+      return
+    }
+
+    alert('Folder selection is not supported in the web preview. Start the desktop app with "npm run dev" in desktop_app, or use "npm run dev:web" only for browser preview.')
+  }, [setProjectRoot, setActivePanel, setSidebarOpen]);
+
+  // Register global workspace command listeners
+  useEffect(() => {
+    const onSetRoot = (e: Event) => {
+      const root = (e as CustomEvent<{ root: string }>).detail?.root
+      if (root) {
+        setProjectRoot(root)
+        setActivePanel('explorer')
+        setSidebarOpen(true)
+      }
+    }
+    const onOpenFolder = () => handleOpenFolder()
+
+    window.addEventListener('set-project-root', onSetRoot)
+    window.addEventListener('open-project-folder', onOpenFolder)
+    return () => {
+      window.removeEventListener('set-project-root', onSetRoot)
+      window.removeEventListener('open-project-folder', onOpenFolder)
+    }
+  }, [handleOpenFolder])
 
   const handleNewFile = async () => {
-    const name = prompt('New file name:')
-    if (!name || !projectRoot) return
-    if (window.fs?.createFile) {
-      const path = `${projectRoot}\\${name}`
-      await window.fs.createFile(path)
-      openFile(path, name)
-    }
+    // Trigger new file from the explorer sidebar instead of using prompt()
+    setActivePanel('explorer')
+    setSidebarOpen(true)
+    // Fire event that FileExplorer can listen for
+    window.dispatchEvent(new CustomEvent('explorer-new-file'))
   }
 
   const handleRunTask = () => {
     setBottomPanelOpen(true)
     setActiveBottomTab('terminal')
-    // Send run cmd
-    const cmd = prompt('Run command:', 'npm run dev')
-    if (cmd) {
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('run-terminal-command', { detail: { cmd } }))
-      }, 300)
-    }
+    // Just open the terminal - user can type commands directly
   }
 
   const handleRunActiveFile = () => {
@@ -604,12 +679,12 @@ function App() {
 
   // ── Render active editor content ──
   const renderEditorContent = () => {
-    if (!activeTab) return <WelcomeScreen openFile={openFile} openWebView={openWebView} openAIChat={openAIChat}
+    if (!activeTab) return <WelcomeScreen openFile={openFile} openFolder={handleOpenFolder} openWebView={openWebView} openAIChat={openAIChat}
       openCompress={() => openTab({ id: 'compress', label: 'Compress', type: 'compress' })} />
 
     switch (activeTab.type) {
       case 'welcome':
-        return <WelcomeScreen openFile={openFile} openWebView={openWebView} openAIChat={openAIChat}
+        return <WelcomeScreen openFile={openFile} openFolder={handleOpenFolder} openWebView={openWebView} openAIChat={openAIChat}
           openCompress={() => openTab({ id: 'compress', label: 'Compress', type: 'compress' })} />
       case 'file': {
         const ext = activeTab.filePath?.split('.').pop()?.toLowerCase() || ''
@@ -630,11 +705,11 @@ function App() {
       case 'webview':
         return <WebViewPanel url={activeTab.url} />
       case 'ai-chat':
-        return <AIChatPanel serverStatus={serverStatus} />
+        return <AIChatPanel serverStatus={serverStatus} projectRoot={projectRoot} activeFilePath={activeFilePath} />
       case 'settings':
         return <SettingsPanel />
       default:
-        return <WelcomeScreen openFile={openFile} openWebView={openWebView} openAIChat={openAIChat}
+        return <WelcomeScreen openFile={openFile} openFolder={handleOpenFolder} openWebView={openWebView} openAIChat={openAIChat}
           openCompress={() => openTab({ id: 'compress', label: 'Compress', type: 'compress' })} />
     }
   }

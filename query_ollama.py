@@ -20,7 +20,7 @@ def load_prompt_and_model(argv, default_model):
 
     return prompt, model
 
-def query_ollama(prompt, model="llama3"):
+def query_ollama(prompt, model="qwen2.5-coder:7b"):
     url = "http://localhost:11434/api/generate"
     data = json.dumps({
         "model": model,
@@ -44,5 +44,5 @@ def query_ollama(prompt, model="llama3"):
         print("Make sure Ollama is running (ollama serve)")
 
 if __name__ == "__main__":
-    prompt, model = load_prompt_and_model(sys.argv, "llama3")
+    prompt, model = load_prompt_and_model(sys.argv, "qwen2.5-coder:7b")
     query_ollama(prompt, model)

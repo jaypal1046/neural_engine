@@ -76,7 +76,8 @@ export function TerminalPanel({ activeTab, onTabChange, onClose, projectRoot, pr
         }
     }, [outputLogs, activeTab])
 
-    const createTerminal = useCallback(async () => {
+    const createTerminal = useCallback(async (customCwd?: string) => {
+        const cwd = typeof customCwd === 'string' ? customCwd : projectRoot
         const id = `term-${Date.now()}`
         const newTerm: TerminalInstance = {
             id,
@@ -92,7 +93,7 @@ export function TerminalPanel({ activeTab, onTabChange, onClose, projectRoot, pr
         // Spawn actual terminal process
         if (window.terminal?.spawn) {
             try {
-                await window.terminal.spawn(id, projectRoot)
+                await window.terminal.spawn(id, cwd)
 
                 window.terminal.onData(id, (data: string) => {
                     setTerminals(prev => prev.map(t =>
@@ -180,8 +181,21 @@ export function TerminalPanel({ activeTab, onTabChange, onClose, projectRoot, pr
             }
         }
         window.addEventListener('run-terminal-command', handleRunCommand)
-        return () => window.removeEventListener('run-terminal-command', handleRunCommand)
-    }, [activeTerminalId])
+        
+        const handleOpenTerminalCwd = (e: Event) => {
+            const customEvent = e as CustomEvent<string>
+            const cwd = customEvent.detail
+            if (cwd) {
+                createTerminal(cwd)
+            }
+        }
+        window.addEventListener('open-terminal-cwd', handleOpenTerminalCwd)
+
+        return () => {
+            window.removeEventListener('run-terminal-command', handleRunCommand)
+            window.removeEventListener('open-terminal-cwd', handleOpenTerminalCwd)
+        }
+    }, [activeTerminalId, createTerminal])
 
     // Split terminal: show current + create new side-by-side
     const handleSplitTerminal = useCallback(async () => {
@@ -340,7 +354,7 @@ export function TerminalPanel({ activeTab, onTabChange, onClose, projectRoot, pr
                             <Columns size={14} />
                         </button>
                     )}
-                    <button className="panel-action-btn" onClick={createTerminal} title="New Terminal">
+                    <button className="panel-action-btn" onClick={() => createTerminal()} title="New Terminal">
                         <Plus size={14} />
                     </button>
                     <button className="panel-action-btn" onClick={clearTerminal} title="Clear">

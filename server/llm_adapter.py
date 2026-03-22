@@ -4,7 +4,7 @@ import os
 from typing import List, Dict, Any, Optional
 
 class OllamaAdapter:
-    def __init__(self, model: str = "llama3", base_url: str = "http://localhost:11434"):
+    def __init__(self, model: str = "qwen2.5-coder:7b", base_url: str = "http://127.0.0.1:11434"):
         self.model = model
         self.base_url = base_url
 
@@ -17,14 +17,15 @@ class OllamaAdapter:
         num_ctx: int = 2048,
         timeout: int = 45,
         num_predict: int = 256,
-    ) -> str:
+        stream: bool = False,
+    ):
         """
         Sends a conversation history to Ollama.
         """
         payload = {
             "model": self.model,
             "messages": messages,
-            "stream": False,
+            "stream": stream,
             "options": {
                 "temperature": temperature,
                 "num_ctx": num_ctx,
@@ -40,13 +41,33 @@ class OllamaAdapter:
             response = requests.post(
                 f"{self.base_url}/api/chat",
                 json=payload,
-                timeout=timeout
+                timeout=timeout,
+                stream=stream
             )
             response.raise_for_status()
+            
+            if stream:
+                def gen():
+                    for line in response.iter_lines():
+                        if line:
+                            try:
+                                chunk = json.loads(line)
+                                msg = chunk.get("message", {}).get("content", "")
+                                if msg: 
+                                    yield msg
+                            except Exception:
+                                pass
+                return gen()
+
             data = response.json()
             return data.get("message", {}).get("content", "")
         except Exception as e:
-            return f"Error contacting Ollama: {str(e)}"
+            error_msg = str(e)
+            if stream:
+                def err_gen():
+                    yield f"Error contacting Ollama: {error_msg}"
+                return err_gen()
+            return f"Error contacting Ollama: {error_msg}"
 
     def generate_streaming(self, prompt: str):
         """Streaming version for better UI response."""

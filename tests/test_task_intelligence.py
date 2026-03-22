@@ -114,6 +114,23 @@ class LocalTaskIntelligenceTests(unittest.TestCase):
         self.assertEqual(result["route"], "modify_chat")
         self.assertEqual(result["intent"], "modify")
 
+    def test_flow_explanation_request_does_not_route_to_modify_chat(self):
+        with tempfile.TemporaryDirectory() as temp_local:
+            original_local = os.environ.get("LOCALAPPDATA")
+            try:
+                os.environ["LOCALAPPDATA"] = temp_local
+                intelligence = LocalTaskIntelligence(str(REPO_ROOT))
+                intelligence._candidate_steps = lambda _message, _task: []
+                result = intelligence.prepare_task("flow from editor selection to modify patch", allow_web=False)
+            finally:
+                if original_local is None:
+                    os.environ.pop("LOCALAPPDATA", None)
+                else:
+                    os.environ["LOCALAPPDATA"] = original_local
+
+        self.assertEqual(result["route"], "context_chat")
+        self.assertEqual(result["intent"], "explain_or_review")
+
     def test_desktop_target_prefers_desktop_analysis_steps(self):
         with tempfile.TemporaryDirectory() as temp_local:
             original_local = os.environ.get("LOCALAPPDATA")

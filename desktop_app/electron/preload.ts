@@ -35,6 +35,7 @@ contextBridge.exposeInMainWorld('fs', {
     rename: (oldPath: string, newPath: string) => ipcRenderer.invoke('fs:rename', oldPath, newPath),
     stat: (filePath: string) => ipcRenderer.invoke('fs:stat', filePath),
     getProjectRoot: () => ipcRenderer.invoke('fs:getProjectRoot'),
+    selectDirectory: () => ipcRenderer.invoke('dialog:openDirectory'),
 })
 
 // ── Search API ──

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Play, Plus, Trash2, Settings, Save, ChevronDown, RefreshCw } from 'lucide-react'
+import { readFile } from '../lib/desktopBridge'
 
 export interface RunConfig {
     name: string
@@ -53,12 +54,12 @@ export function RunPanel({ projectRoot, activeFilePath }: Props) {
     // Load package.json scripts
     useEffect(() => {
         const load = async () => {
-            if (!projectRoot || !window.fs?.readFile) {
+            if (!projectRoot) {
                 setLoading(false)
                 return
             }
             try {
-                const content = await window.fs.readFile(`${projectRoot}\\package.json`)
+                const content = await readFile(`${projectRoot}\\package.json`)
                 if (content && typeof content === 'string') {
                     const pkg = JSON.parse(content)
                     if (pkg.scripts) setScripts(pkg.scripts)

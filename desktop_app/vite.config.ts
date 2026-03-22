@@ -11,9 +11,34 @@ export default defineConfig({
     electron([
       {
         entry: 'electron/main.ts',
+        onstart(options) {
+          options.startup()
+        },
+        vite: {
+          build: {
+            rollupOptions: {
+              output: {
+                entryFileNames: 'bundles/[name]-[hash].js',
+                chunkFileNames: 'bundles/chunks/[name]-[hash].js',
+                assetFileNames: 'bundles/assets/[name]-[hash][extname]',
+              },
+            },
+          },
+        },
       },
       {
         entry: 'electron/preload.ts',
+        vite: {
+          build: {
+            rollupOptions: {
+              output: {
+                entryFileNames: 'bundles/[name]-[hash].js',
+                chunkFileNames: 'bundles/chunks/[name]-[hash].js',
+                assetFileNames: 'bundles/assets/[name]-[hash][extname]',
+              },
+            },
+          },
+        },
         onstart(options) {
           options.reload()
         },

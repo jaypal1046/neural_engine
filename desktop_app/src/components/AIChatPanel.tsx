@@ -3,6 +3,7 @@ import {
     ArrowUp, BrainCircuit, Check, Copy, Globe, Paperclip, Square,
     ThumbsDown, ThumbsUp, Wand2, Zap
 } from 'lucide-react'
+import { readFile, selectFile } from '../lib/desktopBridge'
 
 const API = 'http://127.0.0.1:8001'
 
@@ -76,6 +77,18 @@ interface AnalysisDetails {
     preferredCommands?: string[]
     steps: AnalysisStep[]
     alternatives?: AnalysisStep[]
+}
+
+interface ChatAttachment {
+    name: string
+    path: string
+    content: string
+}
+
+interface AIChatPanelProps {
+    serverStatus: string
+    projectRoot?: string
+    activeFilePath?: string
 }
 
 function FlowSectionsBlock({ sections }: { sections: FlowSection[] }) {
@@ -269,7 +282,7 @@ function ReviewFindingsBlock({ findings }: { findings: ReviewFinding[] }) {
     )
 }
 
-function AnalysisBlock({ analysis }: { analysis: AnalysisDetails }) {
+function AnalysisBlock({ analysis, workspaceRoot }: { analysis: AnalysisDetails; workspaceRoot?: string }) {
     if (!analysis.steps.length) return null
     const [preferredCommands, setPreferredCommands] = useState<string[]>(analysis.preferredCommands || [])
 
@@ -290,6 +303,7 @@ function AnalysisBlock({ analysis }: { analysis: AnalysisDetails }) {
                 body: JSON.stringify({
                     intent: analysis.preferenceIntent,
                     command_name: commandName,
+                    workspace_root: workspaceRoot || '',
                 }),
             })
             const data = await res.json()
@@ -552,7 +566,7 @@ const CodeBlock = ({
     )
 }
 
-export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
+export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '' }: AIChatPanelProps) {
     const [messages, setMessages] = useState<Message[]>([
         {
             role: 'system',
@@ -568,7 +582,53 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
     const [input, setInput] = useState('')
     const [isTyping, setIsTyping] = useState(false)
     const [webEnabled, setWebEnabled] = useState(false)
+    const [attachedFiles, setAttachedFiles] = useState<ChatAttachment[]>([])
     const historyRef = useRef<HTMLDivElement>(null)
+
+    const attachFile = async (filePath: string) => {
+        if (!filePath) return
+        if (attachedFiles.some((file) => file.path === filePath)) return
+
+        try {
+            const result = await readFile(filePath)
+            if (typeof result !== 'string') {
+                throw new Error(result?.error || 'Could not read file')
+            }
+
+            const normalized = result.length > 12000
+                ? `${result.slice(0, 12000)}\n\n[Truncated for chat context]`
+                : result
+
+            setAttachedFiles((prev) => [
+                ...prev,
+                {
+                    name: filePath.split(/[\\/]/).pop() || filePath,
+                    path: filePath,
+                    content: normalized,
+                },
+            ])
+        } catch (error) {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    role: 'assistant',
+                    content: `I could not attach \`${filePath}\`: ${error instanceof Error ? error.message : 'Unknown error'}.`,
+                    timestamp: new Date(),
+                    tool: 'attachment_error',
+                },
+            ])
+        }
+    }
+
+    const handleAttachFile = async () => {
+        const preferredPath = activeFilePath || await selectFile()
+        if (!preferredPath) return
+        await attachFile(preferredPath)
+    }
+
+    const removeAttachment = (filePath: string) => {
+        setAttachedFiles((prev) => prev.filter((file) => file.path !== filePath))
+    }
 
     useEffect(() => {
         if (historyRef.current) {
@@ -595,33 +655,98 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
             .filter(m => m.role !== 'system')
             .map(m => ({ role: m.role, content: m.content }))
 
-        const userMsg: Message = { role: 'user', content: text, timestamp: new Date() }
+        const attachmentContext = attachedFiles.length > 0
+            ? '\n\nAttached local file context:\n' + attachedFiles.map((file) => (
+                `File: ${file.path}\n\`\`\`\n${file.content}\n\`\`\``
+            )).join('\n\n')
+            : ''
+        const requestMessage = `${text}${attachmentContext}`
+        const visibleUserMessage = attachedFiles.length > 0
+            ? `${text}\n\n[Attached files: ${attachedFiles.map((file) => file.name).join(', ')}]`
+            : text
+
+        const userMsg: Message = { role: 'user', content: visibleUserMessage, timestamp: new Date() }
         setMessages(prev => [...prev, userMsg])
         setInput('')
         setIsTyping(true)
 
+        const assistantMsgId = `msg-${Date.now()}`
+        setMessages(prev => [...prev, {
+            role: 'assistant',
+            content: '',
+            timestamp: new Date(),
+            messageId: assistantMsgId,
+        }])
+
         try {
-            const res = await fetch(`${API}/api/chat`, {
+            const res = await fetch(`${API}/api/chat_stream`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: text,
+                    message: requestMessage,
                     history: historyPayload,
                     web_search: webEnabled,
+                    workspace_root: projectRoot || undefined,
                 }),
             })
 
             if (!res.ok) {
-                setMessages(prev => [...prev, {
-                    role: 'assistant',
-                    content: `The local connector returned status ${res.status}. Check the Python connector and C++ brain processes.`,
-                    timestamp: new Date(),
-                }])
+                setMessages(prev => prev.map(m => m.messageId === assistantMsgId ? {
+                    ...m,
+                    content: `The local connector returned status ${res.status}. Check the Python connector and C++ brain processes.`
+                } : m))
                 return
             }
 
-            const data = await res.json()
-            let replyContent = data.response || data.reply || data.content || JSON.stringify(data)
+            const reader = res.body?.getReader()
+            const decoder = new TextDecoder()
+            let partialContent = ''
+            let finalData: any = null
+            let sseBuffer = ''
+
+            if (reader) {
+                while (true) {
+                    const { done, value } = await reader.read()
+                    if (done) break
+                    sseBuffer += decoder.decode(value, { stream: true })
+
+                    let newlineIndex
+                    while ((newlineIndex = sseBuffer.indexOf('\n\n')) >= 0) {
+                        const line = sseBuffer.slice(0, newlineIndex).trim()
+                        sseBuffer = sseBuffer.slice(newlineIndex + 2)
+
+                        if (line.startsWith('data: ')) {
+                            const jsonStr = line.slice(6).trim()
+                            if (jsonStr) {
+                                try {
+                                    const event = JSON.parse(jsonStr)
+                                    if (event.type === 'chunk' && event.content) {
+                                        if (isTyping) setIsTyping(false)
+                                        partialContent += event.content
+                                        setMessages(prev => prev.map(m =>
+                                            m.messageId === assistantMsgId ? { ...m, content: partialContent } : m
+                                        ))
+                                    } else if (event.type === 'final' && event.data) {
+                                        if (isTyping) setIsTyping(false)
+                                        finalData = event.data
+                                    } else if (event.type === 'error') {
+                                        if (isTyping) setIsTyping(false)
+                                        partialContent += `\n[Error: ${event.error}]`
+                                        setMessages(prev => prev.map(m =>
+                                            m.messageId === assistantMsgId ? { ...m, content: partialContent } : m
+                                        ))
+                                    }
+                                } catch (e) {
+                                    console.error('SSE parse error:', e, jsonStr)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            const data = finalData || {}
+            let replyContent = data.response || data.reply || data.content || partialContent || JSON.stringify(data)
             let toolUsed = data.tool
             let confidence = data.confidence || 100
             let proposedCommand = ''
@@ -698,17 +823,18 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                 : []
 
             try {
-                const jsonMatch = replyContent.match(/\{[\s\S]*\}/)
-                const jsonString = jsonMatch ? jsonMatch[0] : replyContent
-                const parsed = JSON.parse(jsonString)
-                if (parsed.answer) {
-                    replyContent = parsed.answer
-                    confidence = parsed.confidence !== undefined ? parsed.confidence : confidence
-                    if (parsed.sources && parsed.sources.length > 0) {
-                        replyContent += '\n\nSources:\n' + parsed.sources.map((s: string) => `- ${s}`).join('\n')
+                // Only try to parse as JSON if it looks like a structured response
+                if (replyContent.trim().startsWith('{') && replyContent.trim().endsWith('}')) {
+                    const parsed = JSON.parse(replyContent.trim())
+                    if (parsed.answer) {
+                        replyContent = parsed.answer
+                        confidence = parsed.confidence !== undefined ? parsed.confidence : confidence
+                        if (parsed.sources && parsed.sources.length > 0) {
+                            replyContent += '\n\nSources:\n' + parsed.sources.map((s: string) => `- ${s}`).join('\n')
+                        }
+                    } else if (parsed.response) {
+                        replyContent = parsed.response
                     }
-                } else if (parsed.response) {
-                    replyContent = parsed.response
                 }
             } catch {
                 // Plain text response, keep as-is.
@@ -753,12 +879,10 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                 replyContent += '\n\nSources:\n' + sourceLines.map(line => `- ${line}`).join('\n')
             }
 
-            setMessages(prev => [...prev, {
-                role: 'assistant',
+            setMessages(prev => prev.map(m => m.messageId === assistantMsgId ? {
+                ...m,
                 content: replyContent,
-                timestamp: new Date(),
                 tool: toolUsed,
-                messageId: `msg-${Date.now()}`,
                 feedback: null,
                 command: proposedCommand,
                 browserUrl: proposedUrl,
@@ -773,13 +897,24 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                 targetPath,
                 appliedContent,
                 validation,
-            }])
+            } : m))
+            setAttachedFiles([])
         } catch (err) {
-            setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: `Could not reach the local connector at ${API}. Make sure the Python connector is running.`,
-                timestamp: new Date(),
-            }])
+            setMessages(prev => {
+                const exists = prev.some(m => m.messageId === assistantMsgId)
+                if (exists) {
+                    return prev.map(m => m.messageId === assistantMsgId ? {
+                        ...m,
+                        content: `Could not reach the local connector at ${API}. Make sure the Python connector is running.`
+                    } : m)
+                } else {
+                    return [...prev, {
+                        role: 'assistant',
+                        content: `Could not reach the local connector at ${API}. Make sure the Python connector is running.`,
+                        timestamp: new Date(),
+                    }]
+                }
+            })
         } finally {
             setIsTyping(false)
         }
@@ -918,6 +1053,11 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                             }} />
                             {serverStatus === 'online' ? 'Connected to Neural Engine' : 'Engine offline'}
                         </div>
+                        <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 2 }}>
+                            {projectRoot
+                                ? `Workspace: ${projectRoot.split(/[\\/]/).pop() || projectRoot}${activeFilePath ? ` · Active file: ${activeFilePath.split(/[\\/]/).pop() || activeFilePath}` : ''}`
+                                : 'Open a folder to give chat full workspace context'}
+                        </div>
                     </div>
                 </div>
                 <button
@@ -980,9 +1120,16 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                                     </div>
                                 )}
                                 <div className={`ai-bubble ${msg.role}`}>
-                                    {formatContent(msg.content)}
+                                    {msg.role === 'assistant' && !msg.content && !msg.analysis && !msg.proposedCode ? (
+                                        <div className="ai-thinking-inline">
+                                            <span className="ai-thinking-text">Thinking</span>
+                                            <div className="dot-flashing" />
+                                        </div>
+                                    ) : (
+                                        formatContent(msg.content)
+                                    )}
                                     {msg.analysis && msg.analysis.steps.length > 0 && (
-                                        <AnalysisBlock analysis={msg.analysis} />
+                                        <AnalysisBlock analysis={msg.analysis} workspaceRoot={projectRoot} />
                                     )}
                                     {msg.proposedCode && (
                                         <div style={{ marginTop: 12 }}>
@@ -1121,7 +1268,7 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
                     )
                 })}
 
-                {isTyping && (
+                {isTyping && messages[messages.length - 1]?.role !== 'assistant' && (
                     <div className="ai-msg-row">
                         <div className="ai-msg-avatar-sm assistant">AI</div>
                         <div className="ai-typing">
@@ -1157,8 +1304,50 @@ export function AIChatPanel({ serverStatus }: { serverStatus: string }) {
             </div>
 
             <div className="ai-input-area">
+                {attachedFiles.length > 0 && (
+                    <div style={{
+                        display: 'flex',
+                        gap: 6,
+                        flexWrap: 'wrap',
+                        margin: '0 16px 8px',
+                    }}>
+                        {attachedFiles.map((file) => (
+                            <div
+                                key={file.path}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                    padding: '4px 8px',
+                                    borderRadius: 999,
+                                    border: '1px solid var(--border)',
+                                    background: 'var(--bg-dark)',
+                                    color: 'var(--text-muted)',
+                                    fontSize: 11,
+                                }}
+                            >
+                                <span>{file.name}</span>
+                                <button
+                                    onClick={() => removeAttachment(file.path)}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        color: 'var(--text-faint)',
+                                        cursor: 'pointer',
+                                        padding: 0,
+                                        fontSize: 12,
+                                        lineHeight: 1,
+                                    }}
+                                    title="Remove attachment"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
                 <div className="ai-input-box">
-                    <button className="ai-input-action" title="Attach file">
+                    <button className="ai-input-action" title="Attach active file or choose a file" onClick={() => { void handleAttachFile() }}>
                         <Paperclip size={15} />
                     </button>
                     <input

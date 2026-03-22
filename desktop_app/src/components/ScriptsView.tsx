@@ -13,7 +13,9 @@ export function ScriptsView() {
                     <label>Script Path</label>
                     <input type="text" placeholder="Select a script file (.bat, .py, .sh)..." id="script_file" />
                     <button className="ghost-btn" onClick={async () => {
-                        const file = await window.ipcRenderer.selectFile();
+    const file = window.ipcRenderer.selectFile
+      ? await window.ipcRenderer.selectFile()
+      : await window.ipcRenderer.invoke?.('dialog:openFile');
                         if (file) {
                             (document.getElementById('script_file') as HTMLInputElement).value = file;
                         }

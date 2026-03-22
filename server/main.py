@@ -595,7 +595,8 @@ def decompress_stream(payload: DecompressRequest):
 # ============================================
 # SECURITY: Workspace Path Validation
 # ============================================
-WORKSPACE_ROOT = os.path.realpath(BASE_DIR)
+DEFAULT_WORKSPACE_ROOT = os.path.realpath(BASE_DIR)
+WORKSPACE_ROOT = DEFAULT_WORKSPACE_ROOT
 SAFE_COMMANDS = {
     "git",
     "python",
@@ -613,24 +614,77 @@ SAFE_COMMANDS = {
 }
 SHELL_METACHARS = {"&&", "||", ";", "|", ">", "<", "$(", "`"}
 MAX_CHAT_HISTORY = 8
+_CONTEXT_PROVIDER_CACHE: dict[str, Any] = {}
+_TASK_INTELLIGENCE_CACHE: dict[str, Any] = {}
+_CODE_GRAPH_ENGINE_CACHE: dict[str, Any] = {}
 
 
-def is_within_workspace(path_str: str) -> bool:
-    """Return True when the resolved path stays inside the workspace root."""
+def resolve_workspace_root(path_str: Optional[str] = None) -> str:
+    """Resolve the active workspace root, falling back to the server repo."""
+    if not path_str:
+        return DEFAULT_WORKSPACE_ROOT
+
     try:
         resolved = os.path.realpath(os.path.abspath(os.path.expanduser(path_str)))
-        return os.path.commonpath([WORKSPACE_ROOT, resolved]) == WORKSPACE_ROOT
+    except Exception:
+        return DEFAULT_WORKSPACE_ROOT
+
+    return resolved if os.path.isdir(resolved) else DEFAULT_WORKSPACE_ROOT
+
+
+def get_context_provider(workspace_root: Optional[str] = None):
+    root = resolve_workspace_root(workspace_root)
+    if ContextProvider is None:
+        return None
+    if root not in _CONTEXT_PROVIDER_CACHE:
+        _CONTEXT_PROVIDER_CACHE[root] = ContextProvider(root)
+    return _CONTEXT_PROVIDER_CACHE[root]
+
+
+def get_task_intelligence(workspace_root: Optional[str] = None):
+    root = resolve_workspace_root(workspace_root)
+    if LocalTaskIntelligence is None:
+        return None
+    if root not in _TASK_INTELLIGENCE_CACHE:
+        _TASK_INTELLIGENCE_CACHE[root] = LocalTaskIntelligence(root)
+    return _TASK_INTELLIGENCE_CACHE[root]
+
+
+def get_code_graph_engine(workspace_root: Optional[str] = None):
+    root = resolve_workspace_root(workspace_root)
+    if CodeGraphEngine is None:
+        return None
+    if root not in _CODE_GRAPH_ENGINE_CACHE:
+        _CODE_GRAPH_ENGINE_CACHE[root] = CodeGraphEngine(root)
+    return _CODE_GRAPH_ENGINE_CACHE[root]
+
+
+def request_workspace_root(req: Optional["ChatRequest"] = None, task_prep: Optional[dict[str, Any]] = None) -> str:
+    if task_prep and task_prep.get("workspace_root"):
+        return resolve_workspace_root(str(task_prep.get("workspace_root")))
+    if req is not None and getattr(req, "workspace_root", None):
+        return resolve_workspace_root(str(req.workspace_root))
+    return DEFAULT_WORKSPACE_ROOT
+
+
+def is_within_workspace(path_str: str, workspace_root: Optional[str] = None) -> bool:
+    """Return True when the resolved path stays inside the workspace root."""
+    try:
+        root = resolve_workspace_root(workspace_root)
+        resolved = os.path.realpath(os.path.abspath(os.path.expanduser(path_str)))
+        return os.path.commonpath([root, resolved]) == root
     except ValueError:
         return False
 
 
-def validate_path(path_str: str) -> str:
+def validate_path(path_str: str, workspace_root: Optional[str] = None) -> str:
     """Ensure paths stay within the authorized workspace root."""
     if not path_str:
         raise HTTPException(status_code=400, detail="Path cannot be empty")
 
+    root = resolve_workspace_root(workspace_root)
     resolved = os.path.realpath(os.path.abspath(os.path.expanduser(path_str)))
-    if not is_within_workspace(resolved):
+    if not is_within_workspace(resolved, root):
         print(f"[SECURITY] Path traversal attempt blocked: {resolved}", flush=True)
         raise HTTPException(status_code=403, detail=f"Access denied: {path_str} is outside workspace")
     return resolved
@@ -2150,10 +2204,12 @@ class ChatRequest(BaseModel):
     message: str
     history: list[ChatMessage] = []
     web_search: bool = False
+    workspace_root: Optional[str] = None
 
 class CommandPreferenceRequest(BaseModel):
     intent: str
     command_name: str
+    workspace_root: Optional[str] = None
 
 class GraphSymbolRequest(BaseModel):
     symbol: str
@@ -2206,8 +2262,8 @@ LOCAL_LOOKUP_SUMMARIES = {
     "node.js": "Node.js is a JavaScript runtime used to build servers, tooling, and desktop integrations outside the browser.",
 }
 
-FAST_CHAT_MODEL = os.environ.get("OLLAMA_FAST_MODEL") or os.environ.get("OLLAMA_MODEL") or "llama3:latest"
-CONTEXT_CHAT_MODEL = os.environ.get("OLLAMA_CONTEXT_MODEL") or FAST_CHAT_MODEL
+FAST_CHAT_MODEL = os.environ.get("OLLAMA_FAST_MODEL") or "qwen2.5-coder:7b"
+CONTEXT_CHAT_MODEL = os.environ.get("OLLAMA_CONTEXT_MODEL") or "qwen2.5-coder:7b"
 HTTP_HEADERS = {
     "accept": "application/json",
     "user-agent": "NeuralStudio/1.0 (local desktop assistant)",
@@ -2227,6 +2283,7 @@ DEEP_AGENT_KEYWORDS = {
 
 
 def small_talk_reply(message: str) -> Optional[str]:
+    print(f">>> DEBUG: small_talk_reply(message='{message}')")
     cleaned = re.sub(r"\s+", " ", message.strip().lower())
     normalized = re.sub(r"[!?.,]+$", "", cleaned).strip()
     if normalized in SMALL_TALK_MESSAGES:
@@ -2281,18 +2338,20 @@ def fast_chat_messages(req: "ChatRequest", user_message: str) -> list[dict[str, 
     return messages
 
 
-def fast_chat_system_prompt(web_search: bool, task_prep: Optional[dict[str, Any]] = None) -> str:
+def fast_chat_system_prompt(web_search: bool, task_prep: Optional[dict[str, Any]] = None, local_context: Optional[str] = None) -> str:
     base = (
-        "You are Nero fast local chat mode inside Neural Studio. "
-        "Reply quickly and clearly in 2-5 sentences unless the user asks for more. "
+        "[DEBUG: V2] You are Nero fast local chat mode inside Neural Studio. "
+        "Reply quickly and clearly. "
         "Do not use tool syntax, action syntax, or long reasoning traces. "
         "If the question is about the current project files, coding changes, code review, debugging, or architecture, "
-        "say briefly that you are switching to deep project mode."
+        "incorporate the provided context or state briefly that you are switching to deep project mode."
     )
     if web_search:
         base += " Web mode is enabled, but prioritize a fast local answer first."
+    if local_context:
+        base += "\n\nRelevant Local Context:\n" + local_context
     if task_prep and task_prep.get("analysis_summary"):
-        base += " Local task routing summary:\n" + task_prep["analysis_summary"]
+        base += "\n\nLocal task routing summary:\n" + task_prep["analysis_summary"]
     return base
 
 
@@ -2404,10 +2463,18 @@ def quick_web_summary(message: str) -> Optional[str]:
         return None
 
 
-def build_context_fallback_answer(user_message: str, context: dict[str, Any], return_payload: bool = False) -> Any:
+def build_context_fallback_answer(
+    user_message: str,
+    context: dict[str, Any],
+    return_payload: bool = False,
+    workspace_root: Optional[str] = None,
+    code_graph_engine: Any = None,
+) -> Any:
     sources = context.get("sources", [])
     project_overview = str(context.get("project_overview", "") or "").strip()
     lowered = user_message.lower()
+    workspace_root_path = Path(resolve_workspace_root(workspace_root))
+    code_graph = code_graph_engine
 
     def _finalize(
         response: str,
@@ -2505,7 +2572,7 @@ def build_context_fallback_answer(user_message: str, context: dict[str, Any], re
 
         def find_marker_line(rel_path: str, marker: str, occurrence: str = "last") -> int:
             try:
-                text = (Path(BASE_DIR) / rel_path).read_text(encoding="utf-8", errors="replace")
+                text = (workspace_root_path / rel_path).read_text(encoding="utf-8", errors="replace")
             except OSError:
                 return 1
             first_match = 1
@@ -2601,6 +2668,127 @@ def build_context_fallback_answer(user_message: str, context: dict[str, Any], re
             }],
         }
 
+    def _is_modify_patch_flow_query() -> bool:
+        flow_words = ("flow", "path", "route", "pipeline", "journey")
+        selection_words = ("selection", "selected", "editor", "cursor")
+        modify_words = ("modify", "patch", "edit", "apply", "reviewed patch")
+        return (
+            any(word in lowered for word in flow_words)
+            and any(word in lowered for word in selection_words)
+            and any(word in lowered for word in modify_words)
+        )
+
+    def _build_modify_patch_flow_payload() -> Optional[dict[str, Any]]:
+        if not _is_modify_patch_flow_query():
+            return None
+
+        def find_marker_line(rel_path: str, marker: str, occurrence: str = "last") -> int:
+            try:
+                text = (workspace_root_path / rel_path).read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                return 1
+            first_match = 1
+            last_match = 1
+            for line_number, line in enumerate(text.splitlines(), start=1):
+                if marker.lower() in line.lower():
+                    if first_match == 1:
+                        first_match = line_number
+                    last_match = line_number
+            return first_match if occurrence == "first" else last_match
+
+        entries: list[dict[str, Any]] = []
+        flow_sources: list[dict[str, Any]] = []
+
+        def add_entry(label: str, path: str, marker: str, snippet: str, kind: str = "flow", occurrence: str = "last") -> None:
+            line_number = find_marker_line(path, marker, occurrence=occurrence)
+            entries.append({
+                "label": label,
+                "path": path,
+                "line_start": line_number,
+                "line_end": line_number,
+                "kind": kind,
+                "snippet": snippet,
+            })
+            flow_sources.append({
+                "path": path,
+                "line_start": line_number,
+                "line_end": line_number,
+                "reason": f"modify-flow:{label.lower().replace(' ', '-')}",
+            })
+
+        add_entry(
+            "Editor tracks selection",
+            "desktop_app/src/components/MonacoEditor.tsx",
+            "setSelectionInfo({",
+            "When the user selects code, MonacoEditor captures the selected text and the start/end line+column range.",
+        )
+        add_entry(
+            "Editor syncs selection to local context",
+            "desktop_app/src/components/MonacoEditor.tsx",
+            "window.appApi.updateEditorContext({",
+            "The editor sends file path, cursor position, selection range, selected text, and current symbol into the local workspace context store.",
+        )
+        add_entry(
+            "Electron stores editor context",
+            "desktop_app/electron/main.ts",
+            "ipcMain.handle('workspace:updateEditorContext'",
+            "The Electron main process receives workspace:updateEditorContext and writes that selection context outside the repo.",
+        )
+        add_entry(
+            "Python enters modify mode",
+            "server/main.py",
+            'def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None) -> dict:',
+            "When the request is a real code-change task, the Python connector enters run_modify_chat and loads the active file plus the saved editor selection.",
+        )
+        add_entry(
+            "Selected range becomes a candidate patch",
+            "server/main.py",
+            "candidate_full_text = apply_selection_to_text(original_full_text, selection, updated_code)",
+            "The generated replacement code is applied against the selected range to build a candidate full-file result.",
+        )
+        add_entry(
+            "Patch helper applies exact selection range",
+            "server/modify_pipeline.py",
+            "def apply_selection_to_text(full_text: str, selection: dict[str, Any], replacement: str) -> str:",
+            "The modify pipeline converts the saved start/end line and column into exact text offsets and replaces only that region.",
+        )
+        add_entry(
+            "Chat returns reviewed patch result",
+            "server/main.py",
+            '"patch_diff": diff_text,',
+            "Modify mode returns the diff, proposed code, validation result, target file, and applied full content back to the desktop chat.",
+        )
+        add_entry(
+            "Editor can apply reviewed patch",
+            "desktop_app/src/components/MonacoEditor.tsx",
+            "window.addEventListener('ai-apply-reviewed-patch'",
+            "If the user confirms, the editor writes the reviewed patch into the open file and updates the saved editor state.",
+        )
+
+        lines = [
+            "Here is the local flow from editor selection to modify patch.",
+            "",
+            "1. In `desktop_app/src/components/MonacoEditor.tsx`, the editor captures the current selection and saves the selected text plus start/end positions.",
+            "2. The editor syncs that selection through `window.appApi.updateEditorContext(...)`, and Electron stores it in the separate local workspace memory outside the repo.",
+            "3. When you send a real modify request, `server/main.py` enters `run_modify_chat(...)` and loads the active file plus the saved selection context.",
+            "4. The modify pipeline generates replacement code for the selected region, then `apply_selection_to_text(...)` builds a candidate full-file result from the exact selection range.",
+            "5. The server validates and reviews that candidate patch, creates a diff, and returns the reviewed patch payload to the chat UI.",
+            "6. If you click apply, `MonacoEditor.tsx` writes the reviewed patch into the open file and updates the editor state.",
+            "",
+            "In short: editor selection -> Electron context sync -> Python modify mode -> exact selection replacement -> validation/review -> reviewed patch apply.",
+        ]
+
+        return {
+            "response": "\n".join(lines).strip(),
+            "sources": flow_sources,
+            "flow_sections": [{
+                "type": "file",
+                "title": "Editor selection -> modify patch",
+                "summary": "How selected code in the editor turns into a reviewed local patch through the Electron bridge, Python modify mode, and patch application.",
+                "entries": entries,
+            }],
+        }
+
     architecture_flow_payload = _build_architecture_flow_payload()
     if architecture_flow_payload:
         return _finalize(
@@ -2609,10 +2797,18 @@ def build_context_fallback_answer(user_message: str, context: dict[str, Any], re
             override_flow_sections=architecture_flow_payload["flow_sections"],
         )
 
+    modify_patch_flow_payload = _build_modify_patch_flow_payload()
+    if modify_patch_flow_payload:
+        return _finalize(
+            modify_patch_flow_payload["response"],
+            override_sources=modify_patch_flow_payload["sources"],
+            override_flow_sections=modify_patch_flow_payload["flow_sections"],
+        )
+
     if project_overview and is_project_overview_request:
-        if CODE_GRAPH_ENGINE is not None:
+        if code_graph is not None:
             try:
-                overview = CODE_GRAPH_ENGINE.architecture_overview()
+                overview = code_graph.architecture_overview()
             except Exception:
                 overview = None
             if overview:
@@ -2673,7 +2869,7 @@ def build_context_fallback_answer(user_message: str, context: dict[str, Any], re
 
     def _read_local_file(rel_path: str) -> str:
         try:
-            return (Path(BASE_DIR) / rel_path).read_text(encoding="utf-8", errors="replace")
+            return (workspace_root_path / rel_path).read_text(encoding="utf-8", errors="replace")
         except OSError:
             return ""
 
@@ -2860,10 +3056,10 @@ def build_context_fallback_answer(user_message: str, context: dict[str, Any], re
         return "workspace layer"
 
     def _build_graph_file_explanation(rel_path: str) -> str:
-        if CODE_GRAPH_ENGINE is None or not rel_path:
+        if code_graph is None or not rel_path:
             return ""
         try:
-            summary = CODE_GRAPH_ENGINE.describe_file(rel_path)
+            summary = code_graph.describe_file(rel_path)
         except Exception:
             return ""
         if not summary or not summary.get("found"):
@@ -2948,11 +3144,11 @@ def build_context_fallback_answer(user_message: str, context: dict[str, Any], re
         return "\n".join(lines).strip()
 
     def _build_graph_symbol_explanation() -> str:
-        if CODE_GRAPH_ENGINE is None:
+        if code_graph is None:
             return ""
         for symbol_name in _extract_symbol_candidates():
             try:
-                summary = CODE_GRAPH_ENGINE.describe_symbol(symbol_name)
+                summary = code_graph.describe_symbol(symbol_name)
             except Exception:
                 continue
             if not summary or not summary.get("found"):
@@ -3025,7 +3221,7 @@ def build_context_fallback_answer(user_message: str, context: dict[str, Any], re
             lines.extend(["", "How it fits into the project:", f"- {fit_sentence}"])
 
             try:
-                impact = CODE_GRAPH_ENGINE.impact_analysis(symbol=summary["symbol"])
+                impact = code_graph.impact_analysis(symbol=summary["symbol"])
             except Exception:
                 impact = None
             impacts = [item for item in ((impact or {}).get("impacts") or []) if item.get("path")]
@@ -3064,7 +3260,7 @@ def build_context_fallback_answer(user_message: str, context: dict[str, Any], re
             return _finalize(graph_symbol_answer)
 
     lines = [
-        "Here is a fast local explanation from the indexed project context.",
+        "Project Context Summary:",
     ]
     if concise_summary_lines:
         lines.extend(["", *concise_summary_lines])
@@ -3116,6 +3312,18 @@ def build_context_fallback_answer(user_message: str, context: dict[str, Any], re
 
 def should_prefer_context_fallback(user_message: str, context: dict[str, Any]) -> bool:
     lowered = user_message.strip().lower()
+    is_modify_patch_flow_request = (
+        any(word in lowered for word in ("flow", "path", "route", "pipeline"))
+        and any(word in lowered for word in ("selection", "selected", "editor", "cursor"))
+        and any(word in lowered for word in ("modify", "patch", "edit", "apply"))
+    )
+    is_architecture_flow_request = (
+        any(word in lowered for word in ("flow", "path", "route", "pipeline"))
+        and any(word in lowered for word in ("ui", "react", "electron", "desktop", "server", "python", "c++", "cpp", "brain", "ollama"))
+    )
+    if is_modify_patch_flow_request or is_architecture_flow_request:
+        return True
+
     action_pattern = r"(?<![A-Za-z0-9_])(review|modify|patch|fix|implement|refactor)(?![A-Za-z0-9_])"
     if re.search(action_pattern, lowered):
         return False
@@ -3142,13 +3350,7 @@ def should_prefer_context_fallback(user_message: str, context: dict[str, Any]) -
     )
     asks_usage_or_location = any(phrase in lowered for phrase in ("used", "called", "where is", "where does"))
     has_symbol_or_flow = bool(flow_sections or len(context.get("sources", [])) <= 2)
-    is_architecture_flow_request = (
-        any(word in lowered for word in ("flow", "path", "route", "pipeline"))
-        and any(word in lowered for word in ("ui", "react", "electron", "desktop", "server", "python", "c++", "cpp", "brain", "ollama"))
-    )
     if is_project_overview_request:
-        return True
-    if is_architecture_flow_request:
         return True
     if asks_usage_or_location and flow_sections:
         return True
@@ -3215,55 +3417,41 @@ def start_background_services() -> None:
     threading.Thread(target=_boot, daemon=True).start()
 
 
-def run_fast_local_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None) -> dict:
-    local_lookup = quick_local_lookup_summary(user_message)
+def run_fast_local_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None, stream_callback=None):
+    print(">>> DEBUG: run_fast_local_chat entered")
+    full = []
+    local_lookup = quick_local_lookup_summary(user_message) or ""
     if local_lookup:
-        return {
-            "response": local_lookup,
-            "tool": "local_lookup_fast_path",
-            "status": "ok",
-            "confidence": 84,
-            "analysis": build_analysis_payload(task_prep),
-        }
+        lookup_msg = "Project Context Summary:\n" + local_lookup + "\n\n"
+        full.append(lookup_msg)
+        yield lookup_msg
+        if stream_callback: stream_callback(lookup_msg)
 
     if OllamaAdapter is None:
-        return {
-            "response": "Fast local chat is unavailable because the Ollama adapter could not be loaded.",
-            "tool": "error",
-            "status": "error"
-        }
+        msg = "Fast local chat is unavailable because the Ollama adapter could not be loaded."
+        if stream_callback: stream_callback(msg)
+        yield msg
+        return
 
     adapter = OllamaAdapter(model=FAST_CHAT_MODEL)
-    response_text = adapter.chat(
+    response_stream = adapter.chat(
         fast_chat_messages(req, user_message),
-        system_prompt=fast_chat_system_prompt(req.web_search, task_prep),
+        system_prompt=fast_chat_system_prompt(req.web_search, task_prep, local_context=local_lookup),
         temperature=0.3,
-        num_ctx=1536,
-        timeout=12,
-        num_predict=72,
-    ).strip()
-
-    if response_text.startswith("Error contacting Ollama:") and req.web_search:
-        web_summary = quick_web_summary(user_message)
-        if web_summary:
-            return {
-                "response": web_summary,
-                "tool": "quick_web_summary",
-                "status": "ok",
-                "confidence": 88,
-                "analysis": build_analysis_payload(task_prep),
-            }
-
-    if response_text.startswith("Error contacting Ollama:") and "Read timed out" in response_text:
-        response_text = (
-            "The local Ollama fast model is still too slow for short chat right now. "
-            f"This workspace is using `{FAST_CHAT_MODEL}` for fast chat, and a smaller local model in `OLLAMA_FAST_MODEL` will make simple messages much faster."
-        )
-
-    if not response_text:
-        response_text = "I didn't get a useful answer from the local model. Please try again."
-
-    return {
+        num_ctx=1024,
+        timeout=120,
+        num_predict=512,
+        stream=True,
+    )
+    
+    full = []
+    for chunk in response_stream:
+        full.append(chunk)
+        if stream_callback: stream_callback(chunk)
+        yield chunk
+    
+    response_text = "".join(full).strip()
+    yield {
         "response": response_text,
         "tool": "fast_local_chat",
         "status": "ok",
@@ -3272,9 +3460,9 @@ def run_fast_local_chat(req: "ChatRequest", user_message: str, task_prep: Option
     }
 
 
-CONTEXT_PROVIDER = ContextProvider(BASE_DIR) if ContextProvider else None
-TASK_INTELLIGENCE = LocalTaskIntelligence(BASE_DIR) if LocalTaskIntelligence else None
-CODE_GRAPH_ENGINE = CodeGraphEngine(BASE_DIR) if CodeGraphEngine else None
+CONTEXT_PROVIDER = get_context_provider(DEFAULT_WORKSPACE_ROOT)
+TASK_INTELLIGENCE = get_task_intelligence(DEFAULT_WORKSPACE_ROOT)
+CODE_GRAPH_ENGINE = get_code_graph_engine(DEFAULT_WORKSPACE_ROOT)
 
 
 def build_analysis_payload(task_prep: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
@@ -3362,17 +3550,26 @@ def build_analysis_payload(task_prep: Optional[dict[str, Any]]) -> Optional[dict
     }
 
 
-def run_context_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None) -> dict:
-    if OllamaAdapter is None or CONTEXT_PROVIDER is None:
+def run_context_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None, stream_callback=None) -> dict:
+    context_provider = get_context_provider(request_workspace_root(req, task_prep))
+    code_graph_engine = get_code_graph_engine(request_workspace_root(req, task_prep))
+    if OllamaAdapter is None or context_provider is None:
         return {
             "response": "Context chat is unavailable because required local modules could not be loaded.",
             "tool": "error",
             "status": "error"
         }
 
-    context = CONTEXT_PROVIDER.build_context(user_message)
-    if should_prefer_context_fallback(user_message, context):
-        fallback = build_context_fallback_answer(user_message, context, return_payload=True)
+    context = context_provider.build_context(user_message)
+    # Disable fast fallback when streaming to ensure LLM handles it
+    if not stream_callback and should_prefer_context_fallback(user_message, context):
+        fallback = build_context_fallback_answer(
+            user_message,
+            context,
+            return_payload=True,
+            workspace_root=request_workspace_root(req, task_prep),
+            code_graph_engine=code_graph_engine,
+        )
         return {
             "response": fallback["response"],
             "tool": "context_chat_fast_fallback",
@@ -3394,40 +3591,51 @@ def run_context_chat(req: "ChatRequest", user_message: str, task_prep: Optional[
             f"{user_message}"
         )
 
+def run_context_chat(req: "ChatRequest", user_message: str, context: dict[str, Any], task_prep: Optional[dict[str, Any]] = None, stream_callback=None):
+    if OllamaAdapter is None:
+        msg = "Context chat is unavailable (Ollama adapter missing)."
+        if stream_callback: stream_callback(msg)
+        yield msg
+        return
+
     adapter = OllamaAdapter(model=CONTEXT_CHAT_MODEL)
-    response_text = adapter.chat(
-        fast_chat_messages(req, prompt),
+    response_stream = adapter.chat(
+        fast_chat_messages(req, user_message),
         system_prompt=context_chat_system_prompt(context["workspace_summary"], task_prep),
         temperature=0.2,
-        num_ctx=2048,
-        timeout=4,
-        num_predict=120,
-    ).strip()
-
-    if not response_text or response_text.startswith("Error contacting Ollama:"):
-        fallback = build_context_fallback_answer(user_message, context, return_payload=True)
-        response_text = fallback["response"]
-        fallback_sources = fallback.get("sources", context["sources"])
-        fallback_flow_sections = fallback.get("flow_sections", context.get("flow_sections", []))
-    else:
-        fallback_sources = context["sources"]
-        fallback_flow_sections = context.get("flow_sections", [])
-
-    return {
+        num_ctx=1024,
+        timeout=120,
+        num_predict=512,
+        stream=True,
+    )
+    
+    full = []
+    for chunk in response_stream:
+        full.append(chunk)
+        if stream_callback: stream_callback(chunk)
+        yield chunk
+    
+    response_text = "".join(full).strip()
+    if not response_text:
+        msg = "I'm analyzing your workspace but the local model didn't provide a response. Try a more specific question."
+        if stream_callback: stream_callback(msg)
+        yield msg
+    
+    # Return a final metadata dict if needed, but the worker will handle it
+    yield {
         "response": response_text,
         "tool": "context_chat",
         "status": "ok",
-        "confidence": 90,
-        "sources": fallback_sources,
-        "flow_sections": fallback_flow_sections,
         "analysis": build_analysis_payload(task_prep),
+        "sources": context.get("sources", []),
     }
 
 
-def run_review_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None) -> dict:
+def run_review_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None, stream_callback=None) -> dict:
+    context_provider = get_context_provider(request_workspace_root(req, task_prep))
     if (
         OllamaAdapter is None
-        or CONTEXT_PROVIDER is None
+        or context_provider is None
         or review_system_prompt is None
         or normalize_review_response is None
         or format_review_markdown is None
@@ -3438,7 +3646,7 @@ def run_review_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
             "status": "error",
         }
 
-    context = CONTEXT_PROVIDER.build_context(user_message, max_files=5, max_chars=9500)
+    context = context_provider.build_context(user_message, max_files=5, max_chars=9500)
     prompt = (
         "Review request:\n"
         f"{user_message}\n\n"
@@ -3448,14 +3656,25 @@ def run_review_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
     )
 
     adapter = OllamaAdapter(model=CONTEXT_CHAT_MODEL)
-    raw_response = adapter.chat(
+    response_stream = adapter.chat(
         fast_chat_messages(req, prompt),
         system_prompt=review_system_prompt(context["workspace_summary"], (task_prep or {}).get("analysis_summary", "")),
         temperature=0.1,
         num_ctx=4096,
         timeout=12,
         num_predict=500,
-    ).strip()
+        stream=bool(stream_callback),
+    )
+    if stream_callback and not isinstance(response_stream, str):
+        full = []
+        for chunk in response_stream:
+            full.append(chunk)
+            stream_callback(chunk)
+        raw_response = "".join(full).strip()
+    elif isinstance(response_stream, str):
+        raw_response = response_stream.strip()
+    else:
+        raw_response = ""
 
     review = normalize_review_response(raw_response, context)
     response_text = format_review_markdown(review)
@@ -3531,9 +3750,10 @@ def build_generation_fallback(message: str, language: str) -> str:
     )
 
 
-def run_generate_code_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None) -> dict:
+def run_generate_code_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None, stream_callback=None) -> dict:
     language = detect_generation_language(user_message)
-    context = CONTEXT_PROVIDER.build_context(user_message, max_files=3, max_chars=4500) if CONTEXT_PROVIDER is not None else {
+    context_provider = get_context_provider(request_workspace_root(req, task_prep))
+    context = context_provider.build_context(user_message, max_files=3, max_chars=4500) if context_provider is not None else {
         "workspace_summary": "",
         "context_text": "",
         "sources": [],
@@ -3566,7 +3786,7 @@ def run_generate_code_chat(req: "ChatRequest", user_message: str, task_prep: Opt
     )
 
     adapter = OllamaAdapter(model=FAST_CHAT_MODEL)
-    response_text = adapter.chat(
+    response_stream = adapter.chat(
         fast_chat_messages(req, prompt),
         system_prompt=(
             "You are Nero local code generation mode inside Neural Studio. "
@@ -3578,7 +3798,18 @@ def run_generate_code_chat(req: "ChatRequest", user_message: str, task_prep: Opt
         num_ctx=2048,
         timeout=6,
         num_predict=260,
-    ).strip()
+        stream=bool(stream_callback),
+    )
+    if stream_callback and not isinstance(response_stream, str):
+        full = []
+        for chunk in response_stream:
+            full.append(chunk)
+            stream_callback(chunk)
+        response_text = "".join(full).strip()
+    elif isinstance(response_stream, str):
+        response_text = response_stream.strip()
+    else:
+        response_text = ""
 
     if not response_text or response_text.startswith("Error contacting Ollama:"):
         response_text = build_generation_fallback(user_message, language)
@@ -3600,10 +3831,12 @@ def run_generate_code_chat(req: "ChatRequest", user_message: str, task_prep: Opt
     }
 
 
-def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None) -> dict:
+def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None, stream_callback=None) -> dict:
+    workspace_root = request_workspace_root(req, task_prep)
+    context_provider = get_context_provider(workspace_root)
     if (
         OllamaAdapter is None
-        or CONTEXT_PROVIDER is None
+        or context_provider is None
         or modify_system_prompt is None
         or build_impact_brief is None
         or extract_modify_json is None
@@ -3632,7 +3865,7 @@ def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
         }
 
     try:
-        active_file = validate_path(str(active_file))
+        active_file = validate_path(str(active_file), workspace_root)
     except HTTPException as exc:
         return {
             "response": exc.detail,
@@ -3652,9 +3885,9 @@ def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
     selection = editor_context.get("selection") or {}
     selected_text = str(editor_context.get("selectedText") or "").strip()
     target_context = selected_text or editor_context.get("nearbySnippet") or original_full_text[:2000]
-    relative_file = os.path.relpath(active_file, BASE_DIR).replace("\\", "/")
+    relative_file = os.path.relpath(active_file, workspace_root).replace("\\", "/")
 
-    context = CONTEXT_PROVIDER.build_context(user_message, max_files=5, max_chars=9000)
+    context = context_provider.build_context(user_message, max_files=5, max_chars=9000)
     impact_brief = build_impact_brief(context.get("flow_sections", []))
     prompt = "".join([
         "Modify request:\n",
@@ -3706,7 +3939,7 @@ def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
     line_start = int(selection.get("startLine") or editor_context.get("cursorLine") or 1)
     line_end = int(selection.get("endLine") or selection.get("startLine") or editor_context.get("cursorLine") or line_start)
     diff_text = build_unified_diff(relative_file, original_full_text, candidate_full_text)
-    validation = validate_candidate_change(relative_file, candidate_full_text, BASE_DIR)
+    validation = validate_candidate_change(relative_file, candidate_full_text, workspace_root)
 
     if validation.get("status") == "error":
         repair_prompt = "".join([
@@ -3737,7 +3970,7 @@ def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
         repaired_code = str(repaired.get("updated_code") or "").strip()
         if repaired_code and repaired_code != updated_code:
             repaired_full_text = apply_selection_to_text(original_full_text, selection, repaired_code) if selection and selection.get("startLine") and selection.get("endLine") else repaired_code
-            repaired_validation = validate_candidate_change(relative_file, repaired_full_text, BASE_DIR)
+            repaired_validation = validate_candidate_change(relative_file, repaired_full_text, workspace_root)
             if repaired_validation.get("status") == "ok":
                 updated_code = repaired_code
                 candidate_full_text = repaired_full_text
@@ -3810,14 +4043,15 @@ def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
 
 @app.post("/api/analysis/preferences")
 def set_analysis_preference(req: CommandPreferenceRequest):
-    if TASK_INTELLIGENCE is None:
+    task_intelligence = get_task_intelligence(req.workspace_root)
+    if task_intelligence is None:
         return {
             "status": "error",
             "message": "Task intelligence is unavailable.",
         }
 
     try:
-        updated = TASK_INTELLIGENCE.set_command_preference(req.intent, req.command_name)
+        updated = task_intelligence.set_command_preference(req.intent, req.command_name)
         return {
             "status": "ok",
             "intent": req.intent,
@@ -3970,9 +4204,11 @@ async def chat(req: ChatRequest):
                 "confidence": 99,
             }
 
+        workspace_root = request_workspace_root(req)
         task_prep = None
-        if TASK_INTELLIGENCE is not None:
-            task_prep = TASK_INTELLIGENCE.prepare_task(user_message, bool(req.web_search))
+        task_intelligence = get_task_intelligence(workspace_root)
+        if task_intelligence is not None:
+            task_prep = task_intelligence.prepare_task(user_message, bool(req.web_search))
 
         route = str((task_prep or {}).get("route") or "")
 
@@ -4010,6 +4246,120 @@ async def chat(req: ChatRequest):
     except Exception as e:
         print(f"[API ERROR] {str(e)}")
         return {"response": f"Chat error: {str(e)}", "tool": "error", "status": "error"}
+
+@app.post("/api/chat_stream")
+async def chat_stream(req: ChatRequest):
+    print(f">>> API CALL: chat_stream | message={req.message[:30]}...")
+    import queue as _queue
+    import threading as _threading
+    q = _queue.Queue()
+
+    def stream_callback(chunk: str):
+        if chunk:
+            q.put({"type": "chunk", "content": chunk})
+
+    def worker():
+        try:
+            user_message = (req.message or "").strip()
+            if not user_message:
+                q.put({"type": "final", "data": {
+                    "response": "Please type a message first.",
+                    "tool": "validation",
+                    "status": "error",
+                }})
+                return
+
+            quick_reply = small_talk_reply(user_message)
+            if quick_reply:
+                q.put({"type": "chunk", "content": quick_reply})
+                q.put({"type": "final", "data": {
+                    "response": quick_reply,
+                    "tool": "small_talk_fast_path",
+                    "status": "ok",
+                    "confidence": 99,
+                }})
+                return
+
+            workspace_root = request_workspace_root(req)
+            task_prep = None
+            ti = get_task_intelligence(workspace_root)
+            if ti is not None:
+                task_prep = ti.prepare_task(user_message, bool(req.web_search))
+
+            route = str((task_prep or {}).get("route") or "")
+            print(f">>> DEBUG: worker routing: route={route}, user_message={user_message[:50]}")
+
+            if route == "web_lookup":
+                web_summary = quick_web_summary(user_message)
+                if web_summary:
+                    q.put({"type": "chunk", "content": web_summary})
+                    q.put({"type": "final", "data": {
+                        "response": web_summary,
+                        "tool": "quick_web_summary",
+                        "status": "ok",
+                        "confidence": 88,
+                        "analysis": build_analysis_payload(task_prep),
+                    }})
+                    return
+                route = "fast_local_chat"
+
+            if route == "modify_chat":
+                response = run_modify_chat(req, user_message, task_prep, stream_callback=stream_callback)
+            elif route == "generate_chat":
+                response = run_generate_code_chat(req, user_message, task_prep, stream_callback=stream_callback)
+            elif route == "review_chat":
+                response = run_review_chat(req, user_message, task_prep, stream_callback=stream_callback)
+            elif route == "context_chat":
+                # Handle direct context chat (not as a route but as a primary action)
+                context_provider = get_context_provider(workspace_root)
+                context = context_provider.build_context(user_message, max_files=5, max_chars=9500)
+                gen = run_context_chat(req, user_message, context, task_prep, stream_callback=stream_callback)
+                response = None
+                for chunk in gen:
+                    if isinstance(chunk, dict): response = chunk
+                if not response: response = {"response": "Completed", "status": "ok"}
+            elif route == "fast_local_chat" or should_use_fast_chat(user_message, bool(req.web_search)):
+                gen = run_fast_local_chat(req, user_message, task_prep, stream_callback=stream_callback)
+                response = None
+                for chunk in gen:
+                    if isinstance(chunk, dict): response = chunk
+                if not response: response = {"response": "Completed", "status": "ok"}
+            elif should_use_context_chat(user_message):
+                context_provider = get_context_provider(workspace_root)
+                context = context_provider.build_context(user_message, max_files=5, max_chars=9500)
+                gen = run_context_chat(req, user_message, context, task_prep, stream_callback=stream_callback)
+                response = None
+                for chunk in gen:
+                    if isinstance(chunk, dict): response = chunk
+                if not response: response = {"response": "Completed", "status": "ok"}
+            else:
+                gen = run_fast_local_chat(req, user_message, task_prep, stream_callback=stream_callback)
+                response = None
+                for chunk in gen:
+                    if isinstance(chunk, dict): response = chunk
+                if not response: response = {"response": "Completed", "status": "ok"}
+
+            if isinstance(response, dict) and task_prep and "analysis" not in response:
+                response["analysis"] = build_analysis_payload(task_prep)
+
+            q.put({"type": "final", "data": response})
+        except Exception as _exc:
+            _err = str(_exc)
+            print(f"[API STREAM ERROR] {_err}")
+            q.put({"type": "error", "error": _err})
+        finally:
+            q.put(None)
+
+    threading.Thread(target=worker, daemon=True).start()
+
+    def generate():
+        while True:
+            item = q.get()
+            if item is None:
+                break
+            yield f"data: {json.dumps(item)}\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
 
 @app.post("/api/debug/code-detection")
 async def debug_code_detection(req: ChatRequest):

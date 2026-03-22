@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "vite",
-    "build": "node scripts/prepare-build.cjs && tsc -b && vite build",
+    "dev": "start /min cmd /c \"cd /d ..\\server && python main.py\" && node scripts/ensure-electron-stubs.cjs && vite",
+    "dev:web": "start /min cmd /c \"cd /d ..\\server && python main.py\" && node scripts/ensure-electron-stubs.cjs && vite --host",
+    "build": "node scripts/prepare-build.cjs && node scripts/ensure-electron-stubs.cjs && tsc -b && vite build && node scripts/ensure-electron-stubs.cjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

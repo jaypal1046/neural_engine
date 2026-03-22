@@ -3,6 +3,7 @@ import Editor from '@monaco-editor/react'
 import type { OnMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { Breadcrumbs } from './Breadcrumbs'
+import { readFile, writeFile } from '../lib/desktopBridge'
 
 interface EditorSymbol {
     name: string
@@ -256,21 +257,19 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
             return
         }
 
-        if (window.fs?.readFile) {
-            window.fs.readFile(filePath).then((result: any) => {
-                if (typeof result === 'string') {
-                    setContent(result)
-                    setSavedContent(result)
-                } else {
-                    setContent(`// Error loading file: ${result?.error || 'Unknown error'}`)
-                    setSavedContent('')
-                }
-                setLoading(false)
-            })
-        } else {
+        readFile(filePath).then((result: any) => {
+            if (typeof result === 'string') {
+                setContent(result)
+                setSavedContent(result)
+            } else {
+                setContent(`// Error loading file: ${result?.error || 'Unknown error'}`)
+                setSavedContent('')
+            }
+            setLoading(false)
+        }).catch(() => {
             setContent('// File system not available (not running in Electron)')
             setLoading(false)
-        }
+        })
     }, [filePath])
 
     // Track modified state
@@ -322,10 +321,10 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
 
     // Save file
     const saveFile = useCallback(async () => {
-        if (!window.fs?.writeFile || content === null) return
+        if (content === null) return
         setSaving(true)
         try {
-            await window.fs.writeFile(filePath, content)
+            await writeFile(filePath, content)
             setSavedContent(content)
             setSaveStatus('Saved ✓')
             setTimeout(() => setSaveStatus(''), 2000)
@@ -381,14 +380,9 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
                 return
             }
 
-            if (!window.fs?.writeFile) {
-                respond(false, 'Local file write access is not available in this renderer.')
-                return
-            }
-
             setSaving(true)
             try {
-                const result = await window.fs.writeFile(detail.targetPath, detail.content)
+                const result = await writeFile(detail.targetPath, detail.content)
                 if (result?.error) {
                     throw new Error(result.error)
                 }

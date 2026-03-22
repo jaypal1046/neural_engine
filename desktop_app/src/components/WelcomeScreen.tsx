@@ -2,15 +2,17 @@ import {
     Globe, BrainCircuit, FolderOpen, Zap, Terminal,
     Puzzle, GitBranch, Server
 } from 'lucide-react'
+import { selectFile } from '../lib/desktopBridge'
 
 interface Props {
     openFile: (filePath: string, fileName: string) => void
+    openFolder: () => void
     openWebView: () => void
     openAIChat: () => void
     openCompress: () => void
 }
 
-export function WelcomeScreen({ openFile, openWebView, openAIChat, openCompress }: Props) {
+export function WelcomeScreen({ openFile, openFolder, openWebView, openAIChat, openCompress }: Props) {
     return (
         <div className="welcome-screen">
             {/* Logo */}
@@ -55,17 +57,23 @@ export function WelcomeScreen({ openFile, openWebView, openAIChat, openCompress 
                 </div>
 
                 <div className="welcome-action" onClick={() => {
-                    if (window.ipcRenderer?.selectFile) {
-                        window.ipcRenderer.selectFile().then((f: string) => {
-                            if (f) openFile(f, f.split(/[\\/]/).pop()!)
-                        })
-                    }
+                    Promise.resolve(selectFile()).then((f: string) => {
+                        if (f) openFile(f, f.split(/[\\/]/).pop()!)
+                    })
                 }}>
                     <div className="welcome-action-icon" style={{ background: 'rgba(251,191,36,0.1)', color: '#FBBF24' }}>
                         <FolderOpen size={20} />
                     </div>
                     <span className="welcome-action-label">Open File</span>
                     <span className="welcome-action-desc">Browse & edit</span>
+                </div>
+
+                <div className="welcome-action" onClick={openFolder}>
+                    <div className="welcome-action-icon" style={{ background: 'rgba(74,222,128,0.1)', color: '#4ADE80' }}>
+                        <FolderOpen size={20} />
+                    </div>
+                    <span className="welcome-action-label">Open Project</span>
+                    <span className="welcome-action-desc">Choose workspace folder</span>
                 </div>
             </div>
 

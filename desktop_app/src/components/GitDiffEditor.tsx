@@ -3,6 +3,7 @@ import { DiffEditor } from '@monaco-editor/react'
 import type { DiffOnMount } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
 import { X } from 'lucide-react'
+import { readFile } from '../lib/desktopBridge'
 
 // Reuse the themes and settings helpers from MonacoEditor (or duplicate)
 function getEditorSettings(): Record<string, any> {
@@ -74,10 +75,8 @@ export function GitDiffEditor({ projectRoot, filePath, absolutePath, onClose }: 
             setLoading(true)
             try {
                 // Modified from disk
-                if (window.fs?.readFile) {
-                    const local = await window.fs.readFile(absolutePath)
-                    setModified(typeof local === 'string' ? local : '')
-                }
+                const local = await readFile(absolutePath)
+                setModified(typeof local === 'string' ? local : '')
                 // Original from git HEAD
                 if (window.gitApi?.getFile) {
                     const head = await window.gitApi.getFile(projectRoot, 'HEAD', filePath)

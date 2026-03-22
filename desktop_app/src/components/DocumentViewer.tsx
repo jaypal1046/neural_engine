@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import mammoth from 'mammoth'
+import { readFile, readFileBase64 } from '../lib/desktopBridge'
 
 interface Props {
     filePath: string
@@ -21,20 +22,16 @@ export function DocumentViewer({ filePath, projectRoot, onEdit }: Props) {
             setLoading(true)
             try {
                 if (ext === 'md') {
-                    const res = await window.fs?.readFile(filePath)
+                    const res = await readFile(filePath)
                     setContent(typeof res === 'string' ? res : '// Could not load markdown')
                 } else if (ext === 'docx') {
-                    if (window.fs?.readFileBase64) {
-                        const base64 = await window.fs.readFileBase64(filePath)
-                        if (base64 && !base64.error) {
-                            const buffer = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
-                            const result = await mammoth.convertToHtml({ arrayBuffer: buffer.buffer })
-                            setContent(result.value)
-                        } else {
-                            setContent('<p>Error loading DOCX file.</p>')
-                        }
+                    const base64 = await readFileBase64(filePath)
+                    if (base64 && !base64.error) {
+                        const buffer = Uint8Array.from(atob(base64), c => c.charCodeAt(0))
+                        const result = await mammoth.convertToHtml({ arrayBuffer: buffer.buffer })
+                        setContent(result.value)
                     } else {
-                        setContent('<p>fs.readFileBase64 not found</p>')
+                        setContent('<p>Error loading DOCX file.</p>')
                     }
                 }
             } catch (err) {

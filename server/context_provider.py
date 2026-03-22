@@ -43,10 +43,12 @@ class ContextProvider:
         self.workspace_root = Path(workspace_root)
         self._index_cache: dict[str, Any] | None = None
         self._index_mtime: float | None = None
+        self._base_workspace_root = BASE_DIR.resolve()
+        self._shared_index_enabled = self.workspace_root.resolve() == self._base_workspace_root
         self._symbol_graph = SymbolGraph(str(self.workspace_root))
 
     def _load_index(self) -> dict[str, Any]:
-        if PROJECT_INDEX_FILE.exists():
+        if self._shared_index_enabled and PROJECT_INDEX_FILE.exists():
             mtime = PROJECT_INDEX_FILE.stat().st_mtime
             if self._index_cache is not None and self._index_mtime == mtime:
                 return self._index_cache
@@ -64,7 +66,16 @@ class ContextProvider:
     def _scan_workspace(self) -> dict[str, Any]:
         index: dict[str, Any] = {"folders": {}, "indexed_files": 0, "total_size": 0, "file_types": {}}
 
-        for folder in project_indexer.FOLDERS_TO_INDEX:
+        folders_to_index = [
+            folder
+            for folder in project_indexer.FOLDERS_TO_INDEX
+            if (self.workspace_root / folder).exists()
+        ]
+
+        if not folders_to_index:
+            folders_to_index = ["."]
+
+        for folder in folders_to_index:
             folder_path = self.workspace_root / folder
             if not folder_path.exists():
                 continue

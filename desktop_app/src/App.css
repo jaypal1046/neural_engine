@@ -185,6 +185,7 @@ body {
   border-radius: 8px;
   padding: 4px;
   z-index: 100;
+  -webkit-app-region: no-drag;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   animation: menuSlide 0.12s ease-out;
 }
@@ -217,6 +218,7 @@ body {
   font-family: inherit;
   transition: all 0.1s;
   gap: 16px;
+  -webkit-app-region: no-drag;
 }
 
 .dropdown-item:hover {
@@ -3960,4 +3962,66 @@ body {
 
 .status-item.clickable:hover {
   background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── AI Thinking Animation ── */
+.ai-thinking-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  min-height: 24px;
+}
+
+.ai-thinking-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.dot-flashing {
+  position: relative;
+  width: 4px;
+  height: 4px;
+  margin-left: 12px; /* Add space for the ::before dot */
+  border-radius: 5px;
+  background-color: var(--accent);
+  color: var(--accent);
+  animation: dot-flashing 1s infinite linear alternate;
+  animation-delay: 0.5s;
+}
+
+.dot-flashing::before, .dot-flashing::after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  top: 0;
+}
+
+.dot-flashing::before {
+  left: -8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 5px;
+  background-color: var(--accent);
+  color: var(--accent);
+  animation: dot-flashing 1s infinite linear alternate;
+  animation-delay: 0s;
+}
+
+.dot-flashing::after {
+  left: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 5px;
+  background-color: var(--accent);
+  color: var(--accent);
+  animation: dot-flashing 1s infinite linear alternate;
+  animation-delay: 1s;
+}
+
+@keyframes dot-flashing {
+  0% { background-color: var(--accent); }
+  50%, 100% { background-color: rgba(74, 158, 255, 0.2); }
 }

@@ -490,6 +490,13 @@ class LocalTaskIntelligence:
         wants_deep_action = self._contains_keyword_phrase(lowered, DEEP_ACTION_KEYWORDS)
         wants_code_generation = self._contains_keyword_phrase(lowered, CODE_GENERATION_KEYWORDS)
         wants_explain = any(keyword in lowered for keyword in EXPLAIN_KEYWORDS)
+        wants_flow_explanation = (
+            any(keyword in lowered for keyword in ("flow", "path", "route", "pipeline", "journey"))
+            and (
+                lowered.startswith(("flow ", "path ", "route "))
+                or any(keyword in lowered for keyword in ("explain", "tell me", "show", "how", "what happens"))
+            )
+        )
         mentions_language = any(re.search(rf"(?<![A-Za-z0-9_]){re.escape(keyword)}(?![A-Za-z0-9_])", lowered) for keyword in LANGUAGE_HINT_KEYWORDS)
         explicit_path = bool(re.search(r"[\w./\\-]+\.(cpp|h|hpp|py|ts|tsx|js|jsx|json|md)\b", message, re.IGNORECASE))
         deictic_request = any(token in lowered.split() for token in ("this", "here", "current", "selected"))
@@ -520,6 +527,9 @@ class LocalTaskIntelligence:
         if generic_generation_request:
             route = "generate_chat"
             intent = "generate"
+        elif wants_flow_explanation:
+            route = "context_chat"
+            intent = "explain_or_review"
         elif wants_deep_action and (explicit_path or deictic_request or has_editor_target):
             route = "modify_chat"
             intent = "modify"

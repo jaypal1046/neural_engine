@@ -90,7 +90,9 @@ export function DecompressView() {
                     <button className="ghost-btn" onClick={async () => {
                         try {
                             if (window.ipcRenderer) {
-                                const file = await window.ipcRenderer.selectFile();
+            const file = window.ipcRenderer.selectFile
+                ? await window.ipcRenderer.selectFile()
+                : await window.ipcRenderer.invoke?.('dialog:openFile');
                                 if (file) {
                                     (document.getElementById('d_input_file') as HTMLInputElement).value = file;
                                     (document.getElementById('d_output_file') as HTMLInputElement).value = file.replace('.aiz', '');
@@ -109,7 +111,9 @@ export function DecompressView() {
                     <button className="ghost-btn" onClick={async () => {
                         try {
                             if (window.ipcRenderer) {
-                                const file = await window.ipcRenderer.selectSaveFile();
+            const file = window.ipcRenderer.selectSaveFile
+                ? await window.ipcRenderer.selectSaveFile()
+                : await window.ipcRenderer.invoke?.('dialog:saveFile');
                                 if (file) {
                                     (document.getElementById('d_output_file') as HTMLInputElement).value = file;
                                 }
