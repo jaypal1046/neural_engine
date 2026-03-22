@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-    ArrowUp, BrainCircuit, Check, Copy, Globe, Paperclip, Square,
+    ArrowUp, Brain, BrainCircuit, Check, ChevronDown, ChevronUp, Copy, Globe, Paperclip, Square,
     ThumbsDown, ThumbsUp, Wand2, Zap
 } from 'lucide-react'
 import { readFile, selectFile } from '../lib/desktopBridge'
@@ -491,6 +491,33 @@ function AnalysisBlock({ analysis, workspaceRoot }: { analysis: AnalysisDetails;
                     </div>
                 )}
             </div>
+        </div>
+    )
+}
+
+function ThoughtBlock({ analysis, isThinking, workspaceRoot }: { analysis?: AnalysisDetails; isThinking?: boolean; workspaceRoot?: string }) {
+    const [isExpanded, setIsExpanded] = useState(isThinking)
+
+    return (
+        <div className="thought-container">
+            <button className="thought-header" onClick={() => setIsExpanded(!isExpanded)}>
+                <Brain size={14} className="thought-header-icon" />
+                <span className="thought-header-text">
+                    {isThinking ? 'Analyzing & Thinking...' : 'Technical Analysis'}
+                </span>
+                {isExpanded ? <ChevronUp size={14} className="thought-header-toggle" /> : <ChevronDown size={14} className="thought-header-toggle" />}
+            </button>
+            {isExpanded && (
+                <div className="thought-content">
+                    {isThinking && (
+                        <div className="ai-thinking-inline-minimal">
+                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Processing</span>
+                            <div className="dot-flashing" />
+                        </div>
+                    )}
+                    {analysis && <AnalysisBlock analysis={analysis} workspaceRoot={workspaceRoot} />}
+                </div>
+            )}
         </div>
     )
 }
@@ -1120,17 +1147,27 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
                                     </div>
                                 )}
                                 <div className={`ai-bubble ${msg.role}`}>
-                                    {msg.role === 'assistant' && !msg.content && !msg.analysis && !msg.proposedCode ? (
-                                        <div className="ai-thinking-inline">
-                                            <span className="ai-thinking-text">Thinking</span>
-                                            <div className="dot-flashing" />
-                                        </div>
-                                    ) : (
-                                        formatContent(msg.content)
-                                    )}
-                                    {msg.analysis && msg.analysis.steps.length > 0 && (
-                                        <AnalysisBlock analysis={msg.analysis} workspaceRoot={projectRoot} />
-                                    )}
+                                    {msg.role === 'assistant' && (() => {
+                                        const isCurrentlyThinking = isTyping && i === messages.length - 1 && !msg.content;
+                                        const hasAnalysis = msg.analysis && msg.analysis.steps.length > 0;
+                                        return (
+                                            <>
+                                                {(isCurrentlyThinking || hasAnalysis) && (
+                                                    <ThoughtBlock 
+                                                        isThinking={isCurrentlyThinking} 
+                                                        analysis={msg.analysis} 
+                                                        workspaceRoot={projectRoot} 
+                                                    />
+                                                )}
+                                                {msg.content ? (
+                                                    <div style={{ marginTop: (hasAnalysis || isCurrentlyThinking) ? 12 : 0 }}>
+                                                        {formatContent(msg.content)}
+                                                    </div>
+                                                ) : null}
+                                            </>
+                                        );
+                                    })()}
+                                    {msg.role !== 'assistant' && msg.content && formatContent(msg.content)}
                                     {msg.proposedCode && (
                                         <div style={{ marginTop: 12 }}>
                                             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 6 }}>

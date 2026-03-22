@@ -3439,12 +3439,10 @@ def run_fast_local_chat(req: "ChatRequest", user_message: str, task_prep: Option
         system_prompt=fast_chat_system_prompt(req.web_search, task_prep, local_context=local_lookup),
         temperature=0.3,
         num_ctx=1024,
-        timeout=120,
         num_predict=512,
         stream=True,
     )
     
-    full = []
     for chunk in response_stream:
         full.append(chunk)
         if stream_callback: stream_callback(chunk)
