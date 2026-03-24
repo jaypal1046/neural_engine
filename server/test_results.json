@@ -1,0 +1,37 @@
+[
+  {
+    "query": "open browser and take a screenshot",
+    "intent": "WEBAPP_TESTING",
+    "route": "webapp_testing"
+  },
+  {
+    "query": "navigate to google.com",
+    "intent": "WEBAPP_TESTING",
+    "route": "webapp_testing"
+  },
+  {
+    "query": "how to fix this bug?",
+    "intent": "modify",
+    "route": "modify_chat"
+  },
+  {
+    "query": "explain the source code",
+    "intent": "explain_or_review",
+    "route": "context_chat"
+  },
+  {
+    "query": "brouser test",
+    "intent": "WEBAPP_TESTING",
+    "route": "webapp_testing"
+  },
+  {
+    "query": "take screen shot of the website",
+    "intent": "WEBAPP_TESTING",
+    "route": "webapp_testing"
+  },
+  {
+    "query": "playwright automation",
+    "intent": "WEBAPP_TESTING",
+    "route": "webapp_testing"
+  }
+]

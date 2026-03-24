@@ -2,7 +2,7 @@
   "name": "desktop_app",
   "private": true,
   "version": "0.0.0",
-  "main": "dist-electron/main.js",
+  "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "start /min cmd /c \"cd /d ..\\server && python main.py\" && node scripts/ensure-electron-stubs.cjs && vite",
     "dev:web": "start /min cmd /c \"cd /d ..\\server && python main.py\" && node scripts/ensure-electron-stubs.cjs && vite --host",
@@ -15,6 +15,7 @@
     "@monaco-editor/react": "^4.7.0",
     "lucide-react": "^0.575.0",
     "mammoth": "^1.11.0",
+    "mermaid": "^11.13.0",
     "monaco-editor": "^0.55.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

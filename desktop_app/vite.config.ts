@@ -16,8 +16,10 @@ export default defineConfig({
         },
         vite: {
           build: {
+            minify: false,
             rollupOptions: {
               output: {
+                format: 'cjs',
                 entryFileNames: 'bundles/[name]-[hash].js',
                 chunkFileNames: 'bundles/chunks/[name]-[hash].js',
                 assetFileNames: 'bundles/assets/[name]-[hash][extname]',
@@ -30,8 +32,10 @@ export default defineConfig({
         entry: 'electron/preload.ts',
         vite: {
           build: {
+            minify: false,
             rollupOptions: {
               output: {
+                format: 'cjs',
                 entryFileNames: 'bundles/[name]-[hash].js',
                 chunkFileNames: 'bundles/chunks/[name]-[hash].js',
                 assetFileNames: 'bundles/assets/[name]-[hash][extname]',

@@ -4,9 +4,11 @@ import os
 from typing import List, Dict, Any, Optional
 
 class OllamaAdapter:
-    def __init__(self, model: str = "qwen2.5-coder:7b", base_url: str = "http://127.0.0.1:11434"):
+    def __init__(self, model: str = "qwen2.5-coder:7b", base_url: str = None):
         self.model = model
-        self.base_url = base_url
+        self.base_url = (base_url or os.environ.get("OLLAMA_HOST") or "http://127.0.0.1:11434").rstrip("/")
+        if "://" not in self.base_url:
+            self.base_url = f"http://{self.base_url}"
 
     def chat(
         self,
@@ -14,18 +16,26 @@ class OllamaAdapter:
         system_prompt: Optional[str] = None,
         *,
         temperature: float = 0.4,
-        num_ctx: int = 2048,
-        timeout: int = 45,
-        num_predict: int = 256,
+        num_ctx: int = 8192,
+        timeout: Optional[int] = None,  # No timeout for local Ollama
+        num_predict: int = 512,
         stream: bool = False,
+        format: Optional[str] = None,
     ):
         """
         Sends a conversation history to Ollama.
         """
+        chat_messages = []
+        if system_prompt:
+            chat_messages.append({"role": "system", "content": system_prompt})
+        
+        chat_messages.extend(messages)
+
         payload = {
             "model": self.model,
-            "messages": messages,
+            "messages": chat_messages,
             "stream": stream,
+            "format": format,
             "options": {
                 "temperature": temperature,
                 "num_ctx": num_ctx,
@@ -33,9 +43,6 @@ class OllamaAdapter:
             },
             "keep_alive": "30m",
         }
-        
-        if system_prompt:
-            payload["system"] = system_prompt
 
         try:
             response = requests.post(

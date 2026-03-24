@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cryogenic Fluidity - Frozen Waves</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f5f4ef 0%, #ede9e0 100%);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 280px; min-width: 280px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid rgba(0,0,0,0.08);
+      padding: 20px; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .sidebar-header { font-size: 18px; font-weight: 600; color: #1a1a1a; }
+    .sidebar-header span { font-family: 'Lora', serif; font-style: italic; color: #3d5a80; }
+
+    .section-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #888; margin-bottom: 10px;
+    }
+
+    /* Seed controls */
+    .seed-display {
+      font-family: monospace; font-size: 20px; font-weight: 600;
+      color: #1a1a1a; text-align: center; padding: 8px;
+      background: rgba(0,0,0,0.04); border-radius: 6px; margin-bottom: 8px;
+    }
+    .seed-nav { display: flex; gap: 6px; margin-bottom: 6px; }
+    .seed-nav button, .btn {
+      flex: 1; padding: 7px; border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 6px; background: white; cursor: pointer;
+      font-family: 'Poppins', sans-serif; font-size: 12px;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: #3d5a80; color: white; border-color: #3d5a80; font-weight: 500;
+    }
+    .seed-jump { display: flex; gap: 6px; }
+    .seed-jump input {
+      flex: 1; padding: 7px; border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 6px; font-family: 'Poppins', sans-serif; font-size: 12px;
+    }
+
+    /* Parameter controls */
+    .control-group { margin-bottom: 12px; }
+    .control-group label {
+      display: flex; justify-content: space-between;
+      font-size: 12px; color: #555; margin-bottom: 4px;
+    }
+    .control-group input[type="range"] { width: 100%; accent-color: #3d5a80; }
+
+    /* Canvas area */
+    #canvas-container {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 20px; overflow: hidden;
+    }
+    #canvas-container canvas {
+      max-width: 100%; max-height: 100%;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div class="sidebar-header">Algorithmic Art <br><span>Cryogenic Fluidity</span></div>
+
+    <!-- Seed section -->
+    <div>
+      <div class="section-title">Seed</div>
+      <div class="seed-display" id="seed-display">44219</div>
+      <div class="seed-nav">
+        <button onclick="changeSeed(-1)">← Prev</button>
+        <button onclick="randomizeSeed()">Random</button>
+        <button onclick="changeSeed(1)">Next →</button>
+      </div>
+      <div class="seed-jump">
+        <input type="number" id="seed-input" placeholder="Seed number">
+        <button onclick="jumpToSeed()">Go</button>
+      </div>
+    </div>
+
+    <!-- Parameters section -->
+    <div>
+      <div class="section-title">Parameters</div>
+      <div class="control-group">
+        <label>Flow Complexity <span id="val-noiseScale">0.003</span></label>
+        <input type="range" min="0.001" max="0.01" step="0.0001" value="0.003" oninput="updateParam('noiseScale', this.value); regenerate()">
+      </div>
+      <div class="control-group">
+        <label>Crystalline Growth <span id="val-particleCount">800</span></label>
+        <input type="range" min="100" max="2000" step="50" value="800" oninput="updateParam('particleCount', this.value); regenerate()">
+      </div>
+      <div class="control-group">
+        <label>Vitreous Opacity <span id="val-trailOpacity">15</span></label>
+        <input type="range" min="1" max="50" step="1" value="15" oninput="updateParam('trailOpacity', this.value); regenerate()">
+      </div>
+      <div class="control-group">
+        <label>Thermal Viscosity <span id="val-speed">0.8</span></label>
+        <input type="range" min="0.1" max="5.0" step="0.1" value="0.8" oninput="updateParam('speed', this.value); regenerate()">
+      </div>
+      <div class="control-group">
+        <label>Entropy Resistance <span id="val-stasis">0.2</span></label>
+        <input type="range" min="0" max="1.0" step="0.01" value="0.2" oninput="updateParam('stasis', this.value); regenerate()">
+      </div>
+    </div>
+
+    <!-- Actions section -->
+    <div>
+      <div class="section-title">Actions</div>
+      <button class="btn btn-primary" onclick="window.sketch.resetArt()" style="width:100%;margin-bottom:6px">Regenerate</button>
+      <button class="btn" onclick="resetParams()" style="width:100%;margin-bottom:6px">Reset Defaults</button>
+      <button class="btn" onclick="window.sketch.saveArt()" style="width:100%">Download PNG</button>
+    </div>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <script>
+    let params = {
+      seed: 44219,
+      noiseScale: 0.003,
+      particleCount: 800,
+      trailOpacity: 15,
+      speed: 0.8,
+      stasis: 0.2,
+      palette: ['#ffffff', '#f0faff', '#d0e9ff', '#a4d4ff', '#1a3a5f']
+    };
+
+    const defaults = { ...params };
+
+    function updateParam(key, value) {
+      params[key] = parseFloat(value);
+      document.getElementById('val-' + key).textContent = value;
+    }
+
+    function changeSeed(delta) {
+      params.seed += delta;
+      if (params.seed < 0) params.seed = 0;
+      syncSeedUI();
+      regenerate();
+    }
+    function randomizeSeed() {
+      params.seed = Math.floor(Math.random() * 99999);
+      syncSeedUI();
+      regenerate();
+    }
+    function jumpToSeed() {
+      const v = parseInt(document.getElementById('seed-input').value);
+      if (!isNaN(v)) { params.seed = v; syncSeedUI(); regenerate(); }
+    }
+    function syncSeedUI() {
+      document.getElementById('seed-display').textContent = params.seed;
+      document.getElementById('seed-input').value = '';
+    }
+
+    function resetParams() {
+      params = { ...defaults };
+      for (let key in params) {
+        let el = document.getElementById('val-' + key);
+        if (el) el.textContent = params[key];
+        let input = document.querySelector(`input[oninput*="${key}"]`);
+        if (input) input.value = params[key];
+      }
+      syncSeedUI();
+      regenerate();
+    }
+
+    function regenerate() {
+      if (window.sketch) window.sketch.resetArt();
+    }
+
+    // p5.js instance mode
+    window.sketch = new p5(function(p) {
+      let particles = [];
+
+      p.setup = function() {
+        let canvas = p.createCanvas(1200, 1200);
+        canvas.parent('canvas-container');
+        p.background(245, 244, 239);
+        p.resetArt();
+      };
+
+      p.resetArt = function() {
+        p.randomSeed(params.seed);
+        p.noiseSeed(params.seed);
+        p.background(245, 244, 239);
+        particles = [];
+        for (let i = 0; i < params.particleCount; i++) {
+          particles.push(new Particle(p));
+        }
+      };
+
+      p.draw = function() {
+        for (let part of particles) {
+          part.update();
+          part.display();
+        }
+      };
+
+      p.saveArt = function() {
+        p.saveCanvas('frozen-waves-' + params.seed, 'png');
+      }
+
+      class Particle {
+        constructor(p) {
+          this.p = p;
+          this.pos = p.createVector(p.random(p.width), p.random(p.height));
+          this.prevPos = this.pos.copy();
+          this.vel = p.createVector(0, 0);
+          this.acc = p.createVector(0, 0);
+          this.maxSpeed = params.speed;
+          this.color = p.color(p.random(params.palette));
+          this.color.setAlpha(params.trailOpacity);
+        }
+
+        update() {
+          let n = this.p.noise(this.pos.x * params.noiseScale, this.pos.y * params.noiseScale);
+          let angle = this.p.map(n, 0, 1, 0, this.p.TWO_PI * 4);
+          
+          // Modulation by Stasis philosophy: 
+          // High stasis means particles are pulled back into "crystalline" paths
+          let force = p5.Vector.fromAngle(angle);
+          force.mult(1.0 - params.stasis);
+          
+          this.acc.add(force);
+          this.vel.add(this.acc);
+          this.vel.limit(this.maxSpeed);
+          this.pos.add(this.vel);
+          this.acc.mult(0);
+
+          // Wrap around screen
+          if (this.pos.x < 0 || this.pos.x > this.p.width || this.pos.y < 0 || this.pos.y > this.p.height) {
+            this.pos = this.p.createVector(this.p.random(this.p.width), this.p.random(this.p.height));
+            this.prevPos = this.pos.copy();
+          }
+        }
+
+        display() {
+          this.p.stroke(this.color);
+          this.p.strokeWeight(1.5);
+          this.p.line(this.pos.x, this.pos.y, this.prevPos.x, this.prevPos.y);
+          this.prevPos = this.pos.copy();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

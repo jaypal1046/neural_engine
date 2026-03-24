@@ -429,7 +429,8 @@ class ContextProvider:
 
         for match in re.findall(r"[\w./\\-]+\.(?:cpp|h|hpp|py|ts|tsx|js|jsx|json|md)\b", query, re.IGNORECASE):
             normalized = match.replace("\\", "/").lstrip("./")
-            if normalized not in targets and "/" in normalized:
+            if normalized not in targets:
+
                 targets.append(normalized)
 
         relative_path = str(editor_context.get("relativePath", "")).strip().replace("\\", "/")

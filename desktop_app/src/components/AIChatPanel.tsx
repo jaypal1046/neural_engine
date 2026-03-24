@@ -4,6 +4,9 @@ import {
     ThumbsDown, ThumbsUp, Wand2, Zap
 } from 'lucide-react'
 import { readFile, selectFile } from '../lib/desktopBridge'
+import { Mermaid } from './Mermaid'
+import { WebViewPanel } from './WebViewPanel'
+import { apiClient } from '../lib/apiClient'
 
 const API = 'http://127.0.0.1:8001'
 
@@ -297,7 +300,7 @@ function AnalysisBlock({ analysis, workspaceRoot }: { analysis: AnalysisDetails;
     const savePreference = async (commandName?: string) => {
         if (!commandName || !analysis.preferenceIntent) return
         try {
-            const res = await fetch(`${API}/api/analysis/preferences`, {
+            const res = await apiClient.fetch(`${API}/api/analysis/preferences`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -567,26 +570,77 @@ const CodeBlock = ({
     }
 
     return (
-        <div style={{ margin: '8px 0', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px', background: 'var(--bg-dark)', borderBottom: '1px solid var(--border)', fontSize: 10, color: 'var(--text-muted)' }}>
-                <span>{language || 'code'}</span>
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={copy} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                        {copied ? <Check size={12} /> : <Copy size={12} />} {copied ? 'Copied' : 'Copy'}
+        <div style={{ margin: '12px 0', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', background: 'rgba(0,0,0,0.2)' }}>
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                padding: '6px 12px', 
+                background: 'rgba(0,0,0,0.4)', 
+                borderBottom: '1px solid var(--border)', 
+                fontSize: 11,
+                fontWeight: 600,
+                color: 'var(--text-muted)' 
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', opacity: 0.6 }} />
+                    <span style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{language || 'code'}</span>
+                </div>
+                <div style={{ display: 'flex', gap: 12 }}>
+                    <button 
+                        onClick={copy} 
+                        style={{ 
+                            background: 'none', 
+                            border: 'none', 
+                            color: copied ? 'var(--green)' : 'inherit', 
+                            cursor: 'pointer', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 5,
+                            transition: 'all 0.2s',
+                            padding: '2px 4px'
+                        }}
+                        title="Copy to clipboard"
+                    >
+                        {copied ? <Check size={13} /> : <Copy size={13} />}
+                        <span>{copied ? 'Copied' : 'Copy'}</span>
                     </button>
                     {showApplyButton && (
                         <button
                             onClick={() => { void apply() }}
                             disabled={applying}
-                            style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: applying ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 4, opacity: applying ? 0.7 : 1 }}
+                            style={{ 
+                                background: 'none', 
+                                border: 'none', 
+                                color: applied ? 'var(--green)' : 'var(--accent)', 
+                                cursor: applying ? 'wait' : 'pointer', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: 5,
+                                transition: 'all 0.2s',
+                                padding: '2px 4px',
+                                opacity: applying ? 0.7 : 1 
+                            }}
                             title={applyTitle}
                         >
-                            {applied ? <Check size={12} /> : <Wand2 size={12} />} {applied ? 'Applied' : applying ? 'Applying...' : applyLabel}
+                            {applied ? <Check size={13} /> : <Wand2 size={13} />}
+                            <span>{applied ? 'Applied' : applying ? 'Applying...' : applyLabel}</span>
                         </button>
                     )}
                 </div>
             </div>
-            <pre style={{ margin: 0, padding: 8, background: '#1A1D23', color: '#ABB2BF', fontSize: 12, overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            <pre style={{ 
+                margin: 0, 
+                padding: '12px 16px', 
+                background: 'transparent', 
+                color: '#ABB2BF', 
+                fontSize: 12, 
+                lineHeight: 1.5,
+                overflowX: 'auto', 
+                whiteSpace: 'pre-wrap', 
+                wordBreak: 'break-word',
+                fontFamily: 'var(--font-code, "JetBrains Mono", monospace)'
+            }}>
                 <code style={{ fontFamily: 'inherit' }}>{code}</code>
             </pre>
         </div>
@@ -594,7 +648,11 @@ const CodeBlock = ({
 }
 
 export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '' }: AIChatPanelProps) {
-    const [messages, setMessages] = useState<Message[]>([
+    const STORAGE_KEY = `neural-chat-${projectRoot || 'default'}`
+    const fetchedRootRef = useRef<string | null>(null)
+
+
+    const defaultMessages: Message[] = [
         {
             role: 'system',
             content: 'Neural Studio AI Copilot connected to the local brain',
@@ -605,12 +663,72 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
             content: "Welcome to Neural Studio AI Copilot.\n\nI can help explain the project, review code, and suggest safe next steps while keeping the code local.",
             timestamp: new Date(),
         },
-    ])
+    ]
+
+    // Load messages from localStorage on mount, fallback to defaults
+    const [projectContext, setProjectContext] = useState<any>(null)
+    const [projectIndexPath, setProjectIndexPath] = useState<string>('')
+    const [messages, setMessages] = useState<Message[]>(() => {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY)
+            if (saved) {
+                const parsed = JSON.parse(saved) as Message[]
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    // Restore Date objects (JSON stringify converts them to strings)
+                    return parsed.map(m => ({ ...m, timestamp: new Date(m.timestamp) }))
+                }
+            }
+        } catch {
+            // Ignore parse errors, fall through to defaults
+        }
+        return defaultMessages
+    })
+
     const [input, setInput] = useState('')
     const [isTyping, setIsTyping] = useState(false)
-    const [webEnabled, setWebEnabled] = useState(false)
+    const [availableModels, setAvailableModels] = useState<string[]>([])
+    const [selectedModel, setSelectedModel] = useState<string>(() => {
+        return localStorage.getItem('neural-selected-model') || 'qwen2.5-coder:7b'
+    })
+    const [webEnabled, setWebEnabled] = useState(() => {
+        try {
+            const saved = localStorage.getItem(`${STORAGE_KEY}-webEnabled`)
+            return saved ? JSON.parse(saved) : false
+        } catch {
+            return false
+        }
+    })
     const [attachedFiles, setAttachedFiles] = useState<ChatAttachment[]>([])
+    
+    // Split pane browser state
+    const [showBrowser, setShowBrowser] = useState(() => {
+        try {
+            const saved = localStorage.getItem(`${STORAGE_KEY}-showBrowser`)
+            return saved ? JSON.parse(saved) : false
+        } catch {
+            return false
+        }
+    })
+    const [browserUrl, setBrowserUrl] = useState('https://github.com')
+
     const historyRef = useRef<HTMLDivElement>(null)
+
+    // Debounce save messages, webEnabled, and showBrowser to localStorage
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+                localStorage.setItem(`${STORAGE_KEY}-webEnabled`, JSON.stringify(webEnabled))
+                localStorage.setItem(`${STORAGE_KEY}-showBrowser`, JSON.stringify(showBrowser))
+            } catch (error) {
+                console.error("Failed to save state to localStorage", error)
+            }
+        }, 500) // Debounce for 500ms
+
+        return () => {
+            clearTimeout(handler)
+        }
+    }, [messages, webEnabled, showBrowser, STORAGE_KEY])
 
     const attachFile = async (filePath: string) => {
         if (!filePath) return
@@ -674,20 +792,207 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
         return () => window.removeEventListener('ai-chat-query', handleQuery)
     }, [])
 
+    // --- Project Context Awareness ---
+    useEffect(() => {
+        if (!projectRoot || fetchedRootRef.current === projectRoot) {
+            if (!projectRoot) {
+                setProjectContext(null)
+                setProjectIndexPath('')
+                fetchedRootRef.current = null
+            }
+            return
+        }
+
+        const fetchContext = async () => {
+            try {
+                // 1. Get structured context
+                const ctxRes = await apiClient.fetch(`${API}/api/project/context?workspace_root=${encodeURIComponent(projectRoot)}`)
+                if (ctxRes.ok) {
+                    const ctx = await ctxRes.json()
+                    setProjectContext(ctx)
+                    fetchedRootRef.current = projectRoot // Mark as fetched for THIS project
+
+                    // Only show context card if the first message isn't a context card
+                    setMessages(prev => {
+                        const hasContextCard = prev.some(m => m.role === 'system' && m.content.includes('Project Context Loaded'))
+                        if (!hasContextCard && prev.length <= 2) { 
+                            return [
+                                ...prev,
+                                {
+                                    role: 'system',
+                                    content: `📂 **Project Context Loaded: ${ctx.name || 'Current Workspace'}**\nStack: ${(ctx.stack || []).join(', ') || 'Unknown'} • ${ctx.total_files || 0} files • ${((ctx.total_size || 0) / 1024 / 1024).toFixed(2)} MB\nUse \`/tree\` to see files or \`/review <file>\` for analysis.`,
+                                    timestamp: new Date()
+                                }
+                            ]
+                        }
+                        return prev
+                    })
+                }
+
+                // 2. Get/Generate long-form index path
+                const idxRes = await apiClient.fetch(`${API}/api/project/index?workspace_root=${encodeURIComponent(projectRoot)}`)
+                if (idxRes.ok) {
+                    const idxData = await idxRes.json()
+                    setProjectIndexPath(idxData.path)
+                }
+            } catch (err) {
+                console.error('Failed to fetch project context:', err)
+            }
+        }
+
+        fetchContext()
+    }, [projectRoot])
+
+    // --- Model Management ---
+    useEffect(() => {
+        const fetchModels = async () => {
+            try {
+                const res = await apiClient.fetch(`${API}/api/setup/status`)
+                if (res.ok) {
+                    const data = await res.json()
+                    if (data.models && Array.isArray(data.models)) {
+                        setAvailableModels(data.models)
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to fetch models:', e)
+            }
+        }
+        fetchModels()
+    }, [])
+
+
+    // ── Browser Webview Bridge ─────────────────────────────────────────────────
+    // Listen for results coming back FROM the webview
+    useEffect(() => {
+        const onWebviewContent = (e: Event) => {
+            const ce = e as CustomEvent<{ type: string; content: string; error?: string }>
+            const { type, content } = ce.detail || {}
+            const isScreenshot = type === 'screenshot' && content?.startsWith('data:image')
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: isScreenshot
+                    ? `🌐 **Browser screenshot captured**`
+                    : `🌐 **Browser result (${type}):**\n\n${content}`,
+                timestamp: new Date(),
+                tool: `browser_${type}`,
+            }])
+        }
+        window.addEventListener('webview:content', onWebviewContent)
+        return () => window.removeEventListener('webview:content', onWebviewContent)
+    }, [])
+
+    // Scan the latest AI message for [BROWSER: cmd args] directives and execute them
+    useEffect(() => {
+        const lastMsg = messages[messages.length - 1]
+        if (!lastMsg || lastMsg.role !== 'assistant' || !lastMsg.content) return
+
+        // Match all [BROWSER: <command> <optional-arg>] blocks
+        const browserCmdRegex = /\[BROWSER:\s*(\w+)(?:\s+([^\]]+))?\]/gi
+        let match: RegExpExecArray | null
+        const commands: Array<{ cmd: string; arg?: string }> = []
+        while ((match = browserCmdRegex.exec(lastMsg.content)) !== null) {
+            commands.push({ cmd: match[1].toLowerCase(), arg: match[2]?.trim() })
+        }
+        if (commands.length === 0) return
+
+        setShowBrowser(true)
+
+        // Execute each command with a small stagger
+        commands.forEach(({ cmd, arg }, i) => {
+            setTimeout(() => {
+                switch (cmd) {
+                    case 'navigate':
+                        // Update the split pane URL
+                        setBrowserUrl(arg || 'https://github.com')
+                        setTimeout(() => {
+                            window.dispatchEvent(new CustomEvent('webview:navigate', { detail: { url: arg || '' } }))
+                        }, 400)
+                        break
+                    case 'getcontent':
+                        window.dispatchEvent(new CustomEvent('webview:getContent'))
+                        break
+                    case 'gethtml':
+                        window.dispatchEvent(new CustomEvent('webview:getHTML'))
+                        break
+                    case 'getelement':
+                        window.dispatchEvent(new CustomEvent('webview:getElement', { detail: { selector: arg || 'body' } }))
+                        break
+                    case 'consolelogs':
+                        window.dispatchEvent(new CustomEvent('webview:consoleLogs'))
+                        break
+                    case 'screenshot':
+                        window.dispatchEvent(new CustomEvent('webview:screenshot'))
+                        break
+                }
+            }, i * 300)
+        })
+    }, [messages])
+
+
     const sendMessage = async () => {
         const text = input.trim()
         if (!text || isTyping) return
 
-        const historyPayload = messages
-            .filter(m => m.role !== 'system')
-            .map(m => ({ role: m.role, content: m.content }))
+        // --- Slash Command Handling ---
+        if (text.startsWith('/')) {
+            const parts = text.split(' ')
+            const cmd = parts[0].toLowerCase()
+            const arg = parts.slice(1).join(' ').trim()
+
+            if (cmd === '/tree') {
+                if (!projectContext) {
+                    setMessages(prev => [...prev, { role: 'assistant', content: 'No project context loaded. Open a folder first.', timestamp: new Date() }])
+                    setInput('')
+                    return
+                }
+                const tree = projectContext.files.slice(0, 100).map((f: any) => `${f.key ? '* ' : '  '}${f.path}`).join('\n')
+                setMessages(prev => [...prev, { role: 'user', content: text, timestamp: new Date() }, { role: 'assistant', content: `**Project File Tree (top 100):**\n\`\`\`\n${tree}\n\`\`\``, timestamp: new Date() }])
+                setInput('')
+                return
+            }
+
+            if (cmd === '/open' && arg) {
+                window.dispatchEvent(new CustomEvent('open-file', { detail: { path: arg } }))
+                setMessages(prev => [...prev, { role: 'user', content: text, timestamp: new Date() }, { role: 'assistant', content: `Opening \`${arg}\` in editor...`, timestamp: new Date() }])
+                setInput('')
+                return
+            }
+
+            if (cmd === '/review' || cmd === '/explain' || cmd === '/modify') {
+                if (!arg && activeFilePath) {
+                    // Default to active file if no arg provided
+                    setInput(`${cmd} ${activeFilePath}`)
+                    // Recursive call with updated input
+                    setTimeout(sendMessage, 0)
+                    return
+                }
+                // Continue to LLM with these commands
+            }
+        }
+
+        const isSlashCommand = text.trim().startsWith('/')
+        const historyPayload = isSlashCommand ? [] : messages.filter(m => {
+            const content = m.content.trim();
+            const startsWithSlash = content.startsWith('/');
+            const isFindings = content.includes('Findings:');
+            const isAssistedReview = m.role === 'assistant' && (content.includes('Finding') || content.includes('review pipeline'));
+            return m.role !== 'system' && !startsWithSlash && !isFindings && !isAssistedReview;
+        }).map(m => ({ role: m.role, content: m.content }));
+
+
+
 
         const attachmentContext = attachedFiles.length > 0
             ? '\n\nAttached local file context:\n' + attachedFiles.map((file) => (
                 `File: ${file.path}\n\`\`\`\n${file.content}\n\`\`\``
             )).join('\n\n')
             : ''
-        const requestMessage = `${text}${attachmentContext}`
+        
+        // Inject project index path if available
+        const projectIndexHint = projectIndexPath ? `\n\n[Project Index available at: ${projectIndexPath}]` : ''
+        const requestMessage = `${text}${attachmentContext}${projectIndexHint}`
+        
         const visibleUserMessage = attachedFiles.length > 0
             ? `${text}\n\n[Attached files: ${attachedFiles.map((file) => file.name).join(', ')}]`
             : text
@@ -706,7 +1011,7 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
         }])
 
         try {
-            const res = await fetch(`${API}/api/chat_stream`, {
+            const res = await apiClient.fetch(`${API}/api/chat_stream`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -714,9 +1019,10 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
                     history: historyPayload,
                     web_search: webEnabled,
                     workspace_root: projectRoot || undefined,
+                    project_index_path: projectIndexPath || undefined,
+                    model: selectedModel,
                 }),
             })
-
             if (!res.ok) {
                 setMessages(prev => prev.map(m => m.messageId === assistantMsgId ? {
                     ...m,
@@ -1021,7 +1327,7 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
 
         try {
             const userMsg = messages[messageIndex - 1]
-            await fetch(`${API}/api/feedback`, {
+            await apiClient.fetch(`${API}/api/feedback`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1044,6 +1350,9 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
                 const lines = block.slice(3, -3).split('\n')
                 const lang = lines[0].trim()
                 const code = lines.slice(1).join('\n')
+                if (lang === 'mermaid' || (lang === '' && code.trim().startsWith('graph') || code.trim().startsWith('sequenceDiagram') || code.trim().startsWith('classDiagram'))) {
+                    return <Mermaid key={idx} chart={code} />
+                }
                 return <CodeBlock key={idx} language={lang} code={code} />
             }
 
@@ -1065,10 +1374,11 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
     }
 
     return (
-        <div className="ai-chat-panel">
-            <div className="ai-chat-header">
-                <div className="ai-chat-header-left">
-                    <div className="ai-chat-avatar">
+        <div style={{ display: 'flex', width: '100%', height: '100%' }}>
+            <div className="ai-chat-panel" style={{ flex: 1, borderRight: showBrowser ? '1px solid var(--border)' : 'none' }}>
+                <div className="ai-chat-header">
+                    <div className="ai-chat-header-left">
+                        <div className="ai-chat-avatar">
                         <BrainCircuit size={16} />
                     </div>
                     <div>
@@ -1085,6 +1395,37 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
                                 ? `Workspace: ${projectRoot.split(/[\\/]/).pop() || projectRoot}${activeFilePath ? ` · Active file: ${activeFilePath.split(/[\\/]/).pop() || activeFilePath}` : ''}`
                                 : 'Open a folder to give chat full workspace context'}
                         </div>
+                        
+                        <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>Model:</span>
+                            <select
+                                value={selectedModel}
+                                onChange={(e) => {
+                                    const val = e.target.value
+                                    setSelectedModel(val)
+                                    localStorage.setItem('neural-selected-model', val)
+                                }}
+                                style={{
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid var(--border)',
+                                    borderRadius: 4,
+                                    color: 'var(--text-muted)',
+                                    fontSize: 10,
+                                    padding: '1px 4px',
+                                    outline: 'none',
+                                    cursor: 'pointer',
+                                    fontFamily: 'inherit'
+                                }}
+                            >
+                                {availableModels.length > 0 ? (
+                                    availableModels.map(m => (
+                                        <option key={m} value={m} style={{ background: 'var(--bg-dark)' }}>{m}</option>
+                                    ))
+                                ) : (
+                                    <option value={selectedModel}>{selectedModel}</option>
+                                )}
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <button
@@ -1099,6 +1440,22 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
                     }}
                 >
                     <Globe size={12} /> Web
+                </button>
+                <button
+                    onClick={() => {
+                        try { localStorage.removeItem(STORAGE_KEY) } catch {}
+                        setMessages(defaultMessages)
+                        setAttachedFiles([])
+                    }}
+                    title="Clear chat history"
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px',
+                        borderRadius: 16, border: '1px solid var(--border)', cursor: 'pointer',
+                        fontSize: 11, fontWeight: 600, fontFamily: 'inherit', transition: 'all 0.15s',
+                        background: 'transparent', color: 'var(--text-faint)',
+                    }}
+                >
+                    Clear
                 </button>
             </div>
 
@@ -1160,7 +1517,7 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
                                                     />
                                                 )}
                                                 {msg.content ? (
-                                                    <div style={{ marginTop: (hasAnalysis || isCurrentlyThinking) ? 12 : 0 }}>
+                                                    <div style={{ marginTop: 8 }}>
                                                         {formatContent(msg.content)}
                                                     </div>
                                                 ) : null}
@@ -1256,7 +1613,10 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
                                             label="PROPOSED LINK"
                                             value={msg.browserUrl}
                                             buttonLabel="Open Browser"
-                                            onRun={() => window.dispatchEvent(new CustomEvent('ai-open-browser', { detail: { url: msg.browserUrl } }))}
+                                            onRun={() => {
+                                                setBrowserUrl(msg.browserUrl || 'https://github.com')
+                                                setShowBrowser(true)
+                                            }}
                                         />
                                     )}
                                 </div>
@@ -1411,6 +1771,31 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
                     Neural Studio AI · Local C++ brain through Python connector
                 </div>
             </div>
+        </div>
+            
+            {/* Claude-style embedded Web Browser Panel */}
+            {showBrowser && (
+                <div style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-lighter)' }}>
+                    <div style={{ 
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
+                        padding: '8px 16px', background: 'var(--bg-dark)', borderBottom: '1px solid var(--border)' 
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                            <Globe size={14} /> Neural Web Engine
+                        </div>
+                        <button 
+                            onClick={() => setShowBrowser(false)}
+                            style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', padding: 4 }}
+                            title="Close Browser Split"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                    <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+                        <WebViewPanel url={browserUrl} />
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

@@ -7,37 +7,121 @@ from typing import List, Dict, Any, Optional
 try:
     from llm_adapter import OllamaAdapter
 except ImportError:
-    # Final fallback since we are in the same folder
     import sys
     sys.path.append(os.path.dirname(__file__))
     from llm_adapter import OllamaAdapter
 
+# Local engine path
 BIN_PATH = os.path.join(os.path.dirname(__file__), "..", "bin", "neural_engine.exe")
 
 class NeroAgentOrchestrator:
     def __init__(self, workspace_root: str, model: str = "qwen2.5-coder:7b"):
         self.workspace_root = workspace_root
         self.adapter = OllamaAdapter(model=model)
-        self.system_prompt = self._build_system_prompt()
+        self.skills_dir = os.path.join(self.workspace_root, "skills")
         self.recent_files = [] # LRU cache of files touched
+        self.skills_registry = {}
+        self._discover_skills()
 
-    def _track_file(self, path: str):
-        """Maintains a set of recently used files for context."""
-        # Get last 5 recently accessed files for context
-        recent = self.recent_files[:5]
-        if path in self.recent_files:
-            self.recent_files.remove(path)
-        self.recent_files.insert(0, path)
-        self.recent_files = self.recent_files[:5] # Keep last 5 files
+    def _discover_skills(self):
+        """Scans the skills directory for all available skills."""
+        if not os.path.exists(self.skills_dir):
+            return
+            
+        for skill_dir in os.listdir(self.skills_dir):
+            skill_folder = os.path.join(self.skills_dir, skill_dir)
+            if os.path.isdir(skill_folder):
+                skill_file = os.path.join(skill_folder, "SKILL.md")
+                if os.path.exists(skill_file):
+                    metadata = self._parse_skill_metadata(skill_file)
+                    if metadata:
+                        metadata['dir_name'] = skill_dir
+                        self.skills_registry[skill_dir] = metadata
 
-    def _build_system_prompt(self) -> str:
-        return f"""
+    def _parse_skill_metadata(self, path: str) -> Dict:
+        """Simple regex-based YAML frontmatter parser."""
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+            if not match: return {}
+            
+            yaml_text = match.group(1)
+            metadata = {}
+            current_key = None
+            for line in yaml_text.split('\n'):
+                line = line.strip()
+                if not line: continue
+                
+                if line.startswith('-'):
+                    # List item
+                    if current_key:
+                        if not isinstance(metadata[current_key], list):
+                            metadata[current_key] = []
+                        metadata[current_key].append(line[1:].strip().strip('"').strip("'"))
+                elif ':' in line:
+                    key, val = line.split(':', 1)
+                    current_key = key.strip()
+                    val = val.strip().strip('"').strip("'")
+                    metadata[current_key] = val if val else []
+            return metadata
+        except:
+            return {}
+
+    def _get_skill_content(self, skill_name: str) -> str:
+        """Loads SKILL.md and its references from the skills directory."""
+        skill_path = os.path.join(self.skills_dir, skill_name, "SKILL.md")
+        if not os.path.exists(skill_path):
+            return ""
+        
+        with open(skill_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Load all files in references/ if they exist
+        refs_dir = os.path.join(self.skills_dir, skill_name, "references")
+        if os.path.exists(refs_dir):
+            for ref_file in os.listdir(refs_dir):
+                if ref_file.endswith(".md"):
+                    ref_path = os.path.join(refs_dir, ref_file)
+                    with open(ref_path, 'r', encoding='utf-8') as f:
+                        content += f"\n\n### REFERENCE: {ref_file.upper()}\n" + f.read()
+        
+        return content
+    def _should_inject_skill(self, skill: Dict, intent: str) -> bool:
+        """Determines if a skill should be injected based on intent."""
+        intents = skill.get('intents', [])
+        if isinstance(intents, list):
+            return intent in intents
+        return intent == intents
+
+    def _get_injected_skills_prompt(self, intent: str) -> str:
+        """Builds the prompt section for all relevant skills."""
+        prompt = ""
+        for skill_id, skill in self.skills_registry.items():
+            if self._should_inject_skill(skill, intent):
+                skill_content = self._get_skill_content(skill['dir_name'])
+                if skill_content:
+                    prompt += f"\n\n### SPECIALIZED SKILL: {skill['name'].upper()}\n"
+                    prompt += f"Background: {skill.get('description', '')}\n"
+                    prompt += "Follow these rules and modes when this skill is active:\n"
+                    prompt += skill_content
+        return prompt
+
+    def _build_system_prompt(self, intent: str = "") -> str:
+        # Dynamically fetch relevant skills first
+        skills_prompt = self._get_injected_skills_prompt(intent)
+        
+        base_prompt = f"""
 You are Nero Brain, a private local AI development assistant.
 WORKSPACE_ROOT: {self.workspace_root}
 
 Your goal: help with coding, explain project structure, and perform code reviews while staying local.
 
-Available Actions (Strict Format):
+### CAPABILITIES & SKILLS
+Your core capabilities can be significantly expanded by the **Specialized Skills** listed below. When a skill is active, you MUST follow its rules and utilize its tools, even if they seem to exceed your default "text-only" constraints.
+{skills_prompt}
+
+### CORE ACTIONS (Strict Format):
 1.  [TOOL: READ_FILE] path       - Returns the text content of a file.
 2.  [TOOL: LIST_DIR] path        - Returns a list of files in a directory.
 3.  [TOOL: NEURAL_ANALYZE] path  - Uses the C++ Neural Engine for deep code analysis/compression.
@@ -46,8 +130,10 @@ Available Actions (Strict Format):
 7.  [TOOL: RUN_VALIDATION] cmd - Runs a build/test/lint command and returns success/fail/errors.
 8.  [TOOL: PROPOSE_COMMAND] cmd - Suggests a shell command for the user to confirm.
 9.  [TOOL: PROPOSE_DIFF] path,diff - Shows a code change for the user to apply.
+10. [TOOL: WRITE_FILE] path,content - Creates or overwrites a file with the given content.
 
 CRITICAL RULES:
+- If a Specialized Skill is active (see above), its instructions take PRECEDENCE over these rules.
 - You CANNOT execute shell commands or write files directly. You MUST propose them.
 - If you propose a diff or fix, you MUST run [TOOL: RUN_VALIDATION] first to ensure it builds/tests if possible.
 - Provide errors back to your [THOUGHT] for iterative refinement.
@@ -61,7 +147,14 @@ Response Format:
 OR if done:
 [FINAL_ANSWER] Your response to the user.
 """
+        return base_prompt
 
+    def _track_file(self, path: str):
+        """Maintains a set of recently used files for context."""
+        if path in self.recent_files:
+            self.recent_files.remove(path)
+        self.recent_files.insert(0, path)
+        self.recent_files = self.recent_files[:5] # Keep last 5 files
     def get_dashboard_summary(self):
         """Called by the UI to show the 'Brain Dashboard'."""
         try:
@@ -80,7 +173,7 @@ OR if done:
         except Exception as e:
             return f"Error calling C++ engine: {str(e)}"
 
-    def process_query(self, user_query: str, history: List[Dict[str, str]] = None) -> List[str]:
+    def process_query(self, user_query: str, history: List[Dict[str, str]] = []) -> List[str]:
         """
         Main orchestration loop: Router -> Pre-Analysis -> Think -> Action -> Observation -> Final Answer.
         """
@@ -102,11 +195,13 @@ OR if done:
         context_str = "\n".join(obs_log)
         messages.append({"role": "user", "content": f"INTENT: {intent}\nCONTEXT:\n{context_str}\n\nQUERY: {user_query}"})
         
+        system_prompt = self._build_system_prompt(intent=intent)
+        
         max_steps = 5
         conversation_log = []
         
         for _ in range(max_steps):
-            response = self.adapter.chat(messages, system_prompt=self.system_prompt)
+            response = self.adapter.chat(messages, system_prompt=system_prompt)
             conversation_log.append(response)
             
             # Look for [ACTION: TOOL_NAME] arg
@@ -130,6 +225,13 @@ OR if done:
                 observation = self.tool_project_search(tool_arg)
             elif tool_name == "GET_STRUCTURE":
                 observation = self.tool_get_structure(tool_arg)
+            elif tool_name == "WRITE_FILE":
+                # Split arg into path and content
+                try:
+                    path, content = tool_arg.split(",", 1)
+                    observation = self.tool_write_file(path.strip(), content.strip())
+                except:
+                    observation = "Error: Invalid arguments for WRITE_FILE. Use path,content"
             elif tool_name == "RUN_VALIDATION":
                 observation = self.tool_run_validation(tool_arg)
             else:
@@ -143,8 +245,8 @@ OR if done:
 
     def tool_run_validation(self, cmd: str) -> str:
         try:
-            # from action_executor import ActionExecutor # Original line
-            exe = ActionExecutor(self.workspace_root) # Changed to use imported ActionExecutor
+            from action_executor import ActionExecutor
+            exe = ActionExecutor(self.workspace_root)
             res = exe.run_tests(cmd)
             return json.dumps(res, indent=2)
         except Exception as e:
@@ -181,6 +283,19 @@ OR if done:
                 return content[:2000] # Limit context
         except Exception as e:
             return f"Error reading file: {str(e)}"
+
+    def tool_write_file(self, path: str, content: str) -> str:
+        try:
+            abspath = os.path.abspath(os.path.join(self.workspace_root, path))
+            if not abspath.startswith(self.workspace_root):
+                return "Error: Access denied (outside workspace)"
+            os.makedirs(os.path.dirname(abspath), exist_ok=True)
+            with open(abspath, 'w', encoding='utf-8') as f:
+                f.write(content)
+            self._track_file(path)
+            return f"Successfully wrote to {path}"
+        except Exception as e:
+            return f"Error writing file: {str(e)}"
 
     def tool_list_dir(self, path: str) -> str:
         try:

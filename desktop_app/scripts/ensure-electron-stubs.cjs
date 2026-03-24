@@ -49,11 +49,15 @@ module.exports = require(resolveLatestBundle('main'));
 const preloadStub = `
 ${sharedLoader}
 
-require(resolveLatestBundle('preload'));
+try {
+  require(resolveLatestBundle('preload'));
+} catch (e) {
+  fs.writeFileSync(path.join(__dirname, '..', 'preload-error.log'), e.stack || e.message);
+}
 `.trimStart();
 
 fs.mkdirSync(distElectronDir, { recursive: true });
 fs.mkdirSync(bundlesDir, { recursive: true });
 
-writeFileIfChanged(path.join(distElectronDir, 'main.js'), mainStub);
-writeFileIfChanged(path.join(distElectronDir, 'preload.js'), preloadStub);
+writeFileIfChanged(path.join(distElectronDir, 'main.cjs'), mainStub);
+writeFileIfChanged(path.join(distElectronDir, 'preload.cjs'), preloadStub);

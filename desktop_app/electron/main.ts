@@ -8,7 +8,8 @@ import { platform, homedir } from 'node:os'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-process.env.APP_ROOT = path.join(__dirname, '..')
+const isBundlesDir = path.basename(__dirname) === 'bundles'
+process.env.APP_ROOT = path.join(__dirname, isBundlesDir ? '../..' : '..')
 
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
@@ -44,8 +45,9 @@ function safeMainLog(level: 'log' | 'warn' | 'error', ...parts: unknown[]) {
             `[${new Date().toISOString()}] [${level.toUpperCase()}] ${rendered}\n`,
             'utf-8',
         )
-    } catch {
-        // Ignore file logging failures in the main process.
+        console.log(`[${level.toUpperCase()}] ${rendered}`)
+    } catch (e) {
+        console.error('safeMainLog failed:', e)
     }
 }
 
@@ -437,6 +439,8 @@ function runGitCommand(cwd: string, args: string[]): Promise<{ stdout: string; s
 // =============================================================================
 
 function createWindow() {
+    const preloadPath = path.join(MAIN_DIST, 'preload.cjs')
+
     win = new BrowserWindow({
         width: 1440,
         height: 900,
@@ -444,7 +448,8 @@ function createWindow() {
         minHeight: 700,
         icon: path.join(process.env.VITE_PUBLIC || '', 'electron-vite.svg'),
         webPreferences: {
-            preload: path.join(MAIN_DIST, 'preload.js'),
+            preload: preloadPath,
+            sandbox: false,
             webviewTag: true,
             nodeIntegration: false,
             contextIsolation: true,
@@ -506,28 +511,58 @@ app.on('activate', () => {
 app.whenReady().then(() => {
     // ── File Dialog IPC ──
     ipcMain.handle('dialog:openFile', async () => {
-        const { canceled, filePaths } = await dialog.showOpenDialog({})
-        if (!canceled) return filePaths[0]
-        return null
-    })
-    ipcMain.handle('dialog:saveFile', async () => {
-        const { canceled, filePath } = await dialog.showSaveDialog({})
-        if (!canceled) return filePath
-        return null
-    })
-    ipcMain.handle('dialog:openDirectory', async () => {
-        safeMainLog('log', '[IPC] dialog:openDirectory called')
-        const parentWindow = BrowserWindow.getFocusedWindow() || win!
-        const { canceled, filePaths } = await dialog.showOpenDialog(parentWindow, { 
-            properties: ['openDirectory'],
-            title: 'Select Project Folder'
-        })
-        if (!canceled && filePaths.length > 0) {
-            safeMainLog('log', `[IPC] User selected directory: ${filePaths[0]}`)
-            return filePaths[0]
+        try {
+            const parentWindow = BrowserWindow.getFocusedWindow() || win
+            const options: any = { properties: ['openFile'] }
+            const { canceled, filePaths } = parentWindow
+                ? await dialog.showOpenDialog(parentWindow, options)
+                : await dialog.showOpenDialog(options)
+            if (!canceled && filePaths && filePaths.length > 0) return filePaths[0]
+            return null
+        } catch (err) {
+            safeMainLog('error', '[IPC] dialog:openFile error:', err)
+            return null
         }
-        safeMainLog('log', '[IPC] Directory selection canceled')
-        return null
+    })
+    
+    ipcMain.handle('dialog:saveFile', async () => {
+        try {
+            const parentWindow = BrowserWindow.getFocusedWindow() || win
+            const options: any = {}
+            const { canceled, filePath } = parentWindow
+                ? await dialog.showSaveDialog(parentWindow, options)
+                : await dialog.showSaveDialog(options)
+            if (!canceled && filePath) return filePath
+            return null
+        } catch (err) {
+            safeMainLog('error', '[IPC] dialog:saveFile error:', err)
+            return null
+        }
+    })
+    
+    ipcMain.handle('dialog:openDirectory', async () => {
+        try {
+            safeMainLog('log', '[IPC] dialog:openDirectory called')
+            const parentWindow = BrowserWindow.getFocusedWindow() || win
+            const options: any = { 
+                properties: ['openDirectory'],
+                title: 'Select Project Folder'
+            }
+            
+            const { canceled, filePaths } = parentWindow 
+                ? await dialog.showOpenDialog(parentWindow, options)
+                : await dialog.showOpenDialog(options)
+                
+            if (!canceled && filePaths && filePaths.length > 0) {
+                safeMainLog('log', `[IPC] User selected directory: ${filePaths[0]}`)
+                return filePaths[0]
+            }
+            safeMainLog('log', '[IPC] Directory selection canceled')
+            return null
+        } catch (err) {
+            safeMainLog('error', '[IPC] dialog:openDirectory error:', err)
+            return null
+        }
     })
 
     // ── Server IPC ──

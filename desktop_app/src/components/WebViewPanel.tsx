@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import {
     ArrowLeft, ArrowRight, RotateCw, Home, Lock, ExternalLink,
     Star, Shield, Globe, Bug, Wand2
@@ -6,6 +6,11 @@ import {
 
 interface Props {
     url?: string
+}
+
+// Helper: emit a result back to AIChatPanel
+function emitResult(data: { type: string; content: string; error?: string }) {
+    window.dispatchEvent(new CustomEvent('webview:content', { detail: data }))
 }
 
 export function WebViewPanel({ url: initialUrl }: Props) {
@@ -24,6 +29,116 @@ export function WebViewPanel({ url: initialUrl }: Props) {
     ])
 
     const webviewRef = useRef<any>(null)
+    // Buffer of console messages captured from the webview (max 200)
+    const consoleLogsRef = useRef<string[]>([])
+
+    // ── AI Browser Control Bridge ──────────────────────────────────────────────
+    useEffect(() => {
+        const wv = () => webviewRef.current
+
+        // Attach console listener once webview is ready
+        const attachConsole = () => {
+            const el = wv()
+            if (!el) return
+            el.addEventListener('console-message', (e: any) => {
+                const entry = `[${e.level === 1 ? 'warn' : e.level === 2 ? 'error' : 'log'}] ${e.message}`
+                consoleLogsRef.current = [...consoleLogsRef.current.slice(-199), entry]
+            })
+        }
+        // Wait for the DOM webview element to be attached
+        const timer = setTimeout(attachConsole, 800)
+
+        // ── navigate ──
+        const onNavigate = (e: Event) => {
+            const ce = e as CustomEvent<{ url: string }>
+            const url = ce.detail?.url
+            if (!url) return emitResult({ type: 'navigate', content: 'Error: no URL provided' })
+            navigate(url)
+            emitResult({ type: 'navigate', content: `Navigating to ${url}` })
+        }
+
+        // ── getContent (text snapshot) ──
+        const onGetContent = async () => {
+            const el = wv()
+            if (!el) return emitResult({ type: 'getContent', content: 'Error: webview not open. Ask the user to open the browser tab first.' })
+            try {
+                const title = await el.executeJavaScript(`document.title`)
+                const text = await el.executeJavaScript(`document.body?.innerText?.substring(0,4000) ?? 'No content'`)
+                const url = await el.executeJavaScript(`location.href`)
+                emitResult({ type: 'getContent', content: `**Title:** ${title}\n**URL:** ${url}\n\n**Content:**\n${text}` })
+            } catch (err: any) {
+                emitResult({ type: 'getContent', content: `Error reading page: ${err.message}`, error: err.message })
+            }
+        }
+
+        // ── getHTML (full outerHTML) ──
+        const onGetHTML = async () => {
+            const el = wv()
+            if (!el) return emitResult({ type: 'getHTML', content: 'Error: webview not open.' })
+            try {
+                const html = await el.executeJavaScript(`document.documentElement.outerHTML.substring(0,8000)`)
+                emitResult({ type: 'getHTML', content: html })
+            } catch (err: any) {
+                emitResult({ type: 'getHTML', content: `Error: ${err.message}`, error: err.message })
+            }
+        }
+
+        // ── getElement (selector → outerHTML) ──
+        const onGetElement = async (e: Event) => {
+            const ce = e as CustomEvent<{ selector: string }>
+            const selector = ce.detail?.selector
+            if (!selector) return emitResult({ type: 'getElement', content: 'Error: no selector provided' })
+            const el = wv()
+            if (!el) return emitResult({ type: 'getElement', content: 'Error: webview not open.' })
+            try {
+                const html = await el.executeJavaScript(
+                    `(function(){const el=document.querySelector(${JSON.stringify(selector)});return el?el.outerHTML:'Element not found: ${selector}';})()`
+                )
+                emitResult({ type: 'getElement', content: html })
+            } catch (err: any) {
+                emitResult({ type: 'getElement', content: `Error: ${err.message}`, error: err.message })
+            }
+        }
+
+        // ── consoleLogs ──
+        const onConsoleLogs = () => {
+            const logs = consoleLogsRef.current
+            emitResult({
+                type: 'consoleLogs',
+                content: logs.length === 0 ? '(No console logs captured yet)' : logs.join('\n')
+            })
+        }
+
+        // ── screenshot ──
+        const onScreenshot = async () => {
+            const el = wv()
+            if (!el) return emitResult({ type: 'screenshot', content: 'Error: webview not open.' })
+            try {
+                const img = await el.capturePage()
+                const b64 = img.toPNG().toString('base64')
+                emitResult({ type: 'screenshot', content: `data:image/png;base64,${b64}` })
+            } catch (err: any) {
+                emitResult({ type: 'screenshot', content: `Error: ${err.message}`, error: err.message })
+            }
+        }
+
+        window.addEventListener('webview:navigate', onNavigate)
+        window.addEventListener('webview:getContent', onGetContent)
+        window.addEventListener('webview:getHTML', onGetHTML)
+        window.addEventListener('webview:getElement', onGetElement)
+        window.addEventListener('webview:consoleLogs', onConsoleLogs)
+        window.addEventListener('webview:screenshot', onScreenshot)
+
+        return () => {
+            clearTimeout(timer)
+            window.removeEventListener('webview:navigate', onNavigate)
+            window.removeEventListener('webview:getContent', onGetContent)
+            window.removeEventListener('webview:getHTML', onGetHTML)
+            window.removeEventListener('webview:getElement', onGetElement)
+            window.removeEventListener('webview:consoleLogs', onConsoleLogs)
+            window.removeEventListener('webview:screenshot', onScreenshot)
+        }
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     const navigate = useCallback((url: string) => {
         let normalizedUrl = url.trim()
@@ -46,6 +161,7 @@ export function WebViewPanel({ url: initialUrl }: Props) {
         // Simulate load completion
         setTimeout(() => setIsLoading(false), 1500)
     }, [])
+
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {

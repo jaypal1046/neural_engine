@@ -10,19 +10,23 @@ class TaskRouter:
         """
         query = query.lower()
         
-        # 1. MODIFY - Intent to change code
-        if any(w in query for w in ["change", "fix", "modify", "update", "refactor", "add", "implement"]):
-            return "MODIFY"
+        # 4. MAP_SOURCE - Explicit mapping request
+        if any(w in query for w in ["diagram", "source map", "map source", "relationship", "architecture", "flowchart"]):
+            return "MAP_SOURCE"
             
-        # 2. REVIEW - Intent to critique or check code
-        if any(w in query for w in ["review", "critique", "check", "security", "lint", "debug"]):
-            return "REVIEW"
+        # 5. WRITING - Content creation, articles, newsletters
+        if any(w in query for w in ["write", "article", "blog", "newsletter", "outline", "hook", "citation", "research for my", "case study", "tutorial"]):
+            return "WRITING"
             
-        # 3. EXPLAIN - Intent to understand code
-        if any(w in query for w in ["explain", "how", "what", "where", "find", "understand", "flow"]):
-            return "EXPLAIN"
+        # 6. ART_GENERATION - Generative/algorithmic art
+        if any(w in query for w in ["generative art", "algorithmic art", "make art", "p5.js", "visual piece", "creative coding"]):
+            return "ART_GENERATION"
             
-        # 4. CHAT - General discussion
+        # 7. WEBAPP_TESTING - Browser automation and testing
+        if any(w in query for w in ["test", "browser", "brouser", "playwright", "automation", "click", "navigate", "screenshot", "screen shot", "open google", "open website"]):
+            return "WEBAPP_TESTING"
+            
+        # 8. CHAT - General discussion
         return "CHAT"
 
     @staticmethod
@@ -31,7 +35,7 @@ class TaskRouter:
         Returns a list of local tools to run BEFORE asking the LLM.
         Directly implements your 'run relevant local analysis first' rule.
         """
-        if intent == "EXPLAIN":
+        if intent == "EXPLAIN" or intent == "MAP_SOURCE":
             return ["PROJECT_SEARCH", "GET_STRUCTURE"]
         elif intent == "REVIEW":
             return ["NEURAL_ANALYZE", "GET_STRUCTURE"]

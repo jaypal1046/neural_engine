@@ -1026,10 +1026,10 @@ body {
 }
 
 .ai-bubble {
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  line-height: 1.6;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.65;
   white-space: pre-wrap;
 }
 
@@ -3984,7 +3984,8 @@ body {
   position: relative;
   width: 4px;
   height: 4px;
-  margin-left: 12px; /* Add space for the ::before dot */
+  margin-left: 12px;
+  /* Add space for the ::before dot */
   border-radius: 5px;
   background-color: var(--accent);
   color: var(--accent);
@@ -3992,7 +3993,8 @@ body {
   animation-delay: 0.5s;
 }
 
-.dot-flashing::before, .dot-flashing::after {
+.dot-flashing::before,
+.dot-flashing::after {
   content: "";
   display: inline-block;
   position: absolute;
@@ -4022,6 +4024,93 @@ body {
 }
 
 @keyframes dot-flashing {
-  0% { background-color: var(--accent); }
-  50%, 100% { background-color: rgba(74, 158, 255, 0.2); }
+  0% {
+    background-color: var(--accent);
+  }
+
+  50%,
+  100% {
+    background-color: rgba(74, 158, 255, 0.2);
+  }
+}
+
+/* Thought Block (Claude Style) */
+.thought-container {
+  margin: 14px 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  transition: all 0.25s ease-in-out;
+  white-space: normal;
+  /* Override pre-wrap from parent */
+}
+
+.thought-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px 14px !important;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: none !important;
+  width: 100% !important;
+  text-align: left !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: background 0.2s !important;
+}
+
+.thought-header:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.thought-header-icon {
+  color: var(--accent);
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.thought-header-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+
+.thought-header-toggle {
+  color: var(--text-muted);
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+.thought-content {
+  padding: 0 14px 14px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  animation: slide-down 0.2s ease-out;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ai-thinking-inline-minimal {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+  color: var(--text-faint);
+  font-size: 11px;
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import './App.css'
 
 // Components
@@ -24,7 +24,10 @@ import { NotificationManager, useNotifications } from './components/Notification
 import { AIStatsPanel } from './components/AIStatsPanel'
 import { DocumentViewer } from './components/DocumentViewer'
 import { ProjectMemoryPanel } from './components/ProjectMemoryPanel'
+import { DevToolsPanel } from './components/DevToolsPanel'
+import { SetupWizard } from './components/SetupWizard'
 import { getProjectRoot, selectDirectory, selectFile } from './lib/desktopBridge'
+import { apiClient } from './lib/apiClient'
 
 declare global {
   interface Window {
@@ -79,6 +82,11 @@ function App() {
 
   // ── Menu dropdowns ──
   const [openMenu, setOpenMenu] = useState<string | null>(null)
+
+  // ── Setup Status ──
+  const [setupComplete, setSetupComplete] = useState(() => {
+    return localStorage.getItem('neural-setup-complete') === 'true'
+  })
 
   // ── Notifications ──
   const { notifications, notify, dismiss } = useNotifications()
@@ -177,7 +185,7 @@ function App() {
   useEffect(() => {
     const check = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8001/api/health')
+        const res = await apiClient.fetch('http://127.0.0.1:8001/api/health', { silent: true })
         const data = await res.json()
         setServerStatus(data.status === 'online' ? 'online' : 'offline')
       } catch {
@@ -185,9 +193,10 @@ function App() {
       }
     }
     check()
-    const interval = setInterval(check, 5000)
+    const interval = setInterval(check, 30000)
     return () => clearInterval(interval)
   }, [])
+
 
   // Click outside to close menu
   useEffect(() => {
@@ -275,6 +284,16 @@ function App() {
     }
     window.addEventListener('open-terminal-cwd', handleOpenTerminalCwd)
     return () => window.removeEventListener('open-terminal-cwd', handleOpenTerminalCwd)
+  }, [])
+
+  // ── Reset Setup listener ──
+  useEffect(() => {
+    const handleReset = () => {
+      localStorage.removeItem('neural-setup-complete')
+      setSetupComplete(false)
+    }
+    window.addEventListener('reset-setup', handleReset)
+    return () => window.removeEventListener('reset-setup', handleReset)
   }, [])
 
   // ── Notify on save events ──
@@ -409,21 +428,31 @@ function App() {
   const handleOpenFolder = useCallback(async () => {
     console.log('[App] handleOpenFolder called')
 
-    // 1. Prefer the Electron bridge when available
-    try {
-      const dir = await selectDirectory()
-      console.log(`[App] User selected directory: ${dir}`)
-      if (dir) {
-        setProjectRoot(dir)
-        setActivePanel('explorer')
-        setSidebarOpen(true)
-        return
+    const isDesktop = navigator.userAgent.toLowerCase().includes('electron') || [
+      Boolean((window as any).ipcRenderer?.invoke),
+      Boolean((window as any).fs?.readDir),
+      Boolean((window as any).appApi?.setWorkspaceRoot),
+    ].some(Boolean)
+
+    alert(`isDesktop: ${isDesktop}, ipcRenderer: ${typeof (window as any).ipcRenderer}, fs: ${typeof (window as any).fs}`)
+
+    if (isDesktop) {
+      try {
+        const dir = await selectDirectory()
+        console.log(`[App] User selected directory: ${dir}`)
+        if (dir) {
+          setProjectRoot(dir)
+          setActivePanel('explorer')
+          setSidebarOpen(true)
+        }
+      } catch (err) {
+        console.error('[App] Electron directory picker failed:', err)
+        alert('Folder picker is unavailable right now due to IPC disconnect. Please fully close Neural Studio and reopen it, or refresh the window (Ctrl+R).')
       }
-    } catch (err) {
-      console.error('[App] Electron directory picker failed:', err)
+      return // Prevent fallthrough in desktop app
     }
 
-    // 2. Browser preview fallback
+    // Browser preview fallback
     if (typeof (window as any).showDirectoryPicker === 'function') {
       try {
         const handle = await (window as any).showDirectoryPicker()
@@ -436,18 +465,6 @@ function App() {
         if (err.name === 'AbortError') return
         console.error('[App] Browser directory picker failed:', err)
       }
-    }
-
-    // 3. Final fallback
-    const desktopSignals = [
-      Boolean(window.ipcRenderer?.invoke),
-      Boolean(window.fs?.readDir),
-      Boolean(window.appApi?.setWorkspaceRoot),
-    ].filter(Boolean).length
-
-    if (desktopSignals > 0) {
-      alert('Folder picker is unavailable in this desktop session. Fully close Neural Studio and reopen it so the Electron preload bridge can attach, then try Open Folder again.')
-      return
     }
 
     alert('Folder selection is not supported in the web preview. Start the desktop app with "npm run dev" in desktop_app, or use "npm run dev:web" only for browser preview.')
@@ -678,7 +695,7 @@ function App() {
   const activeFilePath = activeTab?.type === 'file' ? activeTab.filePath : undefined
 
   // ── Render active editor content ──
-  const renderEditorContent = () => {
+  const editorContent = useMemo(() => {
     if (!activeTab) return <WelcomeScreen openFile={openFile} openFolder={handleOpenFolder} openWebView={openWebView} openAIChat={openAIChat}
       openCompress={() => openTab({ id: 'compress', label: 'Compress', type: 'compress' })} />
 
@@ -712,10 +729,10 @@ function App() {
         return <WelcomeScreen openFile={openFile} openFolder={handleOpenFolder} openWebView={openWebView} openAIChat={openAIChat}
           openCompress={() => openTab({ id: 'compress', label: 'Compress', type: 'compress' })} />
     }
-  }
+  }, [activeTab, activeTabId, activeFilePath, projectRoot, serverStatus, openFile, handleOpenFolder, openWebView, openAIChat, openTab, closeTab])
 
   // ── Render sidebar content ──
-  const renderSidebarContent = () => {
+  const sidebarContent = useMemo(() => {
     switch (activePanel) {
       case 'explorer':
         return <FileExplorer projectRoot={projectRoot} onFileOpen={openFile} />
@@ -733,6 +750,8 @@ function App() {
         return <AIStatsPanel />
       case 'project-memory':
         return <ProjectMemoryPanel projectRoot={projectRoot} onFileOpen={openFile} />
+      case 'dev':
+        return <DevToolsPanel />
       case 'ai':
         return (
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -747,10 +766,16 @@ function App() {
       default:
         return <FileExplorer projectRoot={projectRoot} onFileOpen={openFile} />
     }
-  }
+  }, [activePanel, projectRoot, openFile, openTab, activeFilePath, serverStatus, openAIChat])
 
   return (
     <div className={`ide-root no-select ${zenMode ? 'zen-mode' : ''}`}>
+      {!setupComplete && (
+        <SetupWizard onComplete={() => {
+          setSetupComplete(true)
+          localStorage.setItem('neural-setup-complete', 'true')
+        }} />
+      )}
       {/* ── Titlebar ── */}
       <div className="ide-titlebar">
         <div className="titlebar-logo">
@@ -813,7 +838,7 @@ function App() {
         {sidebarOpen && (
           <div style={{ display: 'flex', height: '100%', flexShrink: 0 }}>
             <div className="ide-sidebar" style={{ width: sidebarWidth }}>
-              {renderSidebarContent()}
+              {sidebarContent}
             </div>
             <div className="sidebar-resize-handle" onMouseDown={onSidebarResizeStart} />
           </div>
@@ -842,7 +867,7 @@ function App() {
 
           {/* Editor content */}
           <div className="editor-content">
-            {renderEditorContent()}
+            {editorContent}
           </div>
 
           {/* Bottom panel */}

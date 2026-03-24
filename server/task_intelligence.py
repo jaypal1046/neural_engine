@@ -5,7 +5,7 @@ import re
 import subprocess
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from command_discovery import discover_workspace_commands
 
@@ -30,6 +30,9 @@ LANGUAGE_HINT_KEYWORDS = {
 EXPLAIN_KEYWORDS = {
     "explain", "review", "understand", "flow", "architecture", "where", "how", "why", "what does",
 }
+WEBAPP_TESTING_KEYWORDS = {
+    "open browser", "brouser", "screenshot", "screen shot", "navigate", "page", "browser", "website", "playwright",
+}
 GENERAL_LOOKUP_PREFIXES = (
     "what is ",
     "who is ",
@@ -37,6 +40,31 @@ GENERAL_LOOKUP_PREFIXES = (
     "where is ",
     "define ",
 )
+DESIGN_UI_KEYWORDS = {
+    "design", "ui", "ux", "beautify", "style", "css", "layout", "aesthetic", "look", "component", "frontend",
+}
+CHART_VIZ_KEYWORDS = {
+    "chart", "visualize", "plot", "graph", "stats", "statistics", "distribution", "trend", "comparison",
+}
+DEEP_RESEARCH_KEYWORDS = {
+    "research", "investigate", "compare", "deep dive", "thorough", "comprehensive",
+}
+DATA_ANALYSIS_KEYWORDS = {
+    "excel", "csv", "duckdb", "sql query", "pivot", "statistics", "aggregation", "group by", "dataset",
+}
+CONSULTING_KEYWORDS = {
+    "strategy", "roadmap", "trade-off", "feasibility", "business", "competitive", "market", "decision",
+}
+WEB_DESIGN_KEYWORDS = {
+    "guidelines", "accessibility", "responsive", "typography", "colors", "premium ui", "design system",
+}
+SKILL_CREATOR_KEYWORDS = {
+    "new skill", "author skill", "custom persona", "define skill", "create persona",
+}
+GITHUB_RESEARCH_KEYWORDS = {
+    "github", "repository", "open source", "repo analysis", "trending", "stars",
+}
+
 
 
 class LocalTaskIntelligence:
@@ -498,6 +526,7 @@ class LocalTaskIntelligence:
             )
         )
         mentions_language = any(re.search(rf"(?<![A-Za-z0-9_]){re.escape(keyword)}(?![A-Za-z0-9_])", lowered) for keyword in LANGUAGE_HINT_KEYWORDS)
+        wants_webapp_testing = any(keyword in lowered for keyword in WEBAPP_TESTING_KEYWORDS)
         explicit_path = bool(re.search(r"[\w./\\-]+\.(cpp|h|hpp|py|ts|tsx|js|jsx|json|md)\b", message, re.IGNORECASE))
         deictic_request = any(token in lowered.split() for token in ("this", "here", "current", "selected"))
         function_name = re.search(r"\bfunction\s+([A-Za-z_][A-Za-z0-9_]*)", message, re.IGNORECASE)
@@ -509,12 +538,20 @@ class LocalTaskIntelligence:
         target_hints = []
         if explicit_path:
             target_hints.extend(re.findall(r"[\w./\\-]+\.(?:cpp|h|hpp|py|ts|tsx|js|jsx|json|md)\b", message, re.IGNORECASE))
-        if function_name:
-            target_hints.append(f"function:{function_name.group(1)}")
+        
+        # Filter deictic (this/here) targets to avoid server-side internal files
         if has_editor_target and (deictic_request or wants_explain):
-            target_hints.append(active_relative_path or active_file_path)
+            is_internal = any(active_relative_path.startswith(p) for p in ("server/", "knowledge_sample/"))
+            if not is_internal or explicit_path:
+                if active_relative_path not in target_hints:
+                    target_hints.append(active_relative_path or active_file_path)
+        
         if current_symbol_name and (deictic_request or wants_explain):
             target_hints.append(f"symbol:{current_symbol_name}")
+        
+        if function_name:
+            target_hints.append(f"function:{function_name.group(1)}")
+
 
         generic_generation_request = (
             wants_code_generation
@@ -524,7 +561,13 @@ class LocalTaskIntelligence:
             and not has_editor_target
         )
 
-        if generic_generation_request:
+        route = "fast_local_chat"
+        intent = "general_chat"
+
+        if wants_webapp_testing:
+            route = "webapp_testing"
+            intent = "WEBAPP_TESTING"
+        elif generic_generation_request:
             route = "generate_chat"
             intent = "generate"
         elif wants_flow_explanation:
@@ -545,14 +588,41 @@ class LocalTaskIntelligence:
         elif allow_web and lowered.startswith(GENERAL_LOOKUP_PREFIXES) and not mentions_project:
             route = "web_lookup"
             intent = "general_lookup"
-        else:
-            route = "fast_local_chat"
-            intent = "general_chat"
+        elif any(k in lowered for k in DESIGN_UI_KEYWORDS) and ("make" in lowered or "create" in lowered or "improve" in lowered or "design" in lowered):
+            route = "design_chat"
+            intent = "DESIGN_UI"
+        elif any(k in lowered for k in CHART_VIZ_KEYWORDS) and mentions_project:
+            route = "visualize_chat"
+            intent = "VISUALIZE_DATA"
+        elif any(k in lowered for k in DEEP_RESEARCH_KEYWORDS):
+            route = "research_chat"
+            intent = "DEEP_RESEARCH"
+        elif any(k in lowered for k in DATA_ANALYSIS_KEYWORDS):
+            route = "data_analysis_chat"
+            intent = "DATA_ANALYSIS"
+        elif any(k in lowered for k in CONSULTING_KEYWORDS):
+            route = "consulting_chat"
+            intent = "CONSULTING"
+        elif any(k in lowered for k in WEB_DESIGN_KEYWORDS):
+            route = "web_guidelines_chat"
+            intent = "WEB_DESIGN"
+        elif any(k in lowered for k in SKILL_CREATOR_KEYWORDS):
+            route = "skill_creator_chat"
+            intent = "SKILL_CREATOR"
+        elif any(k in lowered for k in GITHUB_RESEARCH_KEYWORDS):
+            route = "github_research_chat"
+            intent = "GITHUB_RESEARCH"
+        
+        # Upgrade to deep research if general lookup but "deep" mentioned
+        if intent == "general_lookup" and "deep" in lowered:
+            route = "research_chat"
+            intent = "DEEP_RESEARCH"
+
 
         return {
             "intent": intent,
             "route": route,
-            "requires_local_analysis": route in {"context_chat", "modify_chat", "review_chat", "generate_chat", "deep_agent"},
+            "requires_local_analysis": route in {"context_chat", "modify_chat", "review_chat", "generate_chat", "deep_agent", "webapp_testing"},
             "allow_web_lookup": route == "web_lookup",
             "target_hints": target_hints,
         }
@@ -642,10 +712,10 @@ class LocalTaskIntelligence:
 
         return "\n".join(lines)
 
-    def prepare_task(self, message: str, allow_web: bool) -> dict[str, Any]:
+    def prepare_task(self, message: str, allow_web: bool, explicit_context: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         self.ensure_storage()
         profile = self._load_json(self.workspace_profile_file, self._detect_workspace_profile())
-        editor_context = self._load_editor_context()
+        editor_context = explicit_context or self._load_editor_context()
         discovery = self._load_command_discovery()
         preferences = self._load_command_preferences()
         task = self.classify_intent(message, allow_web, editor_context)

@@ -215,7 +215,25 @@ export function SettingsPanel() {
                     ))}
                 </div>
                 {/* Reset button */}
-                <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border-subtle)', flexShrink: 0 }}>
+                <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border-subtle)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <button 
+                        onClick={() => {
+                            if (confirm('Are you sure you want to reset the setup? You will need to accept the T&C and verify Ollama again.')) {
+                                window.dispatchEvent(new CustomEvent('reset-setup'))
+                            }
+                        }} 
+                        style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                            width: '100%', padding: '6px', borderRadius: 6, border: '1px solid rgba(239, 68, 68, 0.2)',
+                            background: 'rgba(239, 68, 68, 0.05)', color: 'rgba(239, 68, 68, 0.9)', fontSize: 11,
+                            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.12s', fontWeight: 600
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)' }}
+                    >
+                        <RotateCcw size={12} /> Reset Setup Wizard
+                    </button>
+
                     <button onClick={resetDefaults} style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                         width: '100%', padding: '6px', borderRadius: 6, border: '1px solid var(--border)',

@@ -177,7 +177,6 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
     const monacoRef = useRef<any>(null)
 
-    // Cursor position tracking
     const [cursorLine, setCursorLine] = useState(1)
     const [cursorCol, setCursorCol] = useState(1)
     const [currentSymbolName, setCurrentSymbolName] = useState('')
@@ -189,7 +188,7 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
         selectedText: string
     } | null>(null)
 
-    // AI Inline Generate State (Ctrl+K)
+    // AI Generate State (Ctrl+K)
     const [aiOverlayVisible, setAiOverlayVisible] = useState(false)
     const [aiOverlayTop, setAiOverlayTop] = useState(0)
     const [aiOverlayLeft, setAiOverlayLeft] = useState(0)
@@ -197,18 +196,17 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
     const [aiLoading, setAiLoading] = useState(false)
     const aiInputRef = useRef<HTMLInputElement>(null)
 
-    // AI Inline Edit State (Ctrl+I) — with diff preview
-    const [inlineEditVisible, setInlineEditVisible] = useState(false)
-    const [inlineEditQuery, setInlineEditQuery] = useState('')
-    const [inlineEditLoading, setInlineEditLoading] = useState(false)
-    const [inlineEditResult, setInlineEditResult] = useState<string | null>(null)
-    const [inlineEditOriginal, setInlineEditOriginal] = useState('')
-    const [inlineEditTop, setInlineEditTop] = useState(0)
-    const inlineEditInputRef = useRef<HTMLInputElement>(null)
+    // AI Popup State (Ctrl+I for edit, Ctrl+Shift+E for explain)
+    const [aiPopupVisible, setAiPopupVisible] = useState(false)
+    const [aiPopupMode, setAiPopupMode] = useState<'edit' | 'explain'>('edit')
+    const [aiPopupQuery, setAiPopupQuery] = useState('')
+    const [aiPopupLoading, setAiPopupLoading] = useState(false)
+    const [aiPopupResult, setAiPopupResult] = useState<string | null>(null)
+    const [aiPopupOriginal, setAiPopupOriginal] = useState('')
+    const [aiPopupTop, setAiPopupTop] = useState(0)
+    const aiPopupInputRef = useRef<HTMLInputElement>(null)
 
-    // AI Autocomplete state
     const autocompleteDisposable = useRef<any>(null)
-
     const [settings, setSettings] = useState(getEditorSettings())
 
     useEffect(() => {
@@ -225,9 +223,7 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
     const lineNumbers = settings['line-numbers'] !== false
     const bracketPairs = settings['bracket-pairs'] !== false
 
-    const normalizeFilePath = useCallback((value: string) => {
-        return value.replace(/\//g, '\\').toLowerCase()
-    }, [])
+    const normalizeFilePath = useCallback((value: string) => value.replace(/\//g, '\\').toLowerCase(), [])
 
     const buildNearbySnippet = useCallback((source: string | null, lineNumber: number) => {
         if (!source) return ''
@@ -237,218 +233,111 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
         return lines.slice(start, end).join('\n').slice(0, 2000)
     }, [])
 
-    // Load file content
-    useEffect(() => {
-        setLoading(true)
-        setContent(null)
-        setSelectionInfo(null)
-        setCursorLine(1)
-        setCursorCol(1)
-        setCurrentSymbolName('')
+    // ── AI Popup (Edit/Explain) Logic ──
+    const openAiPopup = useCallback((mode: 'edit' | 'explain' = 'edit') => {
+        if (!editorRef.current) return
+        const editor = editorRef.current
+        const selection = editor.getSelection()
+        const position = editor.getPosition()
 
-        // Binary file check
-        const ext = filePath.split('.').pop()?.toLowerCase() || ''
-        const binaryExts = ['exe', 'dll', 'so', 'dylib', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'icns', 'ico', 'zip', 'tar', 'gz', 'mp4', 'webm', 'ogg', 'mp3', 'wav', 'pdf']
-
-        if (binaryExts.includes(ext)) {
-            setContent(`// This file (${filePath.split(/[/\\]/).pop()}) is binary or unsupported.\n// It cannot be displayed in the text editor.`)
-            setSavedContent('')
-            setLoading(false)
-            return
+        let original = ''
+        if (selection && !selection.isEmpty()) {
+            original = editor.getModel()?.getValueInRange(selection) || ''
+        } else if (position) {
+            original = editor.getModel()?.getLineContent(position.lineNumber) || ''
         }
 
-        readFile(filePath).then((result: any) => {
-            if (typeof result === 'string') {
-                setContent(result)
-                setSavedContent(result)
-            } else {
-                setContent(`// Error loading file: ${result?.error || 'Unknown error'}`)
-                setSavedContent('')
-            }
-            setLoading(false)
-        }).catch(() => {
-            setContent('// File system not available (not running in Electron)')
-            setLoading(false)
-        })
-    }, [filePath])
+        setAiPopupMode(mode)
+        setAiPopupOriginal(original)
+        setAiPopupResult(null)
+        setAiPopupQuery('')
 
-    // Track modified state
-    useEffect(() => {
-        if (content !== null) {
-            onModified(content !== savedContent)
+        const coords = position ? editor.getScrolledVisiblePosition(position) : null
+        setAiPopupTop(coords ? coords.top : 40)
+        setAiPopupVisible(true)
+        setTimeout(() => aiPopupInputRef.current?.focus(), 50)
+    }, [])
+
+    const rejectAiPopup = useCallback(() => {
+        setAiPopupVisible(false)
+        setAiPopupResult(null)
+        setAiPopupQuery('')
+        editorRef.current?.focus()
+    }, [])
+
+    const handleAiPopupSubmit = useCallback(async () => {
+        if (!aiPopupQuery.trim() || aiPopupLoading) return
+        setAiPopupLoading(true)
+
+        const lang = getLanguage(filePath)
+        const fileName = filePath.split(/[/\\]/).pop() || 'file'
+
+        const editorContext = {
+            filePath,
+            fileName,
+            language: lang,
+            cursorLine,
+            cursorColumn: cursorCol,
+            selection: selectionInfo ? {
+                startLine: selectionInfo.startLine,
+                startColumn: selectionInfo.startColumn,
+                endLine: selectionInfo.endLine,
+                endColumn: selectionInfo.endColumn,
+            } : null,
+            selectedText: aiPopupOriginal,
+            nearbySnippet: buildNearbySnippet(content, cursorLine),
         }
-    }, [content, savedContent, onModified])
 
-    useEffect(() => {
-        if (content === null) {
-            setCurrentSymbolName('')
-            return
-        }
-
-        const symbols = extractSymbolsFromSource(content)
-        const currentSymbol = symbols.filter(symbol => symbol.line <= cursorLine).pop()
-        setCurrentSymbolName(currentSymbol?.name || '')
-    }, [content, cursorLine])
-
-    useEffect(() => {
-        if (!window.appApi?.updateEditorContext || !filePath || content === null) {
-            return
-        }
-
-        const timeout = window.setTimeout(() => {
-            window.appApi.updateEditorContext({
-                filePath,
-                fileName: filePath.split(/[\\/]/).pop() || filePath,
-                language: getLanguage(filePath),
-                cursorLine,
-                cursorColumn: cursorCol,
-                selection: selectionInfo ? {
-                    startLine: selectionInfo.startLine,
-                    startColumn: selectionInfo.startColumn,
-                    endLine: selectionInfo.endLine,
-                    endColumn: selectionInfo.endColumn,
-                } : null,
-                selectedText: selectionInfo?.selectedText || '',
-                currentSymbolName,
-                nearbySnippet: buildNearbySnippet(content, cursorLine),
-            }).catch(() => {
-                // Ignore background context sync failures.
-            })
-        }, 300)
-
-        return () => window.clearTimeout(timeout)
-    }, [filePath, content, cursorLine, cursorCol, selectionInfo, currentSymbolName, buildNearbySnippet])
-
-    // Save file
-    const saveFile = useCallback(async () => {
-        if (content === null) return
-        setSaving(true)
         try {
-            await writeFile(filePath, content)
-            setSavedContent(content)
-            setSaveStatus('Saved ✓')
-            setTimeout(() => setSaveStatus(''), 2000)
+            const res = await fetch('http://127.0.0.1:8001/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: aiPopupMode === 'edit'
+                        ? `Edit this code: ${aiPopupQuery}`
+                        : `Explain this code: ${aiPopupQuery}`,
+                    workspace_root: projectRoot,
+                    editor_context: editorContext
+                }),
+            })
+
+            if (res.ok) {
+                const data = await res.json()
+                let result = data.response || data.reply || data.content || ''
+                if (aiPopupMode === 'edit') {
+                    result = result.replace(/^```[\s\S]*?\n/, '').replace(/\n```$/, '').trim()
+                }
+                setAiPopupResult(result)
+            } else {
+                setAiPopupResult('// AI service unavailable')
+            }
         } catch {
-            setSaveStatus('Save failed!')
+            setAiPopupResult('// Could not reach AI service')
         }
-        setSaving(false)
-    }, [filePath, content])
+        setAiPopupLoading(false)
+    }, [aiPopupQuery, aiPopupLoading, filePath, cursorLine, cursorCol, selectionInfo, aiPopupOriginal, content, buildNearbySnippet, aiPopupMode, projectRoot])
 
-    // Ctrl+S handler
-    useEffect(() => {
-        const handler = (e: KeyboardEvent) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault()
-                saveFile()
-            }
-        }
-        window.addEventListener('keydown', handler)
-        return () => window.removeEventListener('keydown', handler)
-    }, [saveFile])
+    const acceptAiPopup = useCallback(() => {
+        if (!aiPopupResult || !editorRef.current || !monacoRef.current || aiPopupMode !== 'edit') return
+        const editor = editorRef.current
+        const monaco = monacoRef.current
+        const selection = editor.getSelection()
+        const position = editor.getPosition()
 
-    useEffect(() => {
-        const handleReviewedPatchApply = async (e: Event) => {
-            const customEvent = e as CustomEvent<{
-                requestId: string
-                targetPath: string
-                targetFile?: string
-                content: string
-            }>
-            const detail = customEvent.detail
-            const requestId = detail?.requestId
-
-            const respond = (success: boolean, message: string) => {
-                window.dispatchEvent(new CustomEvent('ai-apply-reviewed-patch-result', {
-                    detail: { requestId, success, message },
-                }))
-            }
-
-            if (!requestId) return
-
-            if (!detail?.targetPath || typeof detail.content !== 'string') {
-                respond(false, 'Patch payload was incomplete.')
-                return
-            }
-
-            if (normalizeFilePath(detail.targetPath) !== normalizeFilePath(filePath)) {
-                respond(false, 'Open the target file before applying the reviewed patch.')
-                return
-            }
-
-            if (content !== savedContent) {
-                respond(false, 'Save or discard your unsaved editor changes before applying the reviewed patch.')
-                return
-            }
-
-            setSaving(true)
-            try {
-                const result = await writeFile(detail.targetPath, detail.content)
-                if (result?.error) {
-                    throw new Error(result.error)
-                }
-                setContent(detail.content)
-                setSavedContent(detail.content)
-                setSelectionInfo(null)
-                setSaveStatus('Reviewed patch applied ✓')
-                setTimeout(() => setSaveStatus(''), 2500)
-                respond(true, 'Reviewed patch applied successfully.')
-            } catch (error) {
-                setSaveStatus('Patch apply failed!')
-                setTimeout(() => setSaveStatus(''), 2500)
-                respond(false, error instanceof Error ? error.message : 'Failed to write the reviewed patch to disk.')
-            } finally {
-                setSaving(false)
-            }
+        if (selection && !selection.isEmpty()) {
+            editor.executeEdits('ai-popup-edit', [{ range: selection, text: aiPopupResult, forceMoveMarkers: true }])
+        } else if (position) {
+            const lineLength = editor.getModel()?.getLineMaxColumn(position.lineNumber) || 1
+            const range = new monaco.Range(position.lineNumber, 1, position.lineNumber, lineLength)
+            editor.executeEdits('ai-popup-edit', [{ range, text: aiPopupResult, forceMoveMarkers: true }])
         }
 
-        window.addEventListener('ai-apply-reviewed-patch', handleReviewedPatchApply)
-        return () => window.removeEventListener('ai-apply-reviewed-patch', handleReviewedPatchApply)
-    }, [content, filePath, normalizeFilePath, savedContent])
+        setAiPopupVisible(false)
+        setAiPopupResult(null)
+        setAiPopupQuery('')
+        editor.focus()
+    }, [aiPopupResult, aiPopupMode])
 
-    // Apply Code from AI
-    useEffect(() => {
-        const handleApplyCode = (e: Event) => {
-            const customEvent = e as CustomEvent<{ code: string }>
-            if (customEvent.detail?.code && editorRef.current && monacoRef.current) {
-                const editor = editorRef.current
-                const monaco = monacoRef.current
-                const position = editor.getPosition()
-                const selection = editor.getSelection()
-                if (selection && !selection.isEmpty()) {
-                    editor.executeEdits('ai-copilot', [{
-                        range: selection,
-                        text: customEvent.detail.code,
-                        forceMoveMarkers: true
-                    }])
-                } else if (position) {
-                    editor.executeEdits('ai-copilot', [{
-                        range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
-                        text: customEvent.detail.code,
-                        forceMoveMarkers: true
-                    }])
-                }
-                editor.focus()
-            }
-        }
-        window.addEventListener('ai-apply-code', handleApplyCode)
-        return () => window.removeEventListener('ai-apply-code', handleApplyCode)
-    }, [])
-
-    // Go to Line event listener
-    useEffect(() => {
-        const handleGoToLine = (e: Event) => {
-            const ce = e as CustomEvent<{ line: number }>
-            if (ce.detail?.line && editorRef.current) {
-                editorRef.current.revealLineInCenter(ce.detail.line)
-                editorRef.current.setPosition({ lineNumber: ce.detail.line, column: 1 })
-                editorRef.current.focus()
-            }
-        }
-        window.addEventListener('editor-go-to-line', handleGoToLine)
-        return () => window.removeEventListener('editor-go-to-line', handleGoToLine)
-    }, [])
-
-    // Helper for AI context menu actions
     const sendToAI = useCallback((text: string, action: string) => {
         const fileName = filePath.split(/[/\\]/).pop() || 'file'
         const lang = getLanguage(filePath)
@@ -460,23 +349,21 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
             fix: `Find and fix any bugs or issues in this code from \`${fileName}\`:\n\n${codeBlock}`,
             optimize: `Optimize this code from \`${fileName}\` for performance:\n\n${codeBlock}`,
         }
-        window.dispatchEvent(new CustomEvent('ai-chat-query', { detail: { text: prompts[action] || prompts.explain } }))
-        window.dispatchEvent(new CustomEvent('open-ai-chat'))
-    }, [filePath])
+        if (action === 'explain') {
+            openAiPopup('explain')
+        } else {
+            window.dispatchEvent(new CustomEvent('ai-chat-query', { detail: { text: prompts[action] || prompts.explain } }))
+            window.dispatchEvent(new CustomEvent('open-ai-chat'))
+        }
+    }, [filePath, openAiPopup])
 
-    // On editor mount
     const handleEditorMount: OnMount = (editor, monaco) => {
         editorRef.current = editor
         monacoRef.current = monaco
-
-        // Register Neural Dark theme
         monaco.editor.defineTheme('neural-dark', NEURAL_DARK_THEME)
         monaco.editor.setTheme('neural-dark')
-
-        // Focus the editor
         editor.focus()
 
-        // Track cursor position
         editor.onDidChangeCursorPosition((e) => {
             setCursorLine(e.position.lineNumber)
             setCursorCol(e.position.column)
@@ -488,7 +375,6 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
                 setSelectionInfo(null)
                 return
             }
-
             const selectedText = editor.getModel()?.getValueInRange(selection) || ''
             setSelectionInfo({
                 startLine: selection.startLineNumber,
@@ -499,12 +385,38 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
             })
         })
 
-        // Add Ctrl+S command
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
             saveFile()
         })
 
-        // ── AI Context Menu Actions ──
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
+            const position = editor.getPosition()
+            if (!position) return
+            const coords = editor.getScrolledVisiblePosition(position)
+            setAiOverlayTop(coords ? coords.top + 35 : 40)
+            setAiOverlayLeft(coords ? Math.max(20, coords.left) : 40)
+            setAiOverlayVisible(true)
+            setTimeout(() => aiInputRef.current?.focus(), 50)
+        })
+
+        editor.addAction({
+            id: 'ai-edit-inline',
+            label: '🪄 AI: Edit Inline (Ctrl+I)',
+            contextMenuGroupId: '9_ai',
+            contextMenuOrder: 0,
+            keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyI],
+            run: () => openAiPopup('edit')
+        })
+
+        editor.addAction({
+            id: 'ai-explain-selection',
+            label: '🧠 AI: Explain Selection (Ctrl+Shift+E)',
+            contextMenuGroupId: '9_ai',
+            contextMenuOrder: 1,
+            keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyE],
+            run: () => openAiPopup('explain')
+        })
+
         const addAIAction = (id: string, label: string, order: number) => {
             editor.addAction({
                 id: `ai-${id}`,
@@ -523,243 +435,115 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
                 }
             })
         }
+        addAIAction('explain', '🧠 AI: Explain Code', 2)
+        addAIAction('refactor', '✨ AI: Refactor', 3)
+        addAIAction('fix', '🔧 AI: Fix Issues', 4)
+        addAIAction('tests', '🧪 AI: Generate Tests', 5)
+        addAIAction('optimize', '⚡ AI: Optimize', 6)
 
-        addAIAction('explain', '🧠 AI: Explain Code', 1)
-        addAIAction('refactor', '✨ AI: Refactor', 2)
-        addAIAction('fix', '🔧 AI: Fix Issues', 3)
-        addAIAction('tests', '🧪 AI: Generate Tests', 4)
-        addAIAction('optimize', '⚡ AI: Optimize', 5)
-
-        // AI: Edit Inline context menu
-        editor.addAction({
-            id: 'ai-edit-inline',
-            label: '🪄 AI: Edit Inline (Ctrl+I)',
-            contextMenuGroupId: '9_ai',
-            contextMenuOrder: 0,
-            keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyI],
-            run: () => {
-                openInlineEdit()
-            }
-        })
-
-        // Add Ctrl+K AI Generate Command
-        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
-            const position = editor.getPosition()
-            if (!position) return
-            const currentCoords = editor.getScrolledVisiblePosition(position)
-            if (currentCoords) {
-                setAiOverlayTop(currentCoords.top + 35)
-                setAiOverlayLeft(Math.max(20, currentCoords.left))
-            } else {
-                setAiOverlayTop(40)
-                setAiOverlayLeft(40)
-            }
-            setAiOverlayVisible(true)
-            setTimeout(() => aiInputRef.current?.focus(), 50)
-        })
-
-        // Add Ctrl+G Go to Line
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyG, () => {
             window.dispatchEvent(new CustomEvent('open-quick-open', { detail: { mode: 'line', initialQuery: ':' } }))
         })
 
-        // ── AI Autocomplete (Inline Completions Provider) ──
-        if (autocompleteDisposable.current) {
-            autocompleteDisposable.current.dispose()
-        }
-
-        let autocompleteTimer: ReturnType<typeof setTimeout> | null = null
-
+        if (autocompleteDisposable.current) autocompleteDisposable.current.dispose()
+        let autocompleteTimer: any = null
         autocompleteDisposable.current = monaco.languages.registerInlineCompletionsProvider('*', {
-            provideInlineCompletions: async (model: any, position: any, _context: any, token: any) => {
-                // Debounce — only trigger after 800ms of inactivity
+            provideInlineCompletions: async (model, position, _context, token) => {
                 if (autocompleteTimer) clearTimeout(autocompleteTimer)
-
                 return new Promise((resolve) => {
                     autocompleteTimer = setTimeout(async () => {
-                        if (token.isCancellationRequested) {
-                            resolve({ items: [] })
-                            return
-                        }
-
-                        // Get context: current line + a few lines before
-                        const lineCount = model.getLineCount()
-                        const startLine = Math.max(1, position.lineNumber - 15)
-                        const prefix = model.getValueInRange({
-                            startLineNumber: startLine,
-                            startColumn: 1,
-                            endLineNumber: position.lineNumber,
-                            endColumn: position.column,
-                        })
-                        const suffix = model.getValueInRange({
-                            startLineNumber: position.lineNumber,
-                            startColumn: position.column,
-                            endLineNumber: Math.min(lineCount, position.lineNumber + 5),
-                            endColumn: model.getLineMaxColumn(Math.min(lineCount, position.lineNumber + 5)),
-                        })
-
-                        // Don't trigger for very short prefixes
-                        const trimmed = prefix.trim()
-                        if (trimmed.length < 8) {
-                            resolve({ items: [] })
-                            return
-                        }
-
+                        if (token.isCancellationRequested) return resolve({ items: [] })
+                        const prefix = model.getValueInRange({ startLineNumber: Math.max(1, position.lineNumber - 15), startColumn: 1, endLineNumber: position.lineNumber, endColumn: position.column })
+                        const suffix = model.getValueInRange({ startLineNumber: position.lineNumber, startColumn: position.column, endLineNumber: Math.min(model.getLineCount(), position.lineNumber + 5), endColumn: 999 })
+                        if (prefix.trim().length < 8) return resolve({ items: [] })
                         try {
-                            const lang = getLanguage(filePath)
                             const res = await fetch('http://127.0.0.1:8001/api/chat', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                    message: `You are an IDE autocomplete engine. Complete the code that follows. ` +
-                                        `Respond ONLY with the completion text — no markdown, no backticks, no explanations. ` +
-                                        `Just the code that should come next. Keep it short (1-3 lines max).\n\n` +
-                                        `Language: ${lang}\nFile: ${filePath.split(/[/\\]/).pop()}\n\n` +
-                                        `Code before cursor:\n${prefix}\n\n` +
-                                        `Code after cursor:\n${suffix}`,
-                                }),
+                                    message: `Complete this code: ${prefix}`,
+                                    editor_context: { filePath, language: getLanguage(filePath), selectedText: prefix }
+                                })
                             })
-
-                            if (token.isCancellationRequested) {
-                                resolve({ items: [] })
-                                return
-                            }
-
                             if (res.ok) {
                                 const data = await res.json()
                                 let completion = data.response || data.reply || data.content || ''
                                 completion = completion.replace(/^```[\s\S]*?\n/, '').replace(/\n```$/, '').trim()
-
-                                if (completion && completion.length > 0 && completion.length < 500) {
-                                    resolve({
-                                        items: [{
-                                            insertText: completion,
-                                            range: {
-                                                startLineNumber: position.lineNumber,
-                                                startColumn: position.column,
-                                                endLineNumber: position.lineNumber,
-                                                endColumn: position.column,
-                                            },
-                                        }],
-                                    })
-                                    return
-                                }
+                                if (completion) return resolve({ items: [{ insertText: completion, range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column) }] })
                             }
-                        } catch {
-                            // Silently fail — autocomplete is optional
-                        }
-
+                        } catch { }
                         resolve({ items: [] })
                     }, 800)
                 })
             },
-            freeInlineCompletions: () => { },
+            freeInlineCompletions: () => { }
         })
     }
 
-    // ── Ctrl+I Inline Edit Logic ──
-    const openInlineEdit = useCallback(() => {
-        if (!editorRef.current) return
-        const editor = editorRef.current
-        const selection = editor.getSelection()
-        const position = editor.getPosition()
-
-        // Get selected text or current line
-        let original = ''
-        if (selection && !selection.isEmpty()) {
-            original = editor.getModel()?.getValueInRange(selection) || ''
-        } else if (position) {
-            original = editor.getModel()?.getLineContent(position.lineNumber) || ''
-        }
-
-        setInlineEditOriginal(original)
-        setInlineEditResult(null)
-        setInlineEditQuery('')
-
-        // Position the widget
-        const coords = position ? editor.getScrolledVisiblePosition(position) : null
-        setInlineEditTop(coords ? coords.top : 40)
-        setInlineEditVisible(true)
-        setTimeout(() => inlineEditInputRef.current?.focus(), 50)
-    }, [])
-
-    // Handle inline edit submission
-    const handleInlineEditSubmit = useCallback(async () => {
-        if (!inlineEditQuery.trim() || inlineEditLoading) return
-        setInlineEditLoading(true)
-
-        const lang = getLanguage(filePath)
-        const fileName = filePath.split(/[/\\]/).pop() || 'file'
-
+    const saveFile = useCallback(async () => {
+        if (content === null) return
+        setSaving(true)
         try {
-            const res = await fetch('http://127.0.0.1:8001/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    message: `You are editing code inline in an IDE. Apply the following edit instruction to the code below. ` +
-                        `Respond ONLY with the modified code — no markdown, no backticks, no explanations.\n\n` +
-                        `File: ${fileName} (${lang})\n` +
-                        `Edit instruction: ${inlineEditQuery}\n\n` +
-                        `Original code:\n${inlineEditOriginal}`,
-                }),
-            })
-
-            if (res.ok) {
-                const data = await res.json()
-                let result = data.response || data.reply || data.content || ''
-                result = result.replace(/^```[\s\S]*?\n/, '').replace(/\n```$/, '').trim()
-                setInlineEditResult(result)
-            } else {
-                setInlineEditResult('// AI service unavailable')
-            }
+            await writeFile(filePath, content)
+            setSavedContent(content)
+            setSaveStatus('Saved ✓')
+            setTimeout(() => setSaveStatus(''), 2000)
         } catch {
-            setInlineEditResult('// Could not reach AI service')
+            setSaveStatus('Save failed!')
         }
+        setSaving(false)
+    }, [filePath, content])
 
-        setInlineEditLoading(false)
-    }, [inlineEditQuery, inlineEditOriginal, inlineEditLoading, filePath])
-
-    // Accept inline edit
-    const acceptInlineEdit = useCallback(() => {
-        if (!inlineEditResult || !editorRef.current || !monacoRef.current) return
-        const editor = editorRef.current
-        const monaco = monacoRef.current
-        const selection = editor.getSelection()
-        const position = editor.getPosition()
-
-        if (selection && !selection.isEmpty()) {
-            editor.executeEdits('ai-inline-edit', [{ range: selection, text: inlineEditResult, forceMoveMarkers: true }])
-        } else if (position) {
-            // Replace the entire current line
-            const lineLength = editor.getModel()?.getLineMaxColumn(position.lineNumber) || 1
-            const range = new monaco.Range(position.lineNumber, 1, position.lineNumber, lineLength)
-            editor.executeEdits('ai-inline-edit', [{ range, text: inlineEditResult, forceMoveMarkers: true }])
-        }
-
-        setInlineEditVisible(false)
-        setInlineEditResult(null)
-        setInlineEditQuery('')
-        editor.focus()
-    }, [inlineEditResult])
-
-    // Reject inline edit
-    const rejectInlineEdit = useCallback(() => {
-        setInlineEditVisible(false)
-        setInlineEditResult(null)
-        setInlineEditQuery('')
-        editorRef.current?.focus()
-    }, [])
-
-    // Cleanup autocomplete on unmount
     useEffect(() => {
-        return () => {
-            if (autocompleteDisposable.current) {
-                autocompleteDisposable.current.dispose()
+        setLoading(true)
+        setContent(null)
+        setSelectionInfo(null)
+        readFile(filePath).then((res: any) => {
+            const data = typeof res === 'string' ? res : '// Error loading'
+            setContent(data)
+            setSavedContent(data)
+            setLoading(false)
+        })
+    }, [filePath])
+
+    useEffect(() => {
+        if (content !== null) onModified(content !== savedContent)
+    }, [content, savedContent, onModified])
+
+    useEffect(() => {
+        if (!window.appApi?.updateEditorContext || !filePath || content === null) return
+        const timer = setTimeout(() => {
+            window.appApi.updateEditorContext({
+                filePath,
+                fileName: filePath.split(/[\\/]/).pop() || filePath,
+                language: getLanguage(filePath),
+                cursorLine, cursorColumn: cursorCol,
+                selection: selectionInfo ? { startLine: selectionInfo.startLine, startColumn: selectionInfo.startColumn, endLine: selectionInfo.endLine, endColumn: selectionInfo.endColumn } : null,
+                selectedText: selectionInfo?.selectedText || '',
+                currentSymbolName,
+                nearbySnippet: buildNearbySnippet(content, cursorLine),
+            }).catch(() => { })
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [filePath, content, cursorLine, cursorCol, selectionInfo, currentSymbolName, buildNearbySnippet])
+
+    useEffect(() => {
+        const handleApply = (e: any) => {
+            if (!e.detail?.code || !editorRef.current || !monacoRef.current) return
+            const editor = editorRef.current
+            const monaco = monacoRef.current
+            const sel = editor.getSelection()
+            if (sel && !sel.isEmpty()) editor.executeEdits('ai', [{ range: sel, text: e.detail.code, forceMoveMarkers: true }])
+            else {
+                const pos = editor.getPosition()
+                if (pos) editor.executeEdits('ai', [{ range: new monaco.Range(pos.lineNumber, pos.column, pos.lineNumber, pos.column), text: e.detail.code, forceMoveMarkers: true }])
             }
+            editor.focus()
         }
+        window.addEventListener('ai-apply-code', handleApply)
+        return () => window.removeEventListener('ai-apply-code', handleApply)
     }, [])
 
-    // Navigate to symbol from breadcrumb (must be before early return)
     const handleNavigateSymbol = useCallback((line: number) => {
         if (editorRef.current) {
             editorRef.current.revealLineInCenter(line)
@@ -768,270 +552,99 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
         }
     }, [])
 
-    if (loading || content === null) {
-        return (
-            <div style={{
-                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
-                justifyContent: 'center', gap: 8, background: '#1A1D23', color: '#6B7280'
-            }}>
-                <div className="spin">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" strokeWidth="2">
-                        <path d="M21 12a9 9 0 11-6.219-8.56" />
-                    </svg>
-                </div>
-                <span style={{ fontSize: 12 }}>Loading file...</span>
-            </div>
-        )
-    }
+    if (loading || content === null) return <div className="editor-loading">Loading...</div>
 
     const language = getLanguage(filePath)
     const isModified = content !== savedContent
 
-
-
     return (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#1A1D23', overflow: 'hidden', position: 'relative' }}>
-            {/* Breadcrumbs Navigation Bar */}
-            <Breadcrumbs
-                filePath={filePath}
-                language={language}
-                projectRoot={projectRoot || ''}
-                editorRef={editorRef}
-                monacoRef={monacoRef}
-                cursorLine={cursorLine}
-                cursorCol={cursorCol}
-                onNavigateSymbol={handleNavigateSymbol}
-            />
-
-            {/* Save status bar */}
+        <div className="monaco-editor-container" style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+            <Breadcrumbs filePath={filePath} language={language} projectRoot={projectRoot || ''} editorRef={editorRef} monacoRef={monacoRef} cursorLine={cursorLine} cursorCol={cursorCol} onNavigateSymbol={handleNavigateSymbol} />
+            
             {(isModified || saveStatus) && (
-                <div style={{
-                    padding: '2px 16px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 8,
-                    background: '#1A1D23', borderBottom: '1px solid #2A2D35', flexShrink: 0,
-                    justifyContent: 'flex-end'
-                }}>
-                    {isModified && (
-                        <span style={{ fontSize: 10, color: '#4A9EFF', fontWeight: 700 }}>● Modified</span>
-                    )}
-                    {saveStatus && (
-                        <span style={{ fontSize: 11, color: '#4ADE80', fontWeight: 600 }}>{saveStatus}</span>
-                    )}
-                    <button
-                        onClick={saveFile}
-                        disabled={saving || !isModified}
-                        style={{
-                            padding: '2px 10px', borderRadius: 4, fontSize: 10, fontWeight: 600,
-                            border: '1px solid', cursor: isModified ? 'pointer' : 'default', fontFamily: 'inherit',
-                            background: isModified ? '#4A9EFF' : 'transparent',
-                            color: isModified ? '#fff' : '#495162',
-                            borderColor: isModified ? '#4A9EFF' : '#2A2D35',
-                            transition: 'all 0.15s', opacity: isModified ? 1 : 0.5
-                        }}
-                    >
-                        {saving ? 'Saving...' : 'Save'}
-                    </button>
+                <div className="editor-status-bar">
+                    {isModified && <span className="modified-dot">● Modified</span>}
+                    {saveStatus && <span className="save-status">{saveStatus}</span>}
+                    <button onClick={saveFile} disabled={saving || !isModified} className="save-btn">{saving ? 'Saving...' : 'Save'}</button>
                 </div>
             )}
 
             {/* AI Generate Overlay (Ctrl+K) */}
             {aiOverlayVisible && (
                 <div className="ai-overlay ai-generate-overlay" style={{ top: aiOverlayTop, left: aiOverlayLeft }}>
-                    <div className="ai-overlay-header">
-                        <span className="ai-overlay-icon">✨</span>
-                        <span className="ai-overlay-label">AI Generate</span>
-                        <kbd className="ai-overlay-kbd">Ctrl+K</kbd>
-                    </div>
+                    <div className="ai-overlay-header">✨ AI Generate <kbd>Ctrl+K</kbd></div>
                     <div className="ai-overlay-input-row">
-                        <input
-                            ref={aiInputRef}
-                            type="text"
-                            value={aiQuery}
-                            onChange={e => setAiQuery(e.target.value)}
-                            placeholder="Describe what code to generate..."
-                            className="ai-overlay-input"
-                            onKeyDown={async (e) => {
-                                if (e.key === 'Escape') {
-                                    setAiOverlayVisible(false)
-                                    setAiQuery('')
-                                    editorRef.current?.focus()
-                                } else if (e.key === 'Enter') {
-                                    if (!aiQuery.trim() || aiLoading) return
-                                    setAiLoading(true)
-
-                                    try {
-                                        const selection = editorRef.current?.getSelection()
-                                        let contextMsg = ''
-                                        if (selection && !selection.isEmpty()) {
-                                            contextMsg = "Selected code to edit:\n```\n" + editorRef.current?.getModel()?.getValueInRange(selection) + "\n```"
-                                        }
-
-                                        const res = await fetch('http://127.0.0.1:8001/api/chat', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                                message: `You are generating code directly into an editor. Respond ONLY with the raw replacement code block. Do NOT include any markdown formatting, no backticks, no explanations. Do not say "here is the code". Your EXACT output will be injected into the file.\n\nTask: ${aiQuery}\n\n${contextMsg}`
-                                            })
-                                        })
-
-                                        if (res.ok) {
-                                            const data = await res.json()
-                                            let code = data.response || data.reply || data.content || ''
-                                            code = code.replace(/^```[\s\S]*?\n/, '').replace(/\n```$/, '').trim()
-
-                                            const monaco = monacoRef.current
-                                            const editor = editorRef.current
-                                            if (monaco && editor) {
-                                                const sell = editor.getSelection()
+                        <input ref={aiInputRef} type="text" value={aiQuery} onChange={e => setAiQuery(e.target.value)} placeholder="Describe code to generate..." className="ai-overlay-input" onKeyDown={async (e) => {
+                            if (e.key === 'Escape') { setAiOverlayVisible(false); editorRef.current?.focus(); }
+                            else if (e.key === 'Enter') {
+                                if (!aiQuery.trim() || aiLoading) return
+                                setAiLoading(true)
+                                try {
+                                    const res = await fetch('http://127.0.0.1:8001/api/chat', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ message: aiQuery, editor_context: { filePath, language: getLanguage(filePath) } })
+                                    })
+                                    if (res.ok) {
+                                        const data = await res.json()
+                                        let code = data.response || data.reply || data.content || ''
+                                        code = code.replace(/^```[\s\S]*?\n/, '').replace(/\n```$/, '').trim()
+                                        const editor = editorRef.current
+                                        if (editor) {
+                                            const sel = editor.getSelection()
+                                            if (sel && !sel.isEmpty()) editor.executeEdits('ai', [{ range: sel, text: code }])
+                                            else {
                                                 const pos = editor.getPosition()
-                                                if (sell && !sell.isEmpty()) {
-                                                    editor.executeEdits('ai-inline', [{ range: sell, text: code }])
-                                                } else if (pos) {
-                                                    editor.executeEdits('ai-inline', [{
-                                                        range: new monaco.Range(pos.lineNumber, pos.column, pos.lineNumber, pos.column),
-                                                        text: code
-                                                    }])
-                                                }
+                                                if (pos) editor.executeEdits('ai', [{ range: new monacoRef.current.Range(pos.lineNumber, pos.column, pos.lineNumber, pos.column), text: code }])
                                             }
                                         }
-                                    } catch (err) {
-                                        console.error("AI Generation Failed:", err)
                                     }
-
-                                    setAiLoading(false)
-                                    setAiOverlayVisible(false)
-                                    setAiQuery('')
-                                    editorRef.current?.focus()
-                                }
-                            }}
-                        />
+                                } catch { }
+                                setAiLoading(false); setAiOverlayVisible(false); setAiQuery(''); editorRef.current?.focus();
+                            }
+                        }} />
                         {aiLoading && <div className="ai-spinner" />}
                     </div>
                 </div>
             )}
 
-            {/* AI Inline Edit Widget (Ctrl+I) */}
-            {inlineEditVisible && (
-                <div className="ai-overlay ai-inline-edit-overlay" style={{ top: inlineEditTop }}>
+            {/* Unified AI Popup */}
+            {aiPopupVisible && (
+                <div className="ai-overlay ai-inline-edit-overlay" style={{ top: aiPopupTop }}>
                     <div className="ai-overlay-header">
-                        <span className="ai-overlay-icon">🪄</span>
-                        <span className="ai-overlay-label">AI Edit</span>
-                        <kbd className="ai-overlay-kbd">Ctrl+I</kbd>
-                        <button className="ai-overlay-close" onClick={rejectInlineEdit}>✕</button>
+                        <span>{aiPopupMode === 'edit' ? '🪄 AI Edit' : '🧠 AI Explain'}</span>
+                        <kbd>{aiPopupMode === 'edit' ? 'Ctrl+I' : 'Ctrl+Shift+E'}</kbd>
+                        <button onClick={rejectAiPopup}>✕</button>
                     </div>
-
-                    {/* Input row */}
-                    {!inlineEditResult && (
+                    {!aiPopupResult && (
                         <div className="ai-overlay-input-row">
-                            <input
-                                ref={inlineEditInputRef}
-                                type="text"
-                                value={inlineEditQuery}
-                                onChange={e => setInlineEditQuery(e.target.value)}
-                                placeholder="Describe the edit to apply..."
-                                className="ai-overlay-input"
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Escape') rejectInlineEdit()
-                                    else if (e.key === 'Enter') handleInlineEditSubmit()
-                                }}
-                            />
-                            {inlineEditLoading && <div className="ai-spinner" />}
+                            <input ref={aiPopupInputRef} type="text" value={aiPopupQuery} onChange={e => setAiPopupQuery(e.target.value)} placeholder={aiPopupMode === 'edit' ? "Describe edit..." : "Ask..."} className="ai-overlay-input" onKeyDown={e => { if (e.key === 'Escape') rejectAiPopup(); else if (e.key === 'Enter') handleAiPopupSubmit(); }} />
+                            {aiPopupLoading && <div className="ai-spinner" />}
                         </div>
                     )}
-
-                    {/* Diff preview */}
-                    {inlineEditResult && (
-                        <div className="ai-inline-diff">
-                            <div className="ai-diff-section">
-                                <div className="ai-diff-label removed">Original</div>
-                                <pre className="ai-diff-code removed">{inlineEditOriginal}</pre>
-                            </div>
-                            <div className="ai-diff-section">
-                                <div className="ai-diff-label added">AI Suggestion</div>
-                                <pre className="ai-diff-code added">{inlineEditResult}</pre>
-                            </div>
-                            <div className="ai-diff-actions">
-                                <button className="ai-diff-btn accept" onClick={acceptInlineEdit}>
-                                    ✓ Accept
-                                </button>
-                                <button className="ai-diff-btn reject" onClick={rejectInlineEdit}>
-                                    ✕ Reject
-                                </button>
-                                <button className="ai-diff-btn retry" onClick={() => {
-                                    setInlineEditResult(null)
-                                    setTimeout(() => inlineEditInputRef.current?.focus(), 50)
-                                }}>
-                                    ↻ Retry
-                                </button>
-                            </div>
+                    {aiPopupResult && (
+                        <div className="ai-popup-result">
+                            {aiPopupMode === 'edit' ? (
+                                <div className="ai-inline-diff">
+                                    <pre className="removed">{aiPopupOriginal}</pre>
+                                    <pre className="added">{aiPopupResult}</pre>
+                                    <div className="actions">
+                                        <button onClick={acceptAiPopup}>Accept</button>
+                                        <button onClick={rejectAiPopup}>Reject</button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="ai-explanation">
+                                    <div className="content">{aiPopupResult}</div>
+                                    <button onClick={rejectAiPopup}>Close</button>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
             )}
 
-            {/* Monaco Editor */}
-            <Editor
-                height="100%"
-                language={language}
-                value={content}
-                theme="neural-dark"
-                onChange={(value) => setContent(value || '')}
-                onMount={handleEditorMount}
-                options={{
-                    fontSize,
-                    fontFamily: `'${fontFamily}', 'Cascadia Code', 'Fira Code', Consolas, monospace`,
-                    fontLigatures: true,
-                    tabSize,
-                    wordWrap: wordWrap as 'on' | 'off',
-                    minimap: { enabled: minimap, scale: 2 },
-                    lineNumbers: lineNumbers ? 'on' : 'off',
-                    bracketPairColorization: { enabled: bracketPairs },
-                    renderLineHighlight: 'line',
-                    scrollBeyondLastLine: false,
-                    smoothScrolling: true,
-                    cursorBlinking: 'smooth',
-                    cursorSmoothCaretAnimation: 'on',
-                    automaticLayout: true,
-                    padding: { top: 12, bottom: 12 },
-                    overviewRulerLanes: 0,
-                    hideCursorInOverviewRuler: true,
-                    overviewRulerBorder: false,
-                    guides: {
-                        indentation: true,
-                        bracketPairs: true,
-                        highlightActiveIndentation: true,
-                    },
-                    suggest: {
-                        showKeywords: true,
-                        showSnippets: true,
-                        showClasses: true,
-                        showFunctions: true,
-                        showVariables: true,
-                        showConstants: true,
-                    },
-                    quickSuggestions: {
-                        other: true,
-                        comments: false,
-                        strings: true,
-                    },
-                    parameterHints: { enabled: true },
-                    folding: true,
-                    foldingStrategy: 'indentation',
-                    showFoldingControls: 'mouseover',
-                    matchBrackets: 'always',
-                    renderWhitespace: 'selection',
-                    colorDecorators: true,
-                    linkedEditing: true,
-                    stickyScroll: { enabled: true },
-                }}
-                loading={
-                    <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        height: '100%', background: '#1A1D23', color: '#6B7280', fontSize: 12
-                    }}>
-                        Initializing editor...
-                    </div>
-                }
-            />
+            <Editor height="100%" language={language} value={content} theme="neural-dark" onChange={val => setContent(val || '')} onMount={handleEditorMount} options={{ fontSize, fontFamily, tabSize, wordWrap, minimap: { enabled: minimap }, lineNumbers, bracketPairColorization: { enabled: bracketPairs }, automaticLayout: true, padding: { top: 12, bottom: 12 } }} />
         </div>
     )
 }

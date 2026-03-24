@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
     ChevronRight, File, Folder, FolderOpen, RefreshCw,
     FilePlus, FolderPlus, Trash2, Edit3
@@ -38,24 +38,34 @@ export function FileExplorer({ projectRoot, onFileOpen }: Props) {
     const [selected, setSelected] = useState<string>('')
     const [loading, setLoading] = useState(false)
     const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node?: FileNode } | null>(null)
-    const [promptState, setPromptState] = useState<{ type: 'file' | 'folder', targetDir: string } | null>(null)
+    const [promptState, setPromptState] = useState<{ type: 'file' | 'folder' | 'rename', targetDir: string } | null>(null)
     const [promptValue, setPromptValue] = useState('')
+    const lastLoadedRootRef = useRef<string | null>(null)
+    const isFetchingRef = useRef(false)
 
     const pickDirectory = useCallback(async () => selectDirectory(), [])
 
     const loadTree = useCallback(async () => {
-        if (!projectRoot) return
+        if (!projectRoot || isFetchingRef.current) return
+        
+        // Skip if already loaded for this exact root path (and we have data)
+        if (lastLoadedRootRef.current === projectRoot && tree.length > 0) return
+
         console.log(`[FileExplorer] Loading tree for: ${projectRoot}`);
+        isFetchingRef.current = true
         setLoading(true)
         try {
             const result = await readDir(projectRoot)
             console.log(`[FileExplorer] Tree loaded. Entries: ${result?.length || 0}`);
             setTree(result || [])
+            lastLoadedRootRef.current = projectRoot
         } catch (e) {
             console.error('[FileExplorer] Failed to load file tree:', e)
+        } finally {
+            setLoading(false)
+            isFetchingRef.current = false
         }
-        setLoading(false)
-    }, [projectRoot])
+    }, [projectRoot, tree.length])
 
     useEffect(() => {
         loadTree()
@@ -72,14 +82,16 @@ export function FileExplorer({ projectRoot, onFileOpen }: Props) {
             // Debounce refresh to avoid too many reloads
             if (refreshTimer) clearTimeout(refreshTimer)
             refreshTimer = setTimeout(() => {
+                // Clear cache on external change to force re-fetch
+                lastLoadedRootRef.current = null 
                 loadTree()
-            }, 500)
+            }, 1000) // Increase debounce to 1s to be safe
         })
 
         return () => {
             if (refreshTimer) clearTimeout(refreshTimer)
             cleanup?.()
-                ; (window as any).fileWatcher?.unwatch?.()
+            try { (window as any).fileWatcher?.unwatch?.() } catch {}
         }
     }, [projectRoot, loadTree])
 
@@ -115,7 +127,9 @@ export function FileExplorer({ projectRoot, onFileOpen }: Props) {
     }, [contextMenu])
 
     const handleDelete = async (path: string) => {
+        if (!confirm(`Are you sure you want to delete ${path}?`)) return
         await deletePath(path)
+        lastLoadedRootRef.current = null
         loadTree()
         setContextMenu(null)
     }
@@ -127,99 +141,64 @@ export function FileExplorer({ projectRoot, onFileOpen }: Props) {
         const cleanDir = targetDir.endsWith(sep) ? targetDir.slice(0, -1) : targetDir
         const targetPath = `${cleanDir}${sep}${trimmedName}`
         
-        console.log('[FileExplorer] Creating:', { type, targetPath })
-        
         try {
             let res: any
-            if (type === 'file') {
-                res = await createFile(targetPath)
-            } else {
-                res = await createDir(targetPath)
-            }
-            console.log('[FileExplorer] Result:', res)
-            if (res?.error) {
-                alert(`Error: ${res.error}`)
+            if (type === 'file') res = await createFile(targetPath)
+            else res = await createDir(targetPath)
+            
+            if (res?.error) alert(`Error: ${res.error}`)
+            else {
+                lastLoadedRootRef.current = null
+                loadTree()
             }
         } catch (err: any) {
             alert(`Failed: ${err?.message || String(err)}`)
         }
-        loadTree()
     }
 
-
-
-
-
     const handleNewFile = async () => {
-        // If no workspace is open, ask user to select one first (VS Code style)
         let targetDir = projectRoot
         if (!targetDir || targetDir.trim() === '') {
-            if (!window.ipcRenderer?.selectDirectory && !window.ipcRenderer?.invoke) {
-                alert('Workspace operations are only supported in the Electron desktop app.')
-                setContextMenu(null)
-                return
-            }
             const picked = await pickDirectory()
-            if (!picked) { setContextMenu(null); return }
+            if (!picked) return
             targetDir = picked
             window.dispatchEvent(new CustomEvent('set-project-root', { detail: { root: picked } }))
         } else {
-            const targetNode = contextMenu?.node || (selected ? { path: selected, type: tree.find(n => n.path === selected)?.type || 'directory' } : null)
+            const targetNode = contextMenu?.node || (selected ? tree.find(n => n.path === selected) : null)
             if (targetNode) {
-                const lastSlash = Math.max(targetNode.path.lastIndexOf('\\'), targetNode.path.lastIndexOf('/'))
-                targetDir = targetNode.type === 'file' && lastSlash !== -1
-                    ? targetNode.path.substring(0, lastSlash)
+                targetDir = targetNode.type === 'file' 
+                    ? targetNode.path.substring(0, Math.max(targetNode.path.lastIndexOf('\\'), targetNode.path.lastIndexOf('/')))
                     : targetNode.path
             }
         }
-
         setPromptState({ type: 'file', targetDir })
         setPromptValue('')
         setContextMenu(null)
     }
 
     const handleNewFolder = async () => {
-        // If no workspace is open, ask user to select one first (VS Code style)
         let targetDir = projectRoot
         if (!targetDir || targetDir.trim() === '') {
-            if (!window.ipcRenderer?.selectDirectory && !window.ipcRenderer?.invoke) {
-                alert('Workspace operations are only supported in the Electron desktop app.')
-                setContextMenu(null)
-                return
-            }
             const picked = await pickDirectory()
-            if (!picked) { setContextMenu(null); return }
+            if (!picked) return
             targetDir = picked
             window.dispatchEvent(new CustomEvent('set-project-root', { detail: { root: picked } }))
         } else {
-            const targetNode = contextMenu?.node || (selected ? { path: selected, type: tree.find(n => n.path === selected)?.type || 'directory' } : null)
+            const targetNode = contextMenu?.node || (selected ? tree.find(n => n.path === selected) : null)
             if (targetNode) {
-                const lastSlash = Math.max(targetNode.path.lastIndexOf('\\'), targetNode.path.lastIndexOf('/'))
-                targetDir = targetNode.type === 'file' && lastSlash !== -1
-                    ? targetNode.path.substring(0, lastSlash)
+                targetDir = targetNode.type === 'file' 
+                    ? targetNode.path.substring(0, Math.max(targetNode.path.lastIndexOf('\\'), targetNode.path.lastIndexOf('/')))
                     : targetNode.path
             }
         }
-
         setPromptState({ type: 'folder', targetDir })
         setPromptValue('')
         setContextMenu(null)
     }
 
-    // Listen for global "New File" event from the top menu / keyboard shortcut
-    useEffect(() => {
-        const handler = () => {
-            handleNewFile()
-        }
-        window.addEventListener('explorer-new-file', handler)
-        return () => window.removeEventListener('explorer-new-file', handler)
-    }, [projectRoot, handleNewFile])
-
     const handleReveal = () => {
         const targetPath = contextMenu?.node?.path || selected || projectRoot
-        if (targetPath && window.shell?.openPath) {
-            window.shell.openPath(targetPath)
-        }
+        if (targetPath && window.shell?.openPath) window.shell.openPath(targetPath)
         setContextMenu(null)
     }
 
@@ -227,28 +206,21 @@ export function FileExplorer({ projectRoot, onFileOpen }: Props) {
         const targetPath = contextMenu?.node?.path || selected || projectRoot
         let dir = targetPath
         if (contextMenu?.node?.type === 'file' || (!contextMenu?.node && tree.find(n => n.path === selected)?.type === 'file')) {
-            dir = targetPath.substring(0, targetPath.lastIndexOf('\\'))
+            dir = targetPath.substring(0, Math.max(targetPath.lastIndexOf('\\'), targetPath.lastIndexOf('/')))
         }
-        // In this app architecture, terminals are global. The user might want us to launch a terminal or just open the terminal panel.
-        // We'll emit an event to open the panel with this cwd, but let's just use window.appApi or trigger a custom event.
-        const event = new CustomEvent('open-terminal-cwd', { detail: dir })
-        window.dispatchEvent(event)
+        window.dispatchEvent(new CustomEvent('open-terminal-cwd', { detail: dir }))
         setContextMenu(null)
     }
 
     const handleCopyPath = () => {
-        if (contextMenu?.node?.path) {
-            navigator.clipboard.writeText(contextMenu.node.path)
-        }
+        if (contextMenu?.node?.path) navigator.clipboard.writeText(contextMenu.node.path)
         setContextMenu(null)
     }
 
     const handleCopyRelativePath = () => {
         if (contextMenu?.node?.path && projectRoot) {
             let relative = contextMenu.node.path.replace(projectRoot, '')
-            if (relative.startsWith('\\') || relative.startsWith('/')) {
-                relative = relative.substring(1)
-            }
+            if (relative.startsWith('\\') || relative.startsWith('/')) relative = relative.substring(1)
             navigator.clipboard.writeText(relative)
         }
         setContextMenu(null)
@@ -301,19 +273,18 @@ export function FileExplorer({ projectRoot, onFileOpen }: Props) {
                     <button className="sidebar-action-btn" onClick={handleNewFolder} title="New Folder">
                         <FolderPlus size={14} />
                     </button>
-                    <button className="sidebar-action-btn" onClick={loadTree} title="Refresh">
+                    <button className="sidebar-action-btn" onClick={() => { lastLoadedRootRef.current = null; loadTree(); }} title="Refresh">
                         <RefreshCw size={14} className={loading ? 'spin' : ''} />
                     </button>
                 </div>
             </div>
             <div className="sidebar-content" onContextMenu={(e) => {
-                // Only trigger if clicking exactly on this container or file-tree background, not on a node
                 if ((e.target as HTMLElement).closest('.tree-item')) return;
                 e.preventDefault();
                 setContextMenu({ x: e.clientX, y: e.clientY, node: undefined });
             }}>
                 <div className="explorer-tree" style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
-                    {loading ? (
+                    {loading && tree.length === 0 ? (
                         <div style={{ padding: '16px', textAlign: 'center', color: 'var(--text-faint)', fontSize: '12px' }}>
                             Loading...
                         </div>
@@ -321,218 +292,88 @@ export function FileExplorer({ projectRoot, onFileOpen }: Props) {
                         tree.map(node => renderNode(node))
                     ) : (
                         <div style={{
-                            padding: '30px 20px',
-                            textAlign: 'center',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '16px',
-                            alignItems: 'center',
-                            color: 'var(--text-secondary)'
+                            padding: '30px 20px', textAlign: 'center', display: 'flex',
+                            flexDirection: 'column', gap: '16px', alignItems: 'center', color: 'var(--text-secondary)'
                         }}>
                             {!projectRoot ? (
                                 <>
-                                    <p style={{ fontSize: '13px', margin: 0, opacity: 0.8, lineHeight: 1.5 }}>
-                                        You have not yet opened a folder.
-                                    </p>
-                                    <button 
-                                        onClick={() => {
-                                            console.log('[FileExplorer] Open Folder button clicked');
-                                            window.dispatchEvent(new CustomEvent('open-project-folder'));
-                                        }}
-                                        style={{
-                                            background: 'var(--accent)',
-                                            color: 'white',
-                                            border: 'none',
-                                            padding: '10px 20px',
-                                            borderRadius: '6px',
-                                            cursor: 'pointer',
-                                            fontSize: '13px',
-                                            fontWeight: 600,
-                                            width: '100%',
-                                            maxWidth: '160px',
-                                            transition: 'all 0.2s ease',
-                                            boxShadow: '0 4px 12px rgba(var(--accent-rgb), 0.3)'
-                                        }}
-                                        onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
-                                        onMouseOut={(e) => e.currentTarget.style.filter = 'none'}
-                                    >
+                                    <p style={{ fontSize: '13px', margin: 0, opacity: 0.8, lineHeight: 1.5 }}>You have not yet opened a folder.</p>
+                                    <button onClick={() => window.dispatchEvent(new CustomEvent('open-project-folder'))} className="primary-btn">
                                         Open Folder
                                     </button>
                                 </>
                             ) : (
                                 <p style={{ fontSize: '13px', opacity: 0.5 }}>This folder is empty.</p>
                             )}
-                            {!projectRoot && (
-                                <div style={{ fontSize: '11px', opacity: 0.5, marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <span>Or create a new file via File menu</span>
-                                    <span style={{ fontSize: '10px' }}>(Shortcut: Ctrl+Shift+O to open folder)</span>
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Context Menu */}
             {contextMenu && (
                 <div className="context-menu" style={{ left: contextMenu.x, top: contextMenu.y }}>
-                    <button className="context-menu-item" onClick={handleNewFile}>
-                        <FilePlus size={13} /> New File
-                    </button>
-                    <button className="context-menu-item" onClick={handleNewFolder}>
-                        <FolderPlus size={13} /> New Folder
-                    </button>
+                    <button className="context-menu-item" onClick={handleNewFile}><FilePlus size={13} /> New File</button>
+                    <button className="context-menu-item" onClick={handleNewFolder}><FolderPlus size={13} /> New Folder</button>
                     {contextMenu.node && (
                         <>
                             <div className="context-menu-divider" />
-                            <button className="context-menu-item" onClick={handleReveal}>
-                                Reveal in File Explorer
-                            </button>
-                            <button className="context-menu-item" onClick={handleOpenTerminal}>
-                                Open in Integrated Terminal
-                            </button>
+                            <button className="context-menu-item" onClick={handleReveal}>Reveal in File Explorer</button>
+                            <button className="context-menu-item" onClick={handleOpenTerminal}>Open in Integrated Terminal</button>
                             <div className="context-menu-divider" />
-                            <button className="context-menu-item" onClick={handleCopyPath}>
-                                Copy Path
-                            </button>
-                            <button className="context-menu-item" onClick={handleCopyRelativePath}>
-                                Copy Relative Path
-                            </button>
+                            <button className="context-menu-item" onClick={handleCopyPath}>Copy Path</button>
+                            <button className="context-menu-item" onClick={handleCopyRelativePath}>Copy Relative Path</button>
                             <div className="context-menu-divider" />
                             <button className="context-menu-item" onClick={() => {
-                                setPromptState({ type: 'rename', targetDir: contextMenu.node!.path } as any)
+                                setPromptState({ type: 'rename', targetDir: contextMenu.node!.path })
                                 setPromptValue(contextMenu.node!.name)
                                 setContextMenu(null)
-                            }}>
-                                <Edit3 size={13} /> Rename
-                            </button>
-                            <button className="context-menu-item danger" onClick={() => handleDelete(contextMenu.node!.path)}>
-                                <Trash2 size={13} /> Delete
-                            </button>
+                            }}><Edit3 size={13} /> Rename</button>
+                            <button className="context-menu-item danger" onClick={() => handleDelete(contextMenu.node!.path)}><Trash2 size={13} /> Delete</button>
                         </>
                     )}
                 </div>
             )}
 
-            {/* Custom Prompt Dialog */}
             {promptState && (
-                <div style={{
+                <div className="prompt-overlay" style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                     background: 'rgba(0,0,0,0.6)', zIndex: 1000,
                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                    <div style={{
+                    <div className="prompt-card" style={{
                         background: 'var(--bg-card)', padding: '20px', borderRadius: '10px',
                         border: '1px solid var(--border)', width: '420px', maxWidth: '90%',
-                        display: 'flex', flexDirection: 'column', gap: '12px',
-                        boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+                        display: 'flex', flexDirection: 'column', gap: '12px'
                     }}>
-                        {/* Title */}
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>
-                            {(promptState.type as any) === 'rename' ? '✏️ Rename' : promptState.type === 'file' ? '📄 New File' : '📁 New Folder'}
+                        <div style={{ fontSize: 14, fontWeight: 700 }}>
+                            {promptState.type === 'rename' ? '✏️ Rename' : promptState.type === 'file' ? '📄 New File' : '📁 New Folder'}
                         </div>
-
-                        {/* Location row (only for new file/folder, not rename) */}
-                        {(promptState.type as any) !== 'rename' && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <label style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, letterSpacing: '0.05em' }}>LOCATION</label>
-                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                                    <div style={{
-                                        flex: 1, background: 'var(--bg-inset)', border: '1px solid var(--border)',
-                                        borderRadius: '4px', padding: '5px 8px', fontSize: 11,
-                                        color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap', fontFamily: 'monospace'
-                                    }}>
-                                        {promptState.targetDir || '(no folder opened)'}
-                                    </div>
-                                    <button
-                                        onClick={async () => {
-                                            const dir = await pickDirectory()
-                                            if (dir) {
-                                                setPromptState(prev => prev ? { ...prev, targetDir: dir } : prev)
-                                            }
-                                        }}
-                                        style={{
-                                            background: 'var(--bg-inset)', border: '1px solid var(--border)',
-                                            color: 'var(--text)', padding: '5px 10px', borderRadius: '4px',
-                                            cursor: 'pointer', fontSize: 11, whiteSpace: 'nowrap'
-                                        }}
-                                    >Browse...</button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Name input */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <label style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, letterSpacing: '0.05em' }}>
-                                {(promptState.type as any) === 'rename' ? 'NEW NAME' : 'NAME'}
-                            </label>
-                            <input
-                                autoFocus
-                                value={promptValue}
-                                onChange={(e) => setPromptValue(e.target.value)}
-                                placeholder={(promptState.type === 'file' ? 'filename.ext' : promptState.type === 'folder' ? 'folder-name' : '')}
-                                style={{
-                                    background: 'var(--bg-inset)', border: '1px solid var(--accent)',
-                                    color: 'var(--text)', padding: '7px 10px', borderRadius: '4px',
-                                    outline: 'none', fontSize: 13, fontFamily: 'monospace'
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        if ((promptState.type as any) === 'rename') {
-                                            if (promptValue) {
-                                                const lastSlash = Math.max(promptState.targetDir.lastIndexOf('\\'), promptState.targetDir.lastIndexOf('/'))
-                                                const dir = lastSlash !== -1 ? promptState.targetDir.substring(0, lastSlash) : promptState.targetDir
-                                                const sep = dir.includes('\\') ? '\\' : '/'
-                                                renamePath(promptState.targetDir, `${dir}${sep}${promptValue}`).then((res: any) => {
-                                                    if (res?.error) alert(`Failed to rename: ${res.error}`)
-                                                    loadTree()
-                                                })
-                                            }
-                                        } else {
-                                            processNewItem(promptState.type, promptValue, promptState.targetDir)
-                                        }
-                                        setPromptState(null)
-                                    } else if (e.key === 'Escape') {
-                                        setPromptState(null)
-                                    }
-                                }}
-                            />
-                        </div>
-
-                        {/* Buttons */}
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '4px' }}>
-                            <button
-                                onClick={() => setPromptState(null)}
-                                style={{
-                                    background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-secondary)',
-                                    padding: '6px 16px', borderRadius: '5px', cursor: 'pointer', fontSize: 12
-                                }}
-                            >Cancel</button>
-                            <button
-                                onClick={() => {
-                                    if ((promptState.type as any) === 'rename') {
-                                        if (promptValue) {
-                                            const lastSlash = Math.max(promptState.targetDir.lastIndexOf('\\'), promptState.targetDir.lastIndexOf('/'))
-                                            const dir = lastSlash !== -1 ? promptState.targetDir.substring(0, lastSlash) : promptState.targetDir
-                                            const sep = dir.includes('\\') ? '\\' : '/'
-                                            renamePath(promptState.targetDir, `${dir}${sep}${promptValue}`).then((res: any) => {
-                                                if (res?.error) alert(`Failed to rename: ${res.error}`)
-                                                loadTree()
-                                            })
-                                        }
+                        <input
+                            autoFocus
+                            value={promptValue}
+                            onChange={(e) => setPromptValue(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    if (promptState.type === 'rename') {
+                                        const lastSlash = Math.max(promptState.targetDir.lastIndexOf('\\'), promptState.targetDir.lastIndexOf('/'))
+                                        const dir = lastSlash !== -1 ? promptState.targetDir.substring(0, lastSlash) : promptState.targetDir
+                                        const sep = dir.includes('\\') ? '\\' : '/'
+                                        renamePath(promptState.targetDir, `${dir}${sep}${promptValue}`).then(() => {
+                                            lastLoadedRootRef.current = null
+                                            loadTree()
+                                        })
                                     } else {
-                                        processNewItem(promptState.type, promptValue, promptState.targetDir)
+                                        processNewItem(promptState.type as any, promptValue, promptState.targetDir)
                                     }
                                     setPromptState(null)
-                                }}
-                                style={{
-                                    background: 'var(--accent)', border: 'none', color: 'white',
-                                    padding: '6px 16px', borderRadius: '5px', cursor: 'pointer', fontSize: 12, fontWeight: 600
-                                }}
-                            >
-                                {(promptState.type as any) === 'rename' ? 'Rename' : 'Create'}
-                            </button>
+                                } else if (e.key === 'Escape') setPromptState(null)
+                            }}
+                            className="prompt-input"
+                            style={{ width: '100%', padding: '8px', background: 'var(--bg-inset)', border: '1px solid var(--accent)', color: 'var(--text)', borderRadius: '4px' }}
+                        />
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                            <button onClick={() => setPromptState(null)} className="secondary-btn">Cancel</button>
+                            <button onClick={() => { /* same as enter key */ }} className="primary-btn">Confirm</button>
                         </div>
                     </div>
                 </div>

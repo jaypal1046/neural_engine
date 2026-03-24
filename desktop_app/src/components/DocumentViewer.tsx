@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import mammoth from 'mammoth'
 import { readFile, readFileBase64 } from '../lib/desktopBridge'
+import { Mermaid } from './Mermaid'
 
 interface Props {
     filePath: string
@@ -82,7 +83,22 @@ export function DocumentViewer({ filePath, projectRoot, onEdit }: Props) {
                     </button>
                 )}
                 <div className="markdown-body" style={{ maxWidth: 800, margin: '0 auto', fontSize: 14, lineHeight: 1.6 }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <ReactMarkdown 
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                            code({ className, children, ...props }) {
+                                const match = /language-(\w+)/.exec(className || '')
+                                const isMermaid = match?.[1] === 'mermaid' || (!match && String(children).trim().startsWith('graph'))
+                                return isMermaid ? (
+                                    <Mermaid chart={String(children).replace(/\n$/, '')} />
+                                ) : (
+                                    <code className={className} {...props}>
+                                        {children}
+                                    </code>
+                                )
+                            }
+                        }}
+                    >
                         {content || ''}
                     </ReactMarkdown>
                 </div>

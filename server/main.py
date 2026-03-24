@@ -109,7 +109,16 @@ except ImportError:
         normalize_review_response = None
         format_review_markdown = None
 try:
+    from .skill_manager import skill_manager
+except ImportError:
+    try:
+        from skill_manager import skill_manager
+    except ImportError:
+        skill_manager = None
+
+try:
     from .modify_pipeline import (
+
         modify_system_prompt,
         build_impact_brief,
         extract_json_object as extract_modify_json,
@@ -166,8 +175,11 @@ except ImportError:
     PYTHON_BRAIN_AVAILABLE = False
 
 # =============================================================================
-# Models
+# Models & Configuration
 # =============================================================================
+
+DEFAULT_CHAT_MODEL = "llama3"
+FAST_CHAT_MODEL = "tinyllama"
 
 class CompressRequest(BaseModel):
     file_path: str
@@ -197,6 +209,15 @@ class LearnFileRequest(BaseModel):
 class TrainRequest(BaseModel):
     mode: str = "all"
     deep: bool = False
+
+class OllamaStatusResponse(BaseModel):
+    ollama_running: bool
+    models: List[str]
+    default_model: str
+    error: Optional[str] = None
+
+class PullModelRequest(BaseModel):
+    model: str
 
 # =============================================================================
 # Utility functions
@@ -720,6 +741,20 @@ def build_agent_task(req: "ChatRequest", task_prep: Optional[dict[str, Any]] = N
         return user_message
 
     sections = []
+    
+    # Inject browser capabilities
+    sections.extend([
+        "BROWSER CAPABILITY: You have a built-in web browser. DO NOT say you cannot browse the internet.",
+        "Instead, use the following commands exactly as shown to surf the web:",
+        "  [BROWSER: navigate <url>]       - go to a specific URL",
+        "  [BROWSER: getContent]           - get page text and title",
+        "  [BROWSER: getHTML]              - get raw HTML",
+        "  [BROWSER: getElement <selector>]- copy an element by CSS selector",
+        "  [BROWSER: consoleLogs]          - view browser console",
+        "  [BROWSER: screenshot]           - take a screenshot",
+        ""
+    ])
+
     if history_block:
         sections.extend([
             "Recent conversation:",
@@ -1076,7 +1111,71 @@ def ensure_vault():
     if not os.path.exists(VAULT_META):
         with open(VAULT_META, "w") as f:
             json.dump({"version": "10.0", "entries": {}}, f)
+ 
+def ensure_leaning_directory():
+    """Ensure the .leaning directory and its manifest files exist."""
+    leaning_dir = os.path.join(DEFAULT_WORKSPACE_ROOT, ".leaning")
+    os.makedirs(leaning_dir, exist_ok=True)
+    
+    # Files to initialize if they don't exist
+    initial_files = {
+        "identity_manifest.md": "# Project Identity Manifest\n\n- Project Name: Neural Studio\n- Root Path: " + DEFAULT_WORKSPACE_ROOT,
+        "project_blueprint.md": "# Project Blueprint\n\n- Tech Stack: React, Electron, FastAPI, C++",
+        "logic_flows.md": "# Logic Flows\n\n- Defined data paths through the system.",
+    }
+    
+    for filename, content in initial_files.items():
+        filepath = os.path.join(leaning_dir, filename)
+        if not os.path.exists(filepath):
+            try:
+                with open(filepath, "w", encoding="utf-8") as f:
+                    f.write(content)
+                print(f"✓ Initialized project knowledge: {filename}")
+            except Exception as e:
+                print(f"Warning: Could not initialize {filename}: {e}")
+                
+    # New: Auto-generate project summary if missing
+    summary_path = os.path.join(leaning_dir, "project_summary.md")
+    if not os.path.exists(summary_path):
+        # We'll trigger this asynchronously or just do it once if not exists
+        try:
+            from threading import Thread
+            Thread(target=update_leaning_summary, daemon=True).start()
+        except Exception:
+            pass
 
+def update_leaning_summary():
+    """Use AI to generate a concise project summary and store it in .leaning/."""
+    try:
+        leaning_dir = os.path.join(DEFAULT_WORKSPACE_ROOT, ".leaning")
+        os.makedirs(leaning_dir, exist_ok=True)
+        summary_path = os.path.join(leaning_dir, "project_summary.md")
+        
+        # Get context to summarize
+        cp = get_context_provider(DEFAULT_WORKSPACE_ROOT)
+        if not cp:
+            return
+            
+        context = cp.build_context("Provide a high-level technical summary of this project for the .leaning directory.", max_files=10)
+        
+        prompt = (
+            "You are a project architect. Based on the following workspace context, "
+            "write a CONCISE (max 500 words) technical summary of the project. "
+            "Focus on the core purpose, main tech stack, and high-level logic flow. "
+            "Output in Markdown.\n\n"
+            "Workspace Context:\n"
+            f"{context['context_text']}"
+        )
+        
+        adapter = OllamaAdapter(model=CONTEXT_CHAT_MODEL)
+        response = adapter.chat([{"role": "user", "content": prompt}], timeout=300)
+        
+        if response and not response.startswith("Error"):
+            with open(summary_path, "w", encoding="utf-8") as f:
+                f.write(f"# AI-Generated Project Summary\n\n> Generated on: {os.path.basename(summary_path)}\n\n{response}")
+            print("✓ AI-Generated Project Summary stored in .leaning/")
+    except Exception as e:
+        print(f"Failed to generate project summary: {e}")
 def load_vault_index() -> dict:
     ensure_vault()
     with open(VAULT_META, "r") as f:
@@ -1256,6 +1355,111 @@ def vault_remove(key: str):
     save_vault_index(index)
     
     return {"status": "success", "message": f"Removed '{key}' from vault."}
+
+@app.get("/api/setup/status", response_model=OllamaStatusResponse)
+def get_ollama_status():
+    """Check if Ollama is installed and running using both API and CLI."""
+    ollama_installed = False
+    models = []
+    error = None
+    
+    # 1. Check if 'ollama' command exists
+    try:
+        ver_res = subprocess.run(["ollama", "--version"], capture_output=True, text=True, timeout=3, shell=True)
+        if ver_res.returncode == 0:
+            ollama_installed = True
+    except Exception as e:
+        error = f"Ollama CLI not found: {str(e)}"
+
+    # 2. Try API check
+    hosts = [
+        os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434"),
+        "http://127.0.0.1:11434",
+        "http://localhost:11434"
+    ]
+    
+    ollama_running = False
+    for host in hosts:
+        base_url = host.rstrip("/")
+        if "://" not in base_url:
+            base_url = f"http://{base_url}"
+        try:
+            res = requests.get(f"{base_url}/api/tags", timeout=1.5)
+            if res.ok:
+                ollama_running = True
+                data = res.json()
+                models = [m["name"] for m in data.get("models", [])]
+                break
+        except:
+            continue
+            
+    # 3. Fallback to CLI if API fails but command exists
+    if ollama_installed and not ollama_running:
+        try:
+            list_res = subprocess.run(["ollama", "list"], capture_output=True, text=True, timeout=4, shell=True)
+            if list_res.returncode == 0:
+                ollama_running = True
+                # Parse simple table output
+                lines = list_res.stdout.strip().split("\n")
+                if len(lines) > 1:
+                    for line in lines[1:]: # Skip "NAME" header
+                        if line:
+                            parts = line.split()
+                            if parts: models.append(parts[0])
+        except Exception as e:
+            if not error: error = f"CLI failed: {str(e)}"
+
+    return {
+        "ollama_running": ollama_running,
+        "models": list(set(models)),
+        "default_model": DEFAULT_CHAT_MODEL,
+        "error": error if not ollama_running else None
+    }
+
+@app.post("/api/setup/pull-model")
+def pull_ollama_model(payload: PullModelRequest):
+    """Trigger a streaming pull for an Ollama model."""
+    def generate():
+        try:
+            res = requests.post(
+                "http://127.0.0.1:11434/api/pull",
+                json={"name": payload.model},
+                stream=True,
+                timeout=None
+            )
+            for line in res.iter_lines():
+                if line:
+                    yield f"data: {line.decode('utf-8')}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+@app.post("/api/setup/install-ollama")
+async def install_ollama():
+    """Trigger Ollama installation via winget and stream output."""
+    def generate():
+        try:
+            # winget install -e --id Ollama.Ollama --accept-source-agreements --accept-package-agreements
+            cmd = ["winget", "install", "-e", "--id", "Ollama.Ollama", "--accept-source-agreements", "--accept-package-agreements"]
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, shell=True)
+            
+            yield f"data: {json.dumps({'status': 'starting', 'message': 'Starting Ollama installation via winget...'})}\n\n"
+            
+            if process.stdout:
+                for line in process.stdout:
+                    if line.strip():
+                        yield f"data: {json.dumps({'status': 'installing', 'message': line.strip()})}\n\n"
+            
+            process.wait()
+            if process.returncode == 0:
+                yield f"data: {json.dumps({'status': 'success', 'message': 'Ollama installed successfully! Please restart the app if detection still fails.'})}\n\n"
+            else:
+                yield f"data: {json.dumps({'status': 'error', 'message': f'Installation failed with exit code {process.returncode}'})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'status': 'error', 'message': str(e)})}\n\n"
+            
+    return StreamingResponse(generate(), media_type="text/event-stream")
 
 # =============================================================================
 # Neural Task Handler — Intelligent request routing
@@ -2202,9 +2406,12 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
+    model: Optional[str] = None
     history: list[ChatMessage] = []
     web_search: bool = False
     workspace_root: Optional[str] = None
+    project_index_path: Optional[str] = None
+    editor_context: Optional[dict[str, Any]] = None
 
 class CommandPreferenceRequest(BaseModel):
     intent: str
@@ -2312,7 +2519,10 @@ def should_use_fast_chat(message: str, web_search: bool) -> bool:
     if "\n" in message or len(message) > 220:
         return False
 
-    if any(token in cleaned for token in ("`", "\\", "/", ".py", ".cpp", ".ts", ".tsx", ".js", ".json")):
+    if any(token in cleaned for token in ("`", "\\", ".py", ".cpp", ".ts", ".tsx", ".js", ".json")):
+        # Allow slashes if they are part of a URL
+        if "/" in cleaned and not any(url_indicator in cleaned for url_indicator in ("http://", "https://", "localhost:")):
+            return False
         return False
 
     return not any(keyword in cleaned for keyword in PROJECT_TASK_KEYWORDS)
@@ -2340,19 +2550,30 @@ def fast_chat_messages(req: "ChatRequest", user_message: str) -> list[dict[str, 
 
 def fast_chat_system_prompt(web_search: bool, task_prep: Optional[dict[str, Any]] = None, local_context: Optional[str] = None) -> str:
     base = (
-        "[DEBUG: V2] You are Nero fast local chat mode inside Neural Studio. "
+        "[DEBUG: V2] You are Nero, a local AI assistant inside Neural Studio. "
         "Reply quickly and clearly. "
-        "Do not use tool syntax, action syntax, or long reasoning traces. "
         "If the question is about the current project files, coding changes, code review, debugging, or architecture, "
-        "incorporate the provided context or state briefly that you are switching to deep project mode."
+        "incorporate the provided context or state briefly that you are switching to deep project mode.\n\n"
+        "BROWSER CAPABILITY: You have a real embedded browser inside Neural Studio. "
+        "When the user asks you to visit a URL, browse a website, check a page, read console logs, or inspect an element, "
+        "you MUST use [BROWSER: cmd] directives — do NOT say you cannot browse the internet. "
+        "Available browser directives (include them literally in your response):\n"
+        "  [BROWSER: navigate <url>]       — open and navigate to any URL\n"
+        "  [BROWSER: getContent]           — get the page title, URL and text\n"
+        "  [BROWSER: getHTML]              — get the page outer HTML\n"
+        "  [BROWSER: getElement <selector>]— copy a specific element (CSS selector)\n"
+        "  [BROWSER: consoleLogs]          — show browser console messages\n"
+        "  [BROWSER: screenshot]           — take a screenshot of the page\n"
+        "Example: if asked to 'open google.com', respond with: [BROWSER: navigate https://google.com]"
     )
     if web_search:
-        base += " Web mode is enabled, but prioritize a fast local answer first."
+        base += "\nWeb mode is enabled. You can also use [BROWSER: navigate <url>] to visit any page."
     if local_context:
         base += "\n\nRelevant Local Context:\n" + local_context
     if task_prep and task_prep.get("analysis_summary"):
         base += "\n\nLocal task routing summary:\n" + task_prep["analysis_summary"]
     return base
+
 
 
 def context_chat_system_prompt(summary: str, task_prep: Optional[dict[str, Any]] = None) -> str:
@@ -2361,7 +2582,17 @@ def context_chat_system_prompt(summary: str, task_prep: Optional[dict[str, Any]]
         "Answer using the provided workspace context first. "
         "Be concrete, do not invent files, and say when context is incomplete. "
         "Keep the answer clear and practical. "
-        f"{summary}"
+        f"{summary}\n\n"
+        "BROWSER CAPABILITY: You have a real embedded browser inside Neural Studio. "
+        "When the user asks you to visit a URL, browse a website, or inspect an element, "
+        "you MUST use [BROWSER: cmd] directives — do NOT say you cannot browse the internet. "
+        "Available browser directives:\n"
+        "  [BROWSER: navigate <url>]       — open and navigate to any URL\n"
+        "  [BROWSER: getContent]           — get the page title, URL and text\n"
+        "  [BROWSER: getHTML]              — get the page outer HTML\n"
+        "  [BROWSER: getElement <selector>]— copy a specific element (CSS selector)\n"
+        "  [BROWSER: consoleLogs]          — show browser console messages\n"
+        "  [BROWSER: screenshot]           — take a screenshot of the page\n"
     )
     if task_prep and task_prep.get("analysis_summary"):
         prompt += "\n\nLocal task preparation:\n" + task_prep["analysis_summary"]
@@ -3367,9 +3598,9 @@ def warm_ollama_model(timeout: int = 20) -> bool:
             [{"role": "user", "content": "Reply with warm."}],
             system_prompt="Warm the local model cache. Reply with one word only.",
             temperature=0.0,
-            num_ctx=256,
-            timeout=timeout,
-            num_predict=4,
+            num_ctx=8192,
+            timeout=300,
+            num_predict=1024,
         )
         return bool(response and not response.startswith("Error contacting Ollama:"))
     except Exception:
@@ -3381,12 +3612,12 @@ def warm_ollama_model_background() -> None:
         return
 
     def _warm() -> None:
-        warm_ollama_model(timeout=20)
+        warm_ollama_model(timeout=300)
 
     threading.Thread(target=_warm, daemon=True).start()
 
 
-def warm_ollama_model_sync(timeout: int = 12) -> bool:
+def warm_ollama_model_sync(timeout: int = 300) -> bool:
     return warm_ollama_model(timeout=timeout)
 
 
@@ -3417,6 +3648,212 @@ def start_background_services() -> None:
     threading.Thread(target=_boot, daemon=True).start()
 
 
+def run_review_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None, stream_callback=None):
+    print(">>> INVOKING: review_chat")
+    workspace_root = request_workspace_root(req, task_prep)
+    context_provider = get_context_provider(workspace_root)
+    
+    # Build context for review (explicitly include the target file if found)
+    context = ""
+    if context_provider:
+        context = context_provider.build_context(user_message, max_files=5, max_chars=12000)
+    
+    system_prompt = review_system_prompt
+    if "User request:\n" in user_message:
+        # If it's a patch-based review or similar
+        system_prompt = patch_review_system_prompt
+    
+    adapter = OllamaAdapter(model=req.model or DEFAULT_CHAT_MODEL)
+    messages = fast_chat_messages(req, user_message)
+    
+    if context:
+        messages.insert(0, {"role": "system", "content": f"Use the following local project context to inform your review:\n\n{context}"})
+    
+    if stream_callback:
+        # Real-time streaming
+        full_response = ""
+        for chunk in adapter.chat_stream(messages, system_prompt=system_prompt, temperature=0.1):
+            if chunk:
+                full_response += chunk
+                stream_callback(chunk)
+        return {
+            "response": full_response,
+            "tool": "review_chat",
+            "status": "ok",
+            "analysis": build_analysis_payload(task_prep),
+        }
+    else:
+        # Synchronous
+        response = adapter.chat(messages, system_prompt=system_prompt, temperature=0.1)
+        return {
+            "response": response,
+            "tool": "review_chat",
+            "status": "ok",
+            "analysis": build_analysis_payload(task_prep),
+        }
+
+def run_design_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None):
+    print(">>> INVOKING SKILL: frontend-design")
+    system_prompt = "You are an expert Frontend Designer."
+    if skill_manager:
+        system_prompt = skill_manager.inject_skill("frontend-design", system_prompt)
+    
+    adapter = OllamaAdapter(model=req.model or DEFAULT_CHAT_MODEL)
+    response = adapter.chat(
+        fast_chat_messages(req, user_message),
+        system_prompt=system_prompt,
+        temperature=0.7,
+        num_ctx=4096,
+    )
+    return {
+        "response": response,
+        "tool": "frontend_design_skill",
+        "status": "ok",
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+def run_visualize_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None):
+    print(">>> INVOKING SKILL: chart-visualization")
+    system_prompt = "You are a Data Visualization expert."
+    if skill_manager:
+        system_prompt = skill_manager.inject_skill("chart-visualization", system_prompt)
+    
+    adapter = OllamaAdapter(model=req.model or DEFAULT_CHAT_MODEL)
+    response = adapter.chat(
+        fast_chat_messages(req, user_message),
+        system_prompt=system_prompt,
+        temperature=0.2,
+        num_ctx=4096,
+    )
+    return {
+        "response": response,
+        "tool": "chart_viz_skill",
+        "status": "ok",
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+def run_research_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None):
+    print(">>> INVOKING SKILL: deep-research")
+    system_prompt = "You are a Deep Research specialist."
+    if skill_manager:
+        system_prompt = skill_manager.inject_skill("deep-research", system_prompt)
+    
+    adapter = OllamaAdapter(model=req.model or DEFAULT_CHAT_MODEL)
+    response = adapter.chat(
+        fast_chat_messages(req, user_message),
+        system_prompt=system_prompt,
+        temperature=0.4,
+        num_ctx=8192,
+    )
+    return {
+        "response": response,
+        "tool": "deep_research_skill",
+        "status": "ok",
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+def run_data_analysis_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None):
+    print(">>> INVOKING SKILL: data-analysis")
+    system_prompt = "You are a Data Analysis expert using DuckDB."
+    if skill_manager:
+        system_prompt = skill_manager.inject_skill("data-analysis", system_prompt)
+    
+    adapter = OllamaAdapter(model=req.model or DEFAULT_CHAT_MODEL)
+    response = adapter.chat(
+        fast_chat_messages(req, user_message),
+        system_prompt=system_prompt,
+        temperature=0.1,
+        num_ctx=8192,
+    )
+    return {
+        "response": response,
+        "tool": "data_analysis_skill",
+        "status": "ok",
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+def run_consulting_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None):
+    print(">>> INVOKING SKILL: consulting-analysis")
+    system_prompt = "You are a Strategic Technical Consultant."
+    if skill_manager:
+        system_prompt = skill_manager.inject_skill("consulting-analysis", system_prompt)
+    
+    adapter = OllamaAdapter(model=req.model or DEFAULT_CHAT_MODEL)
+    response = adapter.chat(
+        fast_chat_messages(req, user_message),
+        system_prompt=system_prompt,
+        temperature=0.5,
+        num_ctx=4096,
+    )
+    return {
+        "response": response,
+        "tool": "consulting_skill",
+        "status": "ok",
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+def run_web_guidelines_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None):
+    print(">>> INVOKING SKILL: web-design-guidelines")
+    system_prompt = "You are a Web Design Systems expert."
+    if skill_manager:
+        system_prompt = skill_manager.inject_skill("web-design-guidelines", system_prompt)
+    
+    adapter = OllamaAdapter(model=req.model or DEFAULT_CHAT_MODEL)
+    response = adapter.chat(
+        fast_chat_messages(req, user_message),
+        system_prompt=system_prompt,
+        temperature=0.4,
+        num_ctx=4096,
+    )
+    return {
+        "response": response,
+        "tool": "web_design_guidelines_skill",
+        "status": "ok",
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+def run_skill_creator_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None):
+    print(">>> INVOKING SKILL: skill-creator")
+    system_prompt = "You are a meta-skill authoring expert."
+    if skill_manager:
+        system_prompt = skill_manager.inject_skill("skill-creator", system_prompt)
+    
+    adapter = OllamaAdapter(model=req.model or DEFAULT_CHAT_MODEL)
+    response = adapter.chat(
+        fast_chat_messages(req, user_message),
+        system_prompt=system_prompt,
+        temperature=0.7,
+        num_ctx=4096,
+    )
+    return {
+        "response": response,
+        "tool": "skill_creator_skill",
+        "status": "ok",
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+def run_github_research_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None):
+    print(">>> INVOKING SKILL: github-deep-research")
+    system_prompt = "You are a GitHub Repository Research specialist."
+    if skill_manager:
+        system_prompt = skill_manager.inject_skill("github-deep-research", system_prompt)
+    
+    adapter = OllamaAdapter(model=req.model or DEFAULT_CHAT_MODEL)
+    response = adapter.chat(
+        fast_chat_messages(req, user_message),
+        system_prompt=system_prompt,
+        temperature=0.3,
+        num_ctx=8192,
+    )
+    return {
+        "response": response,
+        "tool": "github_research_skill",
+        "status": "ok",
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+
+
 def run_fast_local_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None, stream_callback=None):
     print(">>> DEBUG: run_fast_local_chat entered")
     full = []
@@ -3433,7 +3870,7 @@ def run_fast_local_chat(req: "ChatRequest", user_message: str, task_prep: Option
         yield msg
         return
 
-    adapter = OllamaAdapter(model=FAST_CHAT_MODEL)
+    adapter = OllamaAdapter(model=req.model or FAST_CHAT_MODEL)
     response_stream = adapter.chat(
         fast_chat_messages(req, user_message),
         system_prompt=fast_chat_system_prompt(req.web_search, task_prep, local_context=local_lookup),
@@ -3441,6 +3878,7 @@ def run_fast_local_chat(req: "ChatRequest", user_message: str, task_prep: Option
         num_ctx=1024,
         num_predict=512,
         stream=True,
+        timeout=300,
     )
     
     for chunk in response_stream:
@@ -3596,14 +4034,11 @@ def run_context_chat(req: "ChatRequest", user_message: str, context: dict[str, A
         yield msg
         return
 
-    adapter = OllamaAdapter(model=CONTEXT_CHAT_MODEL)
+    adapter = OllamaAdapter(model=req.model or CONTEXT_CHAT_MODEL)
     response_stream = adapter.chat(
         fast_chat_messages(req, user_message),
         system_prompt=context_chat_system_prompt(context["workspace_summary"], task_prep),
-        temperature=0.2,
-        num_ctx=1024,
-        timeout=120,
-        num_predict=512,
+        timeout=300,
         stream=True,
     )
     
@@ -3653,15 +4088,13 @@ def run_review_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
         "Return strict JSON only."
     )
 
-    adapter = OllamaAdapter(model=CONTEXT_CHAT_MODEL)
+    adapter = OllamaAdapter(model=req.model or CONTEXT_CHAT_MODEL)
     response_stream = adapter.chat(
         fast_chat_messages(req, prompt),
         system_prompt=review_system_prompt(context["workspace_summary"], (task_prep or {}).get("analysis_summary", "")),
-        temperature=0.1,
-        num_ctx=4096,
-        timeout=12,
-        num_predict=500,
+        timeout=300,
         stream=bool(stream_callback),
+        format="json",
     )
     if stream_callback and not isinstance(response_stream, str):
         full = []
@@ -3783,7 +4216,7 @@ def run_generate_code_chat(req: "ChatRequest", user_message: str, task_prep: Opt
         "If no target file is specified, provide a standalone snippet first, then one short note about how it could fit this project."
     )
 
-    adapter = OllamaAdapter(model=FAST_CHAT_MODEL)
+    adapter = OllamaAdapter(model=req.model or FAST_CHAT_MODEL)
     response_stream = adapter.chat(
         fast_chat_messages(req, prompt),
         system_prompt=(
@@ -3792,10 +4225,7 @@ def run_generate_code_chat(req: "ChatRequest", user_message: str, task_prep: Opt
             "When no target file is explicitly given, generate a small standalone snippet in the requested language and keep it concise. "
             "When project context is relevant, mention how the snippet would fit the current workspace."
         ),
-        temperature=0.2,
-        num_ctx=2048,
-        timeout=6,
-        num_predict=260,
+        timeout=300,
         stream=bool(stream_callback),
     )
     if stream_callback and not isinstance(response_stream, str):
@@ -3900,14 +4330,11 @@ def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
         "Return strict JSON only.",
     ])
 
-    adapter = OllamaAdapter(model=CONTEXT_CHAT_MODEL)
+    adapter = OllamaAdapter(model=req.model or CONTEXT_CHAT_MODEL)
     raw_response = adapter.chat(
         fast_chat_messages(req, prompt),
         system_prompt=modify_system_prompt(context["workspace_summary"], (task_prep or {}).get("analysis_summary", "")),
-        temperature=0.15,
-        num_ctx=4096,
-        timeout=15,
-        num_predict=700,
+        timeout=300,
     ).strip()
 
     parsed = extract_modify_json(raw_response) or {}
@@ -3959,10 +4386,7 @@ def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
                 context["workspace_summary"],
                 ((task_prep or {}).get("analysis_summary", "") + "\nFix the patch so it passes local validation."),
             ),
-            temperature=0.1,
-            num_ctx=4096,
-            timeout=15,
-            num_predict=700,
+            timeout=300,
         ).strip()
         repaired = extract_modify_json(repair_raw) or {}
         repaired_code = str(repaired.get("updated_code") or "").strip()
@@ -3992,10 +4416,7 @@ def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
             context["workspace_summary"],
             ((task_prep or {}).get("analysis_summary", "") + "\nThe patch was staged in a temporary workspace before review."),
         ),
-        temperature=0.1,
-        num_ctx=4096,
-        timeout=12,
-        num_predict=500,
+        timeout=300,
     ).strip()
     patch_review = normalize_patch_review_response(
         patch_review_raw,
@@ -4177,7 +4598,232 @@ def calculate_code_confidence(code: str) -> int:
 
     return max(20, min(85, confidence))  # Clamp between 20-85
 
+def run_webapp_testing_chat(req: "ChatRequest", user_message: str, task_prep: Optional[dict[str, Any]] = None):
+    workspace_root = request_workspace_root(req, task_prep)
+    orchestrator = NeroAgentOrchestrator(workspace_root)
+    
+    history = []
+    if req.history:
+        for msg in req.history:
+             history.append({"role": msg.role, "content": msg.content})
+
+    responses = orchestrator.process_query(user_message, history)
+    
+    last_response = responses[-1] if responses else "No response generated."
+    if "[FINAL_ANSWER]" in last_response:
+        final_answer = last_response.split("[FINAL_ANSWER]")[-1].strip()
+    else:
+        final_answer = last_response
+        
+    return {
+        "response": final_answer,
+        "tool": "webapp_testing",
+        "status": "ok",
+        "analysis": build_analysis_payload(task_prep),
+    }
+
+
+# =============================================================================
+# Project Context & Index  (used by AI Chat for auto project awareness)
+# =============================================================================
+
+IGNORED_CONTEXT_DIRS = {
+    ".git", "node_modules", "__pycache__", "dist", "dist-electron", "build",
+    "out", ".next", ".vscode", ".idea", "coverage", ".angular", ".svn",
+    "venv", ".venv", "env", ".env", "target", "vendor",
+}
+IGNORED_CONTEXT_EXTS = {
+    ".aiz", ".exe", ".dll", ".so", ".bin", ".jpg", ".jpeg", ".png", ".gif",
+    ".ico", ".webp", ".mp3", ".mp4", ".avi", ".mov", ".pdf", ".zip", ".rar",
+    ".7z", ".tar", ".gz", ".woff", ".woff2", ".ttf", ".eot", ".otf", ".db",
+    ".sqlite", ".pyc", ".pyo", ".class", ".o", ".a", ".lib",
+}
+KEY_FILE_NAMES = {
+    "package.json", "pyproject.toml", "setup.py", "Cargo.toml", "CMakeLists.txt",
+    "go.mod", "pom.xml", "build.gradle", "README.md", "readme.md", "main.py",
+    "main.ts", "index.ts", "index.js", "App.tsx", "app.py", "main.cpp",
+    ".env.example", "Makefile", "Dockerfile", "docker-compose.yml",
+}
+
+# In-memory cache: workspace_root -> (mtime_hash, index_path, context_dict)
+_PROJECT_CONTEXT_CACHE: dict = {}
+
+
+def _detect_stack(root: str) -> list[str]:
+    stacks = []
+    checks = {
+        "Node.js": ["package.json"],
+        "Python": ["pyproject.toml", "setup.py", "requirements.txt"],
+        "C++": ["CMakeLists.txt", "Makefile"],
+        "Rust": ["Cargo.toml"],
+        "Go": ["go.mod"],
+        "Java": ["pom.xml", "build.gradle"],
+        "Docker": ["Dockerfile", "docker-compose.yml"],
+    }
+    for stack, files in checks.items():
+        if any(os.path.exists(os.path.join(root, f)) for f in files):
+            stacks.append(stack)
+    return stacks or ["Unknown"]
+
+
+def _walk_project(root: str, max_files: int = 300) -> list[dict]:
+    """Walk workspace and return lightweight file metadata list."""
+    files = []
+    root_abs = os.path.realpath(root)
+    for dirpath, dirnames, filenames in os.walk(root_abs):
+        # Prune ignored directories in-place
+        dirnames[:] = [d for d in dirnames if d not in IGNORED_CONTEXT_DIRS and not d.startswith(".")]
+        rel_dir = os.path.relpath(dirpath, root_abs)
+        for fname in sorted(filenames):
+            if len(files) >= max_files:
+                break
+            ext = os.path.splitext(fname)[1].lower()
+            if ext in IGNORED_CONTEXT_EXTS:
+                continue
+            full = os.path.join(dirpath, fname)
+            rel = os.path.join(rel_dir, fname).replace("\\", "/").lstrip("./")
+            try:
+                size = os.path.getsize(full)
+            except OSError:
+                size = 0
+            files.append({"path": rel, "size": size, "key": fname in KEY_FILE_NAMES})
+        if len(files) >= max_files:
+            break
+    return files
+
+
+def _read_key_file_preview(full_path: str, max_lines: int = 60) -> str:
+    """Read first N lines of a text file safely."""
+    try:
+        with open(full_path, "r", encoding="utf-8", errors="replace") as f:
+            lines = []
+            for i, line in enumerate(f):
+                if i >= max_lines:
+                    lines.append(f"... ({i}+ more lines)")
+                    break
+                lines.append(line.rstrip())
+            return "\n".join(lines)
+    except Exception:
+        return "(could not read file)"
+
+
+def _build_project_index_doc(root: str, files: list[dict], stacks: list[str]) -> str:
+    """Build a markdown document summarising the project for the AI."""
+    name = os.path.basename(root)
+    lines = [
+        f"# Project: {name}",
+        f"**Root:** `{root}`",
+        f"**Stack:** {', '.join(stacks)}",
+        f"**Files:** {len(files)} indexed",
+        "",
+        "## File Tree",
+        "```",
+    ]
+    for f in files[:150]:
+        prefix = "* " if f["key"] else "  "
+        size_str = f"{f['size']:,}B" if f["size"] < 1024 else f"{f['size']//1024}KB"
+        lines.append(f"{prefix}{f['path']}  ({size_str})")
+    lines += ["```", "", "## Key File Previews"]
+
+    root_abs = os.path.realpath(root)
+    for f in files:
+        if not f["key"]:
+            continue
+        full = os.path.join(root_abs, f["path"])
+        if not os.path.exists(full):
+            continue
+        ext = os.path.splitext(f["path"])[1].lstrip(".")
+        lines += [
+            f"### {f['path']}",
+            f"```{ext}",
+            _read_key_file_preview(full),
+            "```",
+            "",
+        ]
+    return "\n".join(lines)
+
+
+class ProjectContextRequest(BaseModel):
+    workspace_root: str
+
+
+@app.get("/api/project/context")
+def get_project_context(workspace_root: str = ""):
+    """Return a structured JSON snapshot of the workspace for the AI chat."""
+    root = resolve_workspace_root(workspace_root)
+    if not os.path.isdir(root):
+        return {"error": f"Directory not found: {root}"}
+
+    files = _walk_project(root)
+    stacks = _detect_stack(root)
+    name = os.path.basename(root)
+
+    key_files = [f["path"] for f in files if f["key"]]
+    total_size = sum(f["size"] for f in files)
+
+    return {
+        "name": name,
+        "root": root,
+        "stack": stacks,
+        "total_files": len(files),
+        "total_size": total_size,
+        "key_files": key_files,
+        "files": files,
+    }
+
+
+@app.get("/api/project/index")
+def get_project_index(workspace_root: str = ""):
+    """
+    Generate (or return cached) a markdown Project Index document written to
+    a temp file. Returns the path and content so the AI can use it.
+    """
+    root = resolve_workspace_root(workspace_root)
+    if not os.path.isdir(root):
+        return {"error": f"Directory not found: {root}"}
+
+    # Check cache freshness using mtime of root dir
+    try:
+        mtime = str(os.path.getmtime(root))
+    except OSError:
+        mtime = "0"
+
+    cached = _PROJECT_CONTEXT_CACHE.get(root)
+    if cached and cached.get("mtime") == mtime and os.path.exists(cached.get("path", "")):
+        return {"path": cached["path"], "content": cached["content"], "cached": True}
+
+    files = _walk_project(root)
+    stacks = _detect_stack(root)
+    doc = _build_project_index_doc(root, files, stacks)
+
+    # Write to temp file
+    try:
+        fd, tmp_path = tempfile.mkstemp(prefix="neural_project_", suffix=".md")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(doc)
+    except Exception as e:
+        return {"error": f"Could not write temp file: {e}"}
+
+    _PROJECT_CONTEXT_CACHE[root] = {"mtime": mtime, "path": tmp_path, "content": doc}
+    return {"path": tmp_path, "content": doc, "cached": False}
+
+
+@app.post("/api/project/file")
+def read_project_file(payload: ProjectContextRequest):
+    """Read a single file from the workspace safely and return its content."""
+    # payload.workspace_root is used as the file path here (misname kept for model compat)
+    file_path = payload.workspace_root
+    if not os.path.isfile(file_path):
+        return {"error": f"File not found: {file_path}"}
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext in IGNORED_CONTEXT_EXTS:
+        return {"error": "Binary file type not readable"}
+    content = _read_key_file_preview(file_path, max_lines=300)
+    return {"path": file_path, "content": content, "lines": content.count("\n") + 1}
+
+
 @app.post("/api/chat")
+
 async def chat(req: ChatRequest):
     """
     Conversational AI chat endpoint for desktop UI.
@@ -4206,7 +4852,7 @@ async def chat(req: ChatRequest):
         task_prep = None
         task_intelligence = get_task_intelligence(workspace_root)
         if task_intelligence is not None:
-            task_prep = task_intelligence.prepare_task(user_message, bool(req.web_search))
+            task_prep = task_intelligence.prepare_task(user_message, bool(req.web_search), req.editor_context)
 
         route = str((task_prep or {}).get("route") or "")
 
@@ -4222,13 +4868,32 @@ async def chat(req: ChatRequest):
                 }
             route = "fast_local_chat"
 
-        if route == "modify_chat":
+        if route == "webapp_testing":
+            response = run_webapp_testing_chat(req, user_message, task_prep)
+        elif route == "modify_chat":
             response = run_modify_chat(req, user_message, task_prep)
         elif route == "generate_chat":
             response = run_generate_code_chat(req, user_message, task_prep)
         elif route == "review_chat":
             response = run_review_chat(req, user_message, task_prep)
+        elif route == "design_chat":
+            response = run_design_chat(req, user_message, task_prep)
+        elif route == "visualize_chat":
+            response = run_visualize_chat(req, user_message, task_prep)
+        elif route == "research_chat":
+            response = run_research_chat(req, user_message, task_prep)
+        elif route == "data_analysis_chat":
+            response = run_data_analysis_chat(req, user_message, task_prep)
+        elif route == "consulting_chat":
+            response = run_consulting_chat(req, user_message, task_prep)
+        elif route == "web_guidelines_chat":
+            response = run_web_guidelines_chat(req, user_message, task_prep)
+        elif route == "skill_creator_chat":
+            response = run_skill_creator_chat(req, user_message, task_prep)
+        elif route == "github_research_chat":
+            response = run_github_research_chat(req, user_message, task_prep)
         elif route == "context_chat":
+
             response = run_context_chat(req, user_message, task_prep)
         elif route == "fast_local_chat" or should_use_fast_chat(user_message, bool(req.web_search)):
             response = run_fast_local_chat(req, user_message, task_prep)
@@ -4259,6 +4924,16 @@ async def chat_stream(req: ChatRequest):
     def worker():
         try:
             user_message = (req.message or "").strip()
+            
+            # --- Inject Project Index Context if provided ---
+            if req.project_index_path and os.path.exists(req.project_index_path):
+                try:
+                    with open(req.project_index_path, "r", encoding="utf-8") as f:
+                        index_content = f.read()
+                    user_message = f"--- PROJECT CONTEXT ---\n{index_content}\n--- END PROJECT CONTEXT ---\n\n{user_message}"
+                except Exception as e:
+                    print(f">>> ERROR: Could not read project index {req.project_index_path}: {e}")
+
             if not user_message:
                 q.put({"type": "final", "data": {
                     "response": "Please type a message first.",
@@ -4282,7 +4957,7 @@ async def chat_stream(req: ChatRequest):
             task_prep = None
             ti = get_task_intelligence(workspace_root)
             if ti is not None:
-                task_prep = ti.prepare_task(user_message, bool(req.web_search))
+                task_prep = ti.prepare_task(user_message, bool(req.web_search), req.editor_context)
 
             route = str((task_prep or {}).get("route") or "")
             print(f">>> DEBUG: worker routing: route={route}, user_message={user_message[:50]}")
@@ -4301,12 +4976,31 @@ async def chat_stream(req: ChatRequest):
                     return
                 route = "fast_local_chat"
 
-            if route == "modify_chat":
+            if route == "webapp_testing":
+                # For stream, we currently just run it normally as orchestrator loop isn't streamed yet
+                response = run_webapp_testing_chat(req, user_message, task_prep)
+            elif route == "modify_chat":
                 response = run_modify_chat(req, user_message, task_prep, stream_callback=stream_callback)
             elif route == "generate_chat":
                 response = run_generate_code_chat(req, user_message, task_prep, stream_callback=stream_callback)
             elif route == "review_chat":
                 response = run_review_chat(req, user_message, task_prep, stream_callback=stream_callback)
+            elif route == "design_chat":
+                response = run_design_chat(req, user_message, task_prep)
+            elif route == "visualize_chat":
+                response = run_visualize_chat(req, user_message, task_prep)
+            elif route == "research_chat":
+                response = run_research_chat(req, user_message, task_prep)
+            elif route == "data_analysis_chat":
+                response = run_data_analysis_chat(req, user_message, task_prep)
+            elif route == "consulting_chat":
+                response = run_consulting_chat(req, user_message, task_prep)
+            elif route == "web_guidelines_chat":
+                response = run_web_guidelines_chat(req, user_message, task_prep)
+            elif route == "skill_creator_chat":
+                response = run_skill_creator_chat(req, user_message, task_prep)
+            elif route == "github_research_chat":
+                response = run_github_research_chat(req, user_message, task_prep)
             elif route == "context_chat":
                 # Handle direct context chat (not as a route but as a primary action)
                 context_provider = get_context_provider(workspace_root)
@@ -4595,13 +5289,24 @@ def ai_project_stats():
 
 
 if __name__ == "__main__":
+    print("\n>> Starting Neural Studio V10 Services...")
+    
+    print(">> Initializing Vault and Knowledge directories...")
     ensure_vault()
-    warm_ollama_model_sync(timeout=12)
+    ensure_leaning_directory()
+    
+    # Warm up model in background to avoid blocking server startup (port bind)
+    print(">> Starting Ollama model warm-up in background...")
     warm_ollama_model_background()
+    
+    print(">> Launching background AI services...")
     start_background_services()
 
     print("\n  +----------------------------------------------------+")
     print("  |   Neural Studio V10 -- AI Compression API          |")
     print("  |   C++ Neural Engine + Smart Brain + Vault          |")
     print("  +----------------------------------------------------+\n")
+    
+    print(f">> Server binding to 127.0.0.1:8001...")
     uvicorn.run("main:app", host="127.0.0.1", port=8001, reload=False)
+

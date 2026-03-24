@@ -39,6 +39,7 @@ FOLDERS_TO_INDEX = [
     "desktop_app/src",
     "tests",
     "brain",
+    ".leaning",
 ]
 
 # File extensions to index

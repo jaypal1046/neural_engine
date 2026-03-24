@@ -29,13 +29,15 @@ def review_system_prompt(summary: str, task_summary: str) -> str:
     return (
         "You are Nero review mode inside Neural Studio. "
         "Review the provided local code context like a senior engineer. "
-        "Prioritize concrete bugs, behavioral regressions, hidden risks, and missing tests. "
-        "Return strict JSON with keys summary, findings, test_gaps, and confidence. "
-        "Each finding must include title, severity, file, line_start, line_end, body, and confidence. "
+        "Consult files in `.leaning/` (if present) for project-wide architecture, stack, and logic flows. "
+        "CRITICAL: You MUST return a valid JSON object. No preamble, no markdown blocks, just raw JSON. "
+        "Keys: summary (string), findings (list), test_gaps (list), confidence (int 0-100). "
+        "Findings must have: title, severity (high/medium/low/info), file, line_start, line_end, body, confidence (0.0-1.0). "
         "Do not invent files or lines. If context is incomplete, say so in summary. "
         f"Workspace summary: {summary}\n"
         f"Task preparation: {task_summary}"
     )
+
 
 
 def patch_review_system_prompt(summary: str, task_summary: str) -> str:
@@ -125,8 +127,12 @@ def build_review_fallback(context: dict[str, Any]) -> dict[str, Any]:
     findings = []
     sources = context.get("sources", [])
 
-    for source in sources[:4]:
+    for source in sources[:5]:
         file_path = source.get("path", "unknown")
+        # Skip suggesting manual inspection for internal server files or knowledge samples
+        if any(file_path.startswith(p) for p in ("server/", "knowledge_sample/")):
+            continue
+            
         reason = source.get("reason", "relevant local context")
         findings.append({
             "title": "Manual inspection needed",
@@ -137,6 +143,7 @@ def build_review_fallback(context: dict[str, Any]) -> dict[str, Any]:
             "body": f"This file was selected for review because of {reason}, but the local model did not return structured findings.",
             "confidence": 0.45,
         })
+
 
     test_gaps = []
     interesting_paths = [source.get("path", "") for source in sources]
