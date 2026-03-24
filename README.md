@@ -52,16 +52,8 @@ npm run dev
 ```
 
 ## ⚖️ License & Terms
-
-### MIT License
-Copyright (c) 2024 Nero Brain Team
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software... [Full MIT License Text Recommended in LICENSE file]
-
-### Terms & Conditions
-- **Local Data Guarantee:** Nero Brain operates exclusively on local data. By using this software, you acknowledge that no source code is transmitted to external AI providers.
-- **Model Usage:** Performance depends on the capabilities of the models you install via Ollama (e.g., Llama3, TinyLlama).
-- **Experimental Features:** Some advanced skills and AI-driven modifications are experimental; always verify critical code changes before committing.
+- Read the full [MIT License](LICENSE)
+- Read our [Terms & Conditions](TERMS.md)
 
 ---
 *Built by Developers, for Developers. Unleash the power of Private Intelligence.*
