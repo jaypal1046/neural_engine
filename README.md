@@ -29,6 +29,11 @@ Nero Brain now includes a modular skill system for high-level specialized tasks:
 2.  **C++ Neural Engine (Core):** The high-performance "brain" that manages background agents and CMIX compression.
 3.  **FastAPI Bridge (Backend):** Orchestrates communication between the UI, the C++ engine, and local LLMs.
 
+## 💖 Support the Project
+If you find Nero Brain helpful, consider supporting the development:
+- **Buy me a coffee:** [paypal.me/deathsScavenger](https://paypal.me/deathsScavenger)
+- **Sponsor on GitHub:** Stay tuned for more ways to contribute!
+
 ## ⚡ Quick Start
 
 ### 1. Build the Neural Engine
