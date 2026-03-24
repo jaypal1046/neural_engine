@@ -273,7 +273,8 @@ export function MonacoEditor({ filePath, onModified, projectRoot }: Props) {
         const fileName = filePath.split(/[/\\]/).pop() || 'file'
 
         const editorContext = {
-            filePath,
+            activeFilePath: filePath,
+            relativePath: filePath.replace(projectRoot || '', '').replace(/^[\\/]/, '').replace(/\\/g, '/'),
             fileName,
             language: lang,
             cursorLine,

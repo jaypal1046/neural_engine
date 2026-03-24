@@ -1,0 +1,9 @@
+﻿
+ProcessId CommandLine                                    
+--------- -----------                                    
+    18108 "C:\Users\jaypr\AppData\Local\Programs\Python\P
+          ython312\python.exe" server\main.py            
+    24660 "C:\Users\jaypr\AppData\Local\Programs\Python\P
+          ython312\python.exe" test_chat.py              
+
+

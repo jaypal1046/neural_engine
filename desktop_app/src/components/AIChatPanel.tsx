@@ -178,11 +178,11 @@ function FlowSectionsBlock({ sections }: { sections: FlowSection[] }) {
 }
 
 const QUICK_ACTIONS = [
-    { label: 'Analyze', color: '#4ADE80' },
-    { label: 'Compress', color: '#C97FDB' },
-    { label: 'Generate Code', color: '#FF6B9D' },
-    { label: 'Explain', color: '#4A9EFF' },
-    { label: 'Optimize', color: '#FBBF24' },
+    { label: 'Explain', cmd: '/explain', color: '#4A9EFF' },
+    { label: 'Review', cmd: '/review', color: '#4ADE80' },
+    { label: 'Modify', cmd: '/modify', color: '#FBBF24' },
+    { label: 'Generate', cmd: '/generate', color: '#FF6B9D' },
+    { label: 'Research', cmd: '/research', color: '#C97FDB' },
 ]
 
 function ActionPreview({
@@ -1021,6 +1021,14 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
                     workspace_root: projectRoot || undefined,
                     project_index_path: projectIndexPath || undefined,
                     model: selectedModel,
+                    editor_context: activeFilePath ? {
+                        activeFilePath,
+                        relativePath: activeFilePath.replace(projectRoot || '', '').replace(/^[\\/]/, '').replace(/\\/g, '/'),
+                        language: activeFilePath.split('.').pop() || '',
+                        // Add selection if available via props (though AIChatPanel doesn't currently track it deeply)
+                        selection: null,
+                        selectedText: ''
+                    } : undefined,
                 }),
             })
             if (!res.ok) {
@@ -1309,8 +1317,14 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
         })
     }
 
-    const handleQuickAction = (action: string) => {
-        setInput(`/${action.toLowerCase()} `)
+    const handleQuickAction = (action: any) => {
+        const cmd = action.cmd || `/${action.label.toLowerCase()} `
+        setInput(cmd)
+        // Give time for state update or pass directly
+        setTimeout(() => {
+            const sendBtn = document.querySelector('.ai-send-btn') as HTMLButtonElement
+            sendBtn?.click()
+        }, 50)
     }
 
     const formatTime = (d: Date) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -1680,7 +1694,7 @@ export function AIChatPanel({ serverStatus, projectRoot = '', activeFilePath = '
                 flexShrink: 0, scrollbarWidth: 'none'
             }}>
                 {QUICK_ACTIONS.map(action => (
-                    <button key={action.label} onClick={() => handleQuickAction(action.label)} style={{
+                    <button key={action.label} onClick={() => handleQuickAction(action)} style={{
                         display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px',
                         borderRadius: 16, border: '1px solid var(--border)', background: 'var(--bg-dark)',
                         color: 'var(--text-muted)', fontSize: 11, fontWeight: 600, cursor: 'pointer',

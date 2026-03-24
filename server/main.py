@@ -662,13 +662,16 @@ def get_context_provider(workspace_root: Optional[str] = None):
     return _CONTEXT_PROVIDER_CACHE[root]
 
 
-def get_task_intelligence(workspace_root: Optional[str] = None):
-    root = resolve_workspace_root(workspace_root)
+def get_task_intelligence(workspace_root: str):
+    if not workspace_root:
+        return None
+    # Use realpath for case-insensitive matching on Windows
+    norm_root = os.path.realpath(workspace_root)
     if LocalTaskIntelligence is None:
         return None
-    if root not in _TASK_INTELLIGENCE_CACHE:
-        _TASK_INTELLIGENCE_CACHE[root] = LocalTaskIntelligence(root)
-    return _TASK_INTELLIGENCE_CACHE[root]
+    if norm_root not in _TASK_INTELLIGENCE_CACHE:
+        _TASK_INTELLIGENCE_CACHE[norm_root] = LocalTaskIntelligence(norm_root)
+    return _TASK_INTELLIGENCE_CACHE[norm_root]
 
 
 def get_code_graph_engine(workspace_root: Optional[str] = None):
@@ -4282,12 +4285,14 @@ def run_modify_chat(req: "ChatRequest", user_message: str, task_prep: Optional[d
         }
 
     editor_context = (task_prep or {}).get("editor_context") or {}
+    print(f">>> DEBUG: run_modify_chat editor_context keys: {list(editor_context.keys())}")
     active_file = editor_context.get("activeFilePath")
+    print(f">>> DEBUG: run_modify_chat active_file: {active_file}")
     if not active_file:
         if (task_prep or {}).get("intent") == "generate":
             return run_generate_code_chat(req, user_message, task_prep)
         return {
-            "response": "Modify mode needs an active file in the editor. Open the target file and select code if possible, then try again.",
+            "response": f"Modify mode needs an active file in the editor (Found keys: {list(editor_context.keys())}). Open the target file and select code if possible, then try again.",
             "tool": "modify_chat",
             "status": "error",
         }
